@@ -1,0 +1,30 @@
+{{- /*
+  macOS launchd agent for chezmoi file watching.
+  Deployed to: ~/Library/LaunchAgents/com.chezmoi.watch.plist
+
+  WatchPaths uses kqueue — zero CPU cost while idle, kernel-level notification.
+  Add one <string> per watched file path. Must match entries in config.json.
+
+  Chezmoi source path: private_Library/LaunchAgents/com.chezmoi.watch.plist.tmpl
+*/ -}}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.chezmoi.watch</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>{{ .chezmoi.homeDir }}/.local/bin/chezmoi-watch-handler</string>
+	</array>
+	<key>WatchPaths</key>
+	<array>
+		<!-- Add one <string> per watched file. Must match config.json entries. -->
+		<string>{{ .chezmoi.homeDir }}/Library/Preferences/com.example.App.plist</string>
+	</array>
+	<key>StandardOutPath</key>
+	<string>/tmp/chezmoi-watch.log</string>
+	<key>StandardErrorPath</key>
+	<string>/tmp/chezmoi-watch.log</string>
+</dict>
+</plist>

@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+"""Extract selected keys from a plist into a managed XML plist file.
+
+Usage:
+    plist-extract <source.plist> <output.managed.plist> <key1> [key2] ...
+    plist-extract --from-file <source.plist> <output.managed.plist> <keys-file>
+
+Reads a binary or XML plist, extracts only the named keys, and writes
+them as a sorted XML plist suitable for chezmoi's managed plist pattern.
+
+The --from-file variant reads key names from a text file (one per line,
+blank lines and #-comments ignored). This is useful for large key lists
+or for documenting why each key was included.
+
+Examples:
+    # Extract specific keys
+    plist-extract ~/Library/Preferences/com.example.App.plist \\
+        private_com.example.App.managed.plist \\
+        allowAnyShortcut launchOnLogin appSpecs
+
+    # Extract keys listed in a file
+    plist-extract --from-file ~/Library/Preferences/com.example.App.plist \\
+        private_com.example.App.managed.plist \\
+        managed-keys.txt
+
+Keys file format:
+    # Window layouts
+    appSpecs
+    manualSpecs
+    landscapeSnapAreas
+
+    # Behavior preferences
+    allowAnyShortcut
+    hideMenubarIcon
+    launchOnLogin
+"""
+
+import plistlib
+import sys
+
+
+def read_keys_from_file(path):
+    """Read key names from a text file, ignoring comments and blanks."""
+    keys = []
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                keys.append(line)
+    return keys
+
+
+def main():
+    if len(sys.argv) < 4 or sys.argv[1] in ("-h", "--help"):
+        print(__doc__.strip())
+        sys.exit(0)
+
+    from_file = False
+    if sys.argv[1] == "--from-file":
+        from_file = True
+        if len(sys.argv) != 5:
+            print(
+                "Usage: plist-extract --from-file <source.plist> <output.plist> <keys-file>",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        source_path = sys.argv[2]
+        output_path = sys.argv[3]
+        keys = read_keys_from_file(sys.argv[4])
+    else:
+        source_path = sys.argv[1]
+        output_path = sys.argv[2]
+        keys = sys.argv[3:]
+
+    with open(source_path, "rb") as f:
+        data = plistlib.load(f)
+
+    managed = {}
+    missing = []
+    for key in keys:
+        if key in data:
+            managed[key] = data[key]
+        else:
+            missing.append(key)
+
+    if missing:
+        print(f"Warning: {len(missing)} keys not found in source plist:", file=sys.stderr)
+        for key in missing:
+            print(f"  - {key}", file=sys.stderr)
+
+    with open(output_path, "wb") as f:
+        plistlib.dump(managed, f, fmt=plistlib.FMT_XML, sort_keys=True)
+
+    print(f"Wrote {len(managed)} keys to {output_path}", file=sys.stderr)
+    for key in sorted(managed.keys()):
+        print(f"  + {key}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,7 @@
+{
+  "name": "dotfiles",
+  "version": "0.0.1",
+  "description": "Dotfiles management — chezmoi, fish shell, and environment configuration",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {}
+}

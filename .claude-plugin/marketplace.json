@@ -7,5 +7,38 @@
     "version": "0.0.1",
     "description": "Universal AI Plugin Marketplace — author once, distribute to all platforms"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "dotfiles",
+      "source": "./plugins/dotfiles",
+      "description": "Dotfiles management — chezmoi, fish shell, and environment configuration",
+      "tags": [
+        "chezmoi",
+        "dotfiles",
+        "fish",
+        "devtools"
+      ]
+    },
+    {
+      "name": "spec-skills",
+      "source": "./plugins/spec-skills",
+      "description": "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
+      "tags": [
+        "specs",
+        "skills",
+        "quality"
+      ]
+    },
+    {
+      "name": "project-room-preparation",
+      "source": "./plugins/project-room-preparation",
+      "description": "Organize messy project sources into an inspectable \"project room\" before drafting begins — source inventory, duplicate log, conflict log, missing-context list, and working brief.",
+      "tags": [
+        "skills",
+        "writing",
+        "research",
+        "knowledge-management"
+      ]
+    }
+  ]
 }
