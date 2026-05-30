@@ -42,16 +42,50 @@ const CODEX_HOME = path.join(os.homedir(), ".codex");
 const CACHE_ROOT = path.join(CODEX_HOME, "plugins", "cache");
 const CONFIG_TOML = path.join(CODEX_HOME, "config.toml");
 
-/** Target plugin + marketplace under test. */
-const MARKETPLACE_NAME = "ai-plugin-marketplace";
-const PLUGIN_NAME = "skill-evaluator";
-const PLUGIN_DIR = path.join(ROOT, "plugins", PLUGIN_NAME);
 const MARKETPLACE_FILE = path.join(
   ROOT,
   ".agents",
   "plugins",
   "marketplace.json",
 );
+
+/**
+ * Resolve the marketplace name and target plugin from the marketplace
+ * manifest. The marketplace name is read from the manifest (falling back to
+ * the repo's conventional name). The target plugin defaults to the first
+ * listed plugin but can be overridden with a CLI arg
+ * (`pnpm run test:codex preflight <plugin-name>`). When the marketplace lists
+ * no plugins and no override is given, `pluginName` is `null` and the
+ * plugin-specific phases skip cleanly — there is nothing to acceptance-test.
+ */
+function resolveTarget(): {
+  marketplaceName: string;
+  pluginName: string | null;
+} {
+  let marketplaceName = "ai-plugin-marketplace";
+  let firstPlugin: string | null = null;
+  if (fs.existsSync(MARKETPLACE_FILE)) {
+    try {
+      const mp = readJson<{
+        name?: string;
+        plugins?: Array<{ name?: string }>;
+      }>(MARKETPLACE_FILE);
+      if (mp.name) marketplaceName = mp.name;
+      firstPlugin = mp.plugins?.[0]?.name ?? null;
+    } catch {
+      // Fall back to defaults; the marketplace-schema check will report the
+      // malformed manifest during preflight.
+    }
+  }
+  // argv: [node, script, <subcommand>, <plugin-override?>]
+  const override = process.argv[3];
+  return { marketplaceName, pluginName: override ?? firstPlugin };
+}
+
+/** Target plugin + marketplace under test. */
+const { marketplaceName: MARKETPLACE_NAME, pluginName: PLUGIN_NAME } =
+  resolveTarget();
+const PLUGIN_DIR = PLUGIN_NAME ? path.join(ROOT, "plugins", PLUGIN_NAME) : "";
 
 // ──────────────────────────────────────────────────────────────────────────
 // Zod schemas — documented shape per developers.openai.com/codex/plugins/build
@@ -184,6 +218,15 @@ function ensureScratch() {
 
 function preflight(): number {
   process.stdout.write("── Codex acceptance: preflight ──\n\n");
+
+  if (!PLUGIN_NAME) {
+    process.stdout.write(
+      "· no plugins listed in the marketplace — nothing to acceptance-test.\n" +
+        "  Add a plugin to .agents/plugins/marketplace.json, or target one\n" +
+        "  explicitly: `pnpm run test:codex preflight <plugin-name>`.\n",
+    );
+    return 0;
+  }
 
   // 1. Plugin manifest schema
   const manifestPath = path.join(PLUGIN_DIR, ".codex-plugin", "plugin.json");
@@ -656,6 +699,13 @@ After writing the file, reply with just \`report written\`. Do not summarize.
 
 function verify(): number {
   process.stdout.write("── Codex acceptance: verify ──\n\n");
+
+  if (!PLUGIN_NAME) {
+    process.stdout.write(
+      "· no plugins listed in the marketplace — nothing to verify.\n",
+    );
+    return 0;
+  }
 
   if (!fs.existsSync(SNAPSHOT_FILE)) {
     fail(

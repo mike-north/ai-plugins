@@ -817,8 +817,8 @@ describe("validateCodexMarketplace", () => {
     // path existence check, and expectation here is only that listing passes even when ROOT path doesn't match.
     const mpPath = writeCodexMarketplace(dir, "marketplace.json", [
       {
-        name: "skill-evaluator",
-        source: { source: "local", path: "./plugins/skill-evaluator" },
+        name: "sample-plugin",
+        source: { source: "local", path: "./plugins/sample-plugin" },
         description: "",
         tags: [],
         policy: { installation: "AVAILABLE", authentication: "ON_INSTALL" },
@@ -826,10 +826,10 @@ describe("validateCodexMarketplace", () => {
     ]);
 
     const results = freshResult();
-    validateCodexMarketplace(mpPath, ["skill-evaluator"], "marketplace.json", results);
+    validateCodexMarketplace(mpPath, ["sample-plugin"], "marketplace.json", results);
 
-    // Either the path-existence check succeeds (if ROOT/plugins/skill-evaluator exists from the worktree)
-    // or it fails with a specific message — policy and listing checks should NOT fail either way.
+    // The fixture's ./plugins/sample-plugin path does not exist, so the path-existence check
+    // fails with a specific message — but the policy and listing checks should NOT fail.
     expect(results.failed.every((m) => !m.includes("must use source.source"))).toBe(true);
     expect(results.failed.every((m) => !m.includes("expected source.path"))).toBe(true);
     expect(results.failed.every((m) => !m.includes("should declare policy"))).toBe(true);
@@ -841,9 +841,9 @@ describe("validateCodexMarketplace", () => {
     const mpPath = writeCodexMarketplace(dir, "marketplace.json", []);
 
     const results = freshResult();
-    validateCodexMarketplace(mpPath, ["skill-evaluator"], "marketplace.json", results);
+    validateCodexMarketplace(mpPath, ["sample-plugin"], "marketplace.json", results);
 
-    expect(results.failed.some((m) => m.includes("missing plugin: skill-evaluator"))).toBe(true);
+    expect(results.failed.some((m) => m.includes("missing plugin: sample-plugin"))).toBe(true);
   });
 
   it("fails when source.path does not match expected ./plugins/<name>", () => {

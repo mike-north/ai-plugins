@@ -187,22 +187,13 @@ Codex plugins live alongside the other platforms' manifests:
 After installing a Codex user source pointing at this repo, `codex /plugins`
 will list the plugin with its interface metadata.
 
-## Example Plugin: skill-evaluator
-
-The included `skill-evaluator` plugin demonstrates the full multi-platform
-pattern end-to-end. It evaluates AI skills across model tiers (opus → sonnet →
-haiku) using blind sub-agent testing.
-
-See [plugins/skill-evaluator/README.md](plugins/skill-evaluator/README.md) for
-details.
-
 ## Creating a Plugin Manually
 
 If you prefer to create a plugin without the scaffold script:
 
 1. Create a directory under `plugins/`.
-2. Add platform manifests (see the `skill-evaluator` plugin for the Tier 1
-   shape).
+2. Add platform manifests (see `templates/` for the per-platform manifest
+   shapes and `schemas/` for the authoritative schemas).
 3. Add your skills, agents, rules, commands, and hooks.
 4. Update all root marketplace files:
    - `marketplace.json` (open plugin format / `npx plugins`)
