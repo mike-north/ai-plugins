@@ -42,6 +42,57 @@ const CLAUDE_TO_GEMINI_TOOL_MATCHERS: Record<string, string> = {
   Agent: "activate_skill",
 };
 
+/**
+ * Claude Code → Gemini CLI hook EVENT-name translations (faithful equivalents).
+ *
+ * Hooks are authored once in `hooks/claude.yaml` using Claude's event vocabulary;
+ * Gemini CLI uses a different vocabulary for the same lifecycle points, so the
+ * event KEYS must be renamed when emitting `hooks.json` — not just the tool
+ * matchers. Only semantically-equivalent pairs are mapped.
+ *
+ * @see https://code.claude.com/docs/en/hooks.md — Claude event names
+ * @see https://geminicli.com/docs/hooks/ — Gemini event names
+ */
+const CLAUDE_TO_GEMINI_EVENTS: Record<string, string> = {
+  PreToolUse: "BeforeTool", // before a tool executes
+  PostToolUse: "AfterTool", // after a tool executes
+  UserPromptSubmit: "BeforeAgent", // user submitted a prompt, before processing
+  Stop: "AfterAgent", // the agent finished responding / the agent loop ended
+  PreCompact: "PreCompress", // before context compaction/compression
+};
+
+/**
+ * Event names valid on Gemini CLI under the SAME spelling (pass through unchanged).
+ * @see https://geminicli.com/docs/hooks/
+ */
+const GEMINI_NATIVE_EVENTS = new Set([
+  "SessionStart",
+  "SessionEnd",
+  "Notification",
+  "BeforeAgent",
+  "AfterAgent",
+  "BeforeModel",
+  "AfterModel",
+  "BeforeToolSelection",
+  "BeforeTool",
+  "AfterTool",
+  "PreCompress",
+]);
+
+/**
+ * Resolve a Claude hook event name to its Gemini equivalent.
+ * Returns the Gemini event name, or `null` if Gemini has no equivalent (the
+ * event must be omitted from the Gemini hooks file — per the polyfill rule that
+ * unsupported events degrade by omission, never by silent remap to a different
+ * lifecycle point).
+ */
+export function geminiEventNameFor(claudeEvent: string): string | null {
+  const mapped = CLAUDE_TO_GEMINI_EVENTS[claudeEvent];
+  if (mapped !== undefined) return mapped;
+  if (GEMINI_NATIVE_EVENTS.has(claudeEvent)) return claudeEvent;
+  return null;
+}
+
 interface HookEntry {
   type?: string;
   command?: string;
@@ -65,17 +116,33 @@ function isHooksFile(value: unknown): value is HooksFile {
 }
 
 /**
- * Deep-clone a hooks object and translate `matcher` tool names from Claude to Gemini.
- * Entries whose matcher has no Gemini equivalent are preserved unchanged (the
- * matcher string may be a glob pattern or non-tool identifier).
+ * Deep-clone a hooks object and translate it from Claude's vocabulary to Gemini's:
+ *   1. Event KEYS are renamed to their Gemini equivalent ({@link geminiEventNameFor});
+ *      events with no Gemini equivalent are omitted (and reported via `onWarn`).
+ *   2. `matcher` tool names are translated (Write → write_file, …); matchers with no
+ *      mapping are preserved unchanged (they may be globs or non-tool identifiers).
+ *
+ * @param onWarn called once per omitted event (defaults to console.warn).
  */
-function translateHooksForGemini(source: HooksFile): HooksFile {
+export function translateHooksForGemini(
+  source: HooksFile,
+  onWarn: (message: string) => void = (m) => {
+    console.warn(m);
+  },
+): HooksFile {
   const cloned = JSON.parse(JSON.stringify(source)) as HooksFile;
   const hooks = cloned.hooks;
   if (!hooks) return cloned;
+
+  const translatedHooks: Record<string, HookMatcher[]> = {};
   for (const event of Object.keys(hooks)) {
     const matchers = hooks[event];
-    if (!Array.isArray(matchers)) continue;
+    if (!Array.isArray(matchers)) continue; // skip malformed (non-array) event values
+    const geminiEvent = geminiEventNameFor(event);
+    if (geminiEvent === null) {
+      onWarn(`hook event "${event}" has no Gemini equivalent — omitted from hooks.json`);
+      continue;
+    }
     for (const m of matchers) {
       if (typeof m.matcher === "string") {
         const translated = CLAUDE_TO_GEMINI_TOOL_MATCHERS[m.matcher];
@@ -84,7 +151,16 @@ function translateHooksForGemini(source: HooksFile): HooksFile {
         }
       }
     }
+    // Merge in case two Claude events map to the same Gemini event.
+    const existing = translatedHooks[geminiEvent];
+    if (existing) {
+      existing.push(...matchers);
+    } else {
+      translatedHooks[geminiEvent] = matchers;
+    }
   }
+
+  cloned.hooks = translatedHooks;
   return cloned;
 }
 
