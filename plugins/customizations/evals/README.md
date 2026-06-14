@@ -53,3 +53,30 @@ semantic similarity.
 - `mustRejectRate` is zero across the set; the clarity floor trends toward cheaper tiers over time.
 
 > The scorer is itself deterministic and unit-tested — the doctrine applied to our own tooling.
+
+## Latest cross-tier result
+
+Blind protocol, 3 trials/case at each of two tiers (6 trials/case, 126 total verdicts), each subject
+handed only the routing brain (`SKILL.md` + `reference/*.md`) and the bare `input` — never the answer
+key:
+
+| Tier | Cases passed | Notes |
+|---|---|---|
+| **haiku** | 20 / 21 | only miss: `deterministic-format-script` (see below) |
+| **sonnet** | 21 / 21 | clean |
+
+- **Overall: 100% (21/21), `mustRejectRate` = 0% across all 126 trials.** No forbidden route was ever
+  produced, at any tier.
+- **Clarity floor: sonnet.** The single sub-floor case, `deterministic-format-script` ("every time
+  *I* save a TS file → deterministic prettier/eslint"), is an **inherently dual-valid boundary**:
+  `script` (the canonical — determinism gate, and the user's editor save isn't an agent event) and
+  `hook` (acceptable if "save" means the agent's own write) are *both* correct, so cheaper tiers
+  split between them. Both are scored as passes; neither is a `mustReject`.
+- **Scope is advisory, not gated.** `scopeMatchRate` is intentionally low on several cases — `user`
+  vs `project` is a **confirm-with-the-user** decision by design (the router recommends, then
+  confirms), so blind scope disagreement is expected and does not fail a case (only `primitive`
+  gates pass/fail).
+- **Instruction fixes this run surfaced:** a *trigger-ownership* note in `triage.md` (a Claude hook
+  fires on the agent's own tool events, not the user's editor save) and a clarification that a hook's
+  reaction may be **agentic**, not only a script (which had been nudging the agentic-hook case toward
+  `agent`). Both are the eval doing its job — every routing wobble becomes a sharpened instruction.

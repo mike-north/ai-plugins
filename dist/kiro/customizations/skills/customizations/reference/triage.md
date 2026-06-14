@@ -69,8 +69,15 @@ script? **(T) cheaper tier** — could a cheaper model do the remaining reasonin
 
 ### hook
 - **When:** guarantee a mechanical reaction to the agent's own session event.
-- **Author/delegate:** `update-config` skill; else read `authoring/hook.md` fresh. The action should
-  be a script/command. **(D)** the whole point is deterministic.
+- **Trigger ownership (decisive):** a Claude hook fires ONLY on the *agent's own* tool events
+  (PostToolUse on Edit/Write, etc.). "Every time **I** save / commit / open a file" is the *user's*
+  action, not an agent event — that's a deterministic **script** wired to format-on-save or a git
+  pre-commit hook (delivery mechanism, not a Claude `hook`). A *world* change (an external file, a
+  URL) is a **monitor**. Only "every time **you** (the agent) edit/run X" is a Claude hook.
+- **Author/delegate:** `update-config` skill; else read `authoring/hook.md` fresh. The action is
+  *usually* a deterministic script/command, but it can also fire an **agentic** step (e.g. a
+  guaranteed security review of every edit) — the hook's job is to *guarantee the reaction fires*,
+  deterministic or not. **(D)** prefer a script when the reaction can be one.
 
 ### skill
 - **When:** reusable judgment-bearing expertise; or toggling/invocation-control/hook-bundling need.

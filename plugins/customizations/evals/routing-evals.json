@@ -2,11 +2,11 @@
   {
     "id": "deterministic-format-script",
     "input": "Every time I save a TS file I want it run through the same prettier + eslint --fix pipeline — identical result each time, no judgment calls.",
-    "expectedOutcome": "Routes to a hook on the agent's own save whose action runs the deterministic prettier+eslint command — the on-save guarantee is the dominant feature. A bare script (not bound to the save event) is the acceptable alternative. NOT a skill — there is no judgment to apply.",
-    "expected": { "primitive": "hook", "scope": "project" },
-    "acceptableAlternatives": [{ "primitive": "script", "scope": "project" }],
+    "expectedOutcome": "The whole need is deterministic (prettier + eslint --fix, 'identical result each time, no judgment calls') and the trigger is the USER's own editor save — not the agent's Edit/Write tool event, which is the only thing a Claude hook can fire on. The determinism gate therefore routes this to a script wired to format-on-save / a git pre-commit hook. A Claude hook is the acceptable alternative only if 'save' is read as the agent's own write. NOT a skill/agent — there is no judgment to apply.",
+    "expected": { "primitive": "script", "scope": "project" },
+    "acceptableAlternatives": [{ "primitive": "hook", "scope": "project" }],
     "mustReject": ["skill", "agent"],
-    "tags": ["determinism-first", "hook-with-script", "guaranteed-reaction"]
+    "tags": ["determinism-first", "determinism-gate", "no-agent"]
   },
   {
     "id": "judgment-procedure-skill",
