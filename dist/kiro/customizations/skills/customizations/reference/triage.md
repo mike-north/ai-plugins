@@ -69,11 +69,14 @@ script? **(T) cheaper tier** — could a cheaper model do the remaining reasonin
 
 ### hook
 - **When:** guarantee a mechanical reaction to the agent's own session event.
-- **Trigger ownership (decisive):** a Claude hook fires ONLY on the *agent's own* tool events
+- **Trigger ownership (decisive):** a hook fires ONLY on the *agent's own* lifecycle/tool events
   (PostToolUse on Edit/Write, etc.). "Every time **I** save / commit / open a file" is the *user's*
   action, not an agent event — that's a deterministic **script** wired to format-on-save or a git
-  pre-commit hook (delivery mechanism, not a Claude `hook`). A *world* change (an external file, a
-  URL) is a **monitor**. Only "every time **you** (the agent) edit/run X" is a Claude hook.
+  pre-commit hook (delivery mechanism, not a `hook` primitive). A *world* change (an external file, a
+  URL) is a **monitor**. Only "every time **you** (the agent) edit/run X" is a hook.
+- **Portability:** hooks exist on ~13 harnesses (not Claude-only); event vocabularies differ and the
+  build translates them. Hook-less hosts (e.g. Codex) can't gate, but a *periodic* reaction degrades
+  to a root-guidance session-start trigger + script. See `authoring/hook.md`.
 - **Author/delegate:** `update-config` skill; else read `authoring/hook.md` fresh. The action is
   *usually* a deterministic script/command, but it can also fire an **agentic** step (e.g. a
   guaranteed security review of every edit) — the hook's job is to *guarantee the reaction fires*,
