@@ -1,0 +1,11 @@
+{
+  "name": "dream",
+  "version": "0.0.1",
+  "description": "Periodic memory consolidation and self-improvement — \"dream\". Consolidates a one-fact-per-file memory store and surfaces recurring friction as proposed customizations to review. Includes /dream.",
+  "keywords": ["memory", "consolidation", "dream", "self-improvement", "maintenance", "customizations", "sleep", "meta"],
+  "skills": ["./skills"],
+  "agents": [],
+  "commands": ["./commands/dream.md"],
+  "hooks": "./hooks/claude.json",
+  "mcpServers": "./.mcp.json"
+}

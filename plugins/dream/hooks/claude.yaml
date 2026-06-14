@@ -1,0 +1,16 @@
+# Session-end flag-drop for the dream skill.
+#
+# On Stop (Claude finishes responding), run the deterministic gate: if the dream
+# interval has elapsed, queue a dream by dropping the ~/.claude/.dream-pending
+# flag. The session-start trigger (the auto-dream rule, or an AGENTS.md polyfill
+# on hook-less hosts) consumes that flag next session and runs /dream.
+#
+# This is the OPTIMIZATION path (where hooks exist). The portable trigger is the
+# rule, which checks `should-dream.mjs status` at session start regardless of any
+# hook. Stop translates to Gemini's AfterAgent via build:hooks; hosts without a
+# hook system (e.g. Codex) rely on the rule polyfill alone.
+hooks:
+  Stop:
+    - hooks:
+        - type: command
+          command: node "${CLAUDE_PLUGIN_ROOT}/skills/dream/scripts/should-dream.mjs" tick
