@@ -25,6 +25,28 @@
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
       }
+    },
+    {
+      "name": "customizations",
+      "source": {
+        "source": "local",
+        "path": "./plugins/customizations"
+      },
+      "description": "Route any agent-customization need to the right primitive — determinism-first — authoring the light ones and delegating the rest",
+      "tags": [
+        "customization",
+        "routing",
+        "determinism",
+        "skills",
+        "monitors",
+        "plugins",
+        "memory",
+        "meta"
+      ],
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      }
     }
   ]
 }

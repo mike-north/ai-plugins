@@ -1,0 +1,191 @@
+[
+  {
+    "id": "deterministic-format-script",
+    "input": "Every time I save a TS file I want it run through the same prettier + eslint --fix pipeline — identical result each time, no judgment calls.",
+    "expectedOutcome": "Routes to a hook on the agent's own save whose action runs the deterministic prettier+eslint command — the on-save guarantee is the dominant feature. A bare script (not bound to the save event) is the acceptable alternative. NOT a skill — there is no judgment to apply.",
+    "expected": { "primitive": "hook", "scope": "project" },
+    "acceptableAlternatives": [{ "primitive": "script", "scope": "project" }],
+    "mustReject": ["skill", "agent"],
+    "tags": ["determinism-first", "hook-with-script", "guaranteed-reaction"]
+  },
+  {
+    "id": "judgment-procedure-skill",
+    "input": "When I write a PR description, you keep doing it inconsistently — capture the right way to investigate the diff and frame the summary so it's good every time.",
+    "expectedOutcome": "Routes to a skill (a reusable, judgment-bearing procedure), armed with any deterministic helpers (e.g. a diff-stats script). NOT a pure script — framing needs judgment.",
+    "expected": { "primitive": "skill", "scope": "user" },
+    "acceptableAlternatives": [],
+    "mustReject": ["script", "hook"],
+    "tags": ["script-vs-skill"]
+  },
+  {
+    "id": "durable-fact-memory",
+    "input": "For future reference, our staging database is provisioned through Neon and the prod one is on RDS — remember that.",
+    "expectedOutcome": "Routes to memory (a declarative fact to recall). NOT a rule — it tells the agent what is true, not what to do.",
+    "expected": { "primitive": "memory", "scope": "project" },
+    "acceptableAlternatives": [],
+    "mustReject": ["rule", "hook"],
+    "tags": ["memory-vs-rule"]
+  },
+  {
+    "id": "standing-directive-rule",
+    "input": "Generally, prefer composition over inheritance in this codebase and call it out when reviewing.",
+    "expectedOutcome": "Routes to a rule (a standing directive applied with judgment, soft-nudge tolerant). NOT memory — it directs behavior, not a fact.",
+    "expected": { "primitive": "rule", "scope": "project" },
+    "acceptableAlternatives": [],
+    "mustReject": ["memory", "hook"],
+    "tags": ["memory-vs-rule", "rule-vs-hook"]
+  },
+  {
+    "id": "guaranteed-reaction-own-edit",
+    "input": "Whenever I edit a file in src/generated/, re-run the codegen checksum — it must fire every single time, not just when you remember.",
+    "expectedOutcome": "Routes to a hook (a guaranteed, mechanical reaction to the agent's own edit). NOT a rule — rules are advisory and can be skipped.",
+    "expected": { "primitive": "hook", "scope": "project" },
+    "acceptableAlternatives": [],
+    "mustReject": ["rule", "memory", "skill"],
+    "tags": ["guaranteed-reaction", "rule-vs-hook", "hook-vs-monitor"]
+  },
+  {
+    "id": "watch-external-file-monitor",
+    "input": "Keep an eye on ~/Library/Logs/build.log and ping me when a new ERROR line shows up while I'm working.",
+    "expectedOutcome": "Routes to a monitor (watch an external file over time). NOT a hook — hooks fire on the agent's own tool events, not on external file changes.",
+    "expected": { "primitive": "monitor", "scope": "user" },
+    "acceptableAlternatives": [],
+    "mustReject": ["hook", "script", "agent"],
+    "tags": ["external-watch", "hook-vs-monitor"]
+  },
+  {
+    "id": "inbound-webhook-monitor",
+    "input": "I have a Hookdeck endpoint that receives deploy-finished webhooks — when one arrives, I want to be told so I can verify the release.",
+    "expectedOutcome": "Routes to a monitor (push/inbound-webhook awareness of the world). NOT a hook (own-action only). Degrade gracefully if no push source exists yet.",
+    "expected": { "primitive": "monitor", "scope": "project" },
+    "acceptableAlternatives": [],
+    "mustReject": ["hook", "rule"],
+    "tags": ["external-watch", "push", "hook-vs-monitor"]
+  },
+  {
+    "id": "expensive-source-chain",
+    "input": "There's a Google Doc sign-up table I check via an expensive MCP tool (huge responses). Watch it and tell me only when a sign-up slot actually changes.",
+    "expectedOutcome": "Routes to a script (extracts just the slice) chained with a command-poll monitor (diffs it, pages on real delta) — a script+monitor chain. NOT an agent loop re-pulling and diffing in context.",
+    "expected": { "primitive": "monitor", "scope": "user" },
+    "acceptableAlternatives": [{ "primitive": "script", "scope": "user" }],
+    "mustReject": ["agent", "mcp"],
+    "tags": ["cheapest-tier", "chain", "determinism-first"]
+  },
+  {
+    "id": "toggle-per-subagent-skill",
+    "input": "I want a capability I can switch on for some subagents and off for others — opt-in, loaded only when relevant.",
+    "expectedOutcome": "Routes to a skill (per-session/per-subagent toggleable, opt-in). NOT a rule/memory, which apply globally and can't be scoped per subagent.",
+    "expected": { "primitive": "skill", "scope": "project" },
+    "acceptableAlternatives": [{ "primitive": "plugin", "scope": "project" }],
+    "mustReject": ["rule", "memory", "hook"],
+    "tags": ["per-subagent-toggle", "toggleability"]
+  },
+  {
+    "id": "user-only-invocation-skill",
+    "input": "I want a quick shortcut to merge the current PR, but I do NOT want you doing it autonomously — only when I explicitly ask.",
+    "expectedOutcome": "Routes to a user-invocable (user-only) skill — a shortcut that dissuades autonomous agent use. NOT a rule/hook.",
+    "expected": { "primitive": "skill", "scope": "user" },
+    "acceptableAlternatives": [],
+    "mustReject": ["rule", "hook", "agent"],
+    "tags": ["invocation-control"]
+  },
+  {
+    "id": "mcp-breadth-allowed",
+    "input": "I want you to be able to query and mutate our Linear workspace lots of different ways during a session — issues, projects, comments, the whole surface.",
+    "expectedOutcome": "Routes to mcp (model-driven breadth across many operations, environment permits MCP). A fixed single call would be a script wrapper instead.",
+    "expected": { "primitive": "mcp", "scope": "project" },
+    "acceptableAlternatives": [],
+    "mustReject": ["memory", "rule"],
+    "tags": ["mcp"]
+  },
+  {
+    "id": "mcp-restricted-decompose",
+    "input": "Our org forbids MCP servers, but I need you to fetch one specific report from an internal API on demand.",
+    "expectedOutcome": "Routes to a script/CLI wrapper (the fixed capability) plus a skill for semantic activation — the MCP decomposition. NOT a native mcp server.",
+    "expected": { "primitive": "script", "scope": "project" },
+    "acceptableAlternatives": [{ "primitive": "skill", "scope": "project" }],
+    "mustReject": ["mcp"],
+    "tags": ["mcp-decompose", "determinism-first"]
+  },
+  {
+    "id": "agent-isolation-parallel",
+    "input": "I want to review a 4000-line diff across many files without blowing up your main context — fan it out and bring back just the findings.",
+    "expectedOutcome": "Routes to an agent (context isolation + parallelism, results summarized back). NOT a skill running inline in the main context.",
+    "expected": { "primitive": "agent", "scope": "project" },
+    "acceptableAlternatives": [{ "primitive": "skill", "scope": "project" }],
+    "mustReject": ["memory"],
+    "tags": ["agent-isolation"]
+  },
+  {
+    "id": "agent-cheaper-tier-offload",
+    "input": "I regularly need to scrape thousands of rows from a CSV and label each with a simple category — it's menial but high-volume.",
+    "expectedOutcome": "Pushes the mechanical parts to a script, and routes the residual light reasoning to a cheap-tier (e.g. haiku), tool-scoped, disposable subagent. NOT the premium orchestrator doing it inline.",
+    "expected": { "primitive": "agent", "scope": "project" },
+    "acceptableAlternatives": [{ "primitive": "script", "scope": "project" }],
+    "mustReject": ["mcp"],
+    "tags": ["cheapest-tier", "agent-tier", "determinism-first"]
+  },
+  {
+    "id": "agent-tool-scoping-containment",
+    "input": "I don't want the orchestrating agent ever pulling our giant analytics dataset into its context, but I do need light analysis over it on a recurring basis.",
+    "expectedOutcome": "Routes to an agent with tool-scoping — forbid the data-retrieval tool in the orchestrator, allow it only in a disposable subagent whose context is throwaway.",
+    "expected": { "primitive": "agent", "scope": "project" },
+    "acceptableAlternatives": [],
+    "mustReject": ["rule", "memory"],
+    "tags": ["tool-scoping", "agent-containment"]
+  },
+  {
+    "id": "bundle-toggle-plugin",
+    "input": "I have a set of chief-of-staff capabilities — a few skills, a rule, and a hook — that I want to enable for my assistant agent and disable for my coding agent, as one unit.",
+    "expectedOutcome": "Routes to a plugin (a coherent bundle toggled on/off by context). NOT a single skill — the value is bundling + toggleability.",
+    "expected": { "primitive": "plugin", "scope": "user" },
+    "acceptableAlternatives": [],
+    "mustReject": ["skill", "rule"],
+    "tags": ["bundle-toggle", "toggleability"]
+  },
+  {
+    "id": "no-marketplace-route-to-marketplace",
+    "input": "I want to start packaging my customizations as plugins I can turn on and off, but I don't have anywhere to put them yet.",
+    "expectedOutcome": "Routes to marketplace first (set up a personal marketplace via aipm init), because the plugin primitive requires a marketplace to live in. THEN a plugin.",
+    "expected": { "primitive": "marketplace", "scope": "user" },
+    "acceptableAlternatives": [],
+    "mustReject": ["skill", "rule", "memory"],
+    "tags": ["container", "plugin-precondition"]
+  },
+  {
+    "id": "provenance-override-consumer-skill",
+    "input": "The pdf skill from the anthropic-skills marketplace gets one step wrong for my workflow — fix it so my setup behaves the way I want.",
+    "expectedOutcome": "Routes to a personal override — a local user-scope skill/rule that shadows the upstream skill — NOT editing the consumer-marketplace skill in place (it's read-only / upstream-owned).",
+    "expected": { "primitive": "skill", "scope": "user" },
+    "acceptableAlternatives": [{ "primitive": "rule", "scope": "user" }],
+    "mustReject": ["plugin", "marketplace"],
+    "tags": ["provenance", "personal-override", "no-in-place-edit"]
+  },
+  {
+    "id": "purely-mechanical-no-agent",
+    "input": "Every morning at 6am, rotate yesterday's logs and gzip them. No analysis, no notification — just do it.",
+    "expectedOutcome": "Routes to a script wired to OS cron — purely mechanical, no agent needed. NOT a monitor (nothing to interpret) and NOT an agent.",
+    "expected": { "primitive": "script", "scope": "project" },
+    "acceptableAlternatives": [],
+    "mustReject": ["monitor", "agent", "skill"],
+    "tags": ["determinism-first", "no-agent"]
+  },
+  {
+    "id": "agentic-hook-no-script",
+    "input": "Any time you edit a file under src/auth/, immediately take a careful second look at that change for security problems and flag anything risky — every edit, without fail.",
+    "expectedOutcome": "Routes to a hook on the agent's own edit (PostToolUse matching src/auth/) whose reaction is an agentic security review — there is NO deterministic script; the hook just guarantees the agent does the review. NOT a rule (advisory, can be skipped — but this must fire every edit) and NOT a monitor (this is the agent's OWN action, not the world). Tests the hook-without-script path.",
+    "expected": { "primitive": "hook", "scope": "project" },
+    "acceptableAlternatives": [],
+    "mustReject": ["rule", "monitor", "memory"],
+    "tags": ["guaranteed-reaction", "hook-without-script", "rule-vs-hook"]
+  },
+  {
+    "id": "script-armed-skill",
+    "input": "When I ask you to audit our dependencies, always extract the license of every package the exact same way, then reason about which licenses are legally risky for us to ship.",
+    "expectedOutcome": "Routes to a skill (semantically activated on 'audit dependencies') armed with a deterministic license-extraction script — the script does the mechanical extraction, the skill carries the risk judgment. NOT a hook (there is no own-action/event trigger) and NOT a bare script (there is real judgment). Tests the script-without-hook path (a deterministic script living inside a skill).",
+    "expected": { "primitive": "skill", "scope": "project" },
+    "acceptableAlternatives": [],
+    "mustReject": ["hook", "monitor", "memory"],
+    "tags": ["script-vs-skill", "script-in-skill", "determinism-first"]
+  }
+]

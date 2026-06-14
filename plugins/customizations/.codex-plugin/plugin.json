@@ -1,0 +1,22 @@
+{
+  "name": "customizations",
+  "version": "0.0.1",
+  "description": "Route any agent-customization need to the right primitive — script, memory, rule, hook, skill, agent, MCP, monitor, plugin, or marketplace — determinism-first, authoring the light ones and delegating the rest.",
+  "keywords": ["customization", "routing", "determinism", "skills", "hooks", "monitors", "plugins", "memory", "agents", "meta"],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Customizations",
+    "shortDescription": "Route an agent-customization need to the right primitive, determinism-first.",
+    "longDescription": "A router for agent customization. Takes a vague wish ('make this automatic', 'always do X', 'remember that…', 'watch this and tell me when it changes', 'bundle these so I can toggle them') and routes it to the right primitive — script, memory, rule, hook, skill, agent, MCP, monitor, plugin, or marketplace — at the right scope. It pushes work into deterministic mechanisms and cheaper model tiers first, authors the light primitives directly, and delegates the heavy ones to authoritative tools (installing them on demand).",
+    "category": "developer-tools",
+    "capabilities": [
+      "Determinism-first triage of any customization need to the right primitive and scope",
+      "Direct authoring of scripts, memory, and rules; delegation of skills/agents/MCP/monitors/plugins to authoritative tools",
+      "Chaining (e.g. extractor script → monitor) to neutralize expensive or noisy sources",
+      "Provenance-aware edits — personal overrides for consumed marketplace content, PRs for maintained ones",
+      "A structured, deterministically-scored routing eval set to validate and iterate on the routing"
+    ],
+    "defaultPrompt": "I want to customize how my agent behaves — help me route this to the right primitive."
+  }
+}

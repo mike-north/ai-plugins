@@ -1,0 +1,16 @@
+description = "Create, list, or remove an agent customization — routed determinism-first to the right primitive"
+prompt = """
+Invoke the `customizations` skill and run its routing flow.
+
+Arguments: {{args}}
+
+Dispatch on the first argument:
+- `create` (or none): run the full routing flow — apply the determinism-first gate, split detection
+  from response for any sense/react need, pick the right primitive and scope, then author the light
+  primitives directly or delegate the heavy ones (installing the delegate on demand, with the user's
+  confirmation). If a primitive type follows `create`, skip triage and author that type.
+- `list`: run scripts/manifest.mjs list and present tracked customizations plus marketplace plugins.
+- `remove <slug>`: run scripts/manifest.mjs remove <slug>, confirm, then delete the artifacts.
+
+Follow skills/customizations/SKILL.md for authoritative behavior; this command is only the entry point.
+"""

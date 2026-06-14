@@ -12,7 +12,27 @@
       "name": "skill-evaluator",
       "source": "./plugins/skill-evaluator",
       "description": "Evaluate AI skills across model tiers with blind testing and refinement recommendations",
-      "tags": ["evaluation", "testing", "skills", "model-tiers"]
+      "tags": [
+        "evaluation",
+        "testing",
+        "skills",
+        "model-tiers"
+      ]
+    },
+    {
+      "name": "customizations",
+      "source": "./plugins/customizations",
+      "description": "Route any agent-customization need to the right primitive — determinism-first — authoring the light ones and delegating the rest",
+      "tags": [
+        "customization",
+        "routing",
+        "determinism",
+        "skills",
+        "monitors",
+        "plugins",
+        "memory",
+        "meta"
+      ]
     }
   ]
 }
