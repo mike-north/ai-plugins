@@ -19,9 +19,11 @@ installed to *scaffold/validate*, only for its richer guidance (install-on-deman
 
 ## Read the spec fresh if you must author by hand
 
-If `setup-monitors` isn't installed, scaffold via the CLI and read the spec fresh:
-`/Users/mnorth/Development/agentmonitors/docs/specs/001-monitor-definition.md` (the authoritative
-`MONITOR.md` definition: `watch:` + `urgency` required; optional `notify`).
+If `setup-monitors` isn't installed, scaffold via the CLI and verify against the spec instead of
+trusting memory: run `agentmonitors validate` (the deterministic check), and read the monitor-
+definition spec shipped with the Agent Monitors project —
+`docs/specs/001-monitor-definition.md` in the `@agentmonitors` source — for the authoritative
+`MONITOR.md` definition (`watch:` + `urgency` required; optional `notify`).
 
 ## Chaining (the high-leverage move)
 

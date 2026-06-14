@@ -97,6 +97,30 @@ describe("addEntry", () => {
   it("rejects an invalid scope (negative)", () => {
     expect(() => addEntry(sample({ scope: "global" }), { now: FIXED_ISO })).toThrowError(/invalid scope/i);
   });
+
+  it("rejects an invalid type (negative)", () => {
+    expect(() => addEntry(sample({ type: "bogus" }), { now: FIXED_ISO })).toThrowError(/invalid type/i);
+  });
+
+  it("rejects an invalid status (negative)", () => {
+    expect(() => addEntry(sample({ status: "archived" }), { now: FIXED_ISO })).toThrowError(/invalid status/i);
+  });
+
+  it("rejects non-array components (negative)", () => {
+    expect(() => addEntry(sample({ components: "nope" }), { now: FIXED_ISO })).toThrowError(
+      /components.*array/i,
+    );
+  });
+
+  it("defaults origin to null and preserves a provided origin", () => {
+    const { entry: local } = addEntry(sample({ slug: "local-one" }), { now: FIXED_ISO });
+    expect(local.origin).toBeNull();
+    const { entry: imported } = addEntry(
+      sample({ slug: "imported-one", origin: "anthropics/skills" }),
+      { now: FIXED_ISO },
+    );
+    expect(imported.origin).toBe("anthropics/skills");
+  });
 });
 
 describe("listEntries", () => {
@@ -137,6 +161,7 @@ describe("listEntries", () => {
     const [entry] = listEntries({ scope: "user" });
     expect(entry.type).toBe("unknown");
     expect(entry.status).toBe("active");
+    expect(entry.origin).toBeNull();
   });
 
   it("excludes config.json from listings", () => {

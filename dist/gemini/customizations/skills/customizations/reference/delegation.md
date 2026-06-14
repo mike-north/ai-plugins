@@ -9,7 +9,7 @@ authoritative authoring tool, **hand off** — and if the tool is missing, **pro
 |---|---|---|
 | script, memory, rule | author inline | — |
 | hook | `update-config` skill | read `authoring/hook.md` fresh and author by hand |
-| skill | `anthropic-skills:skill-creator` | read `authoring/skill` source fresh (skill-creator on GitHub) |
+| skill | `anthropic-skills:skill-creator` | read `authoring/skill.md` fresh (points to skill-creator on GitHub) |
 | agent | `plugin-dev:agent-development` | read `authoring/agent.md` fresh |
 | mcp | `plugin-dev:mcp-integration` | decompose → script + skill |
 | monitor | `setup-monitors` skill + `agentmonitors` CLI | scaffold via `agentmonitors init`; read the spec fresh |

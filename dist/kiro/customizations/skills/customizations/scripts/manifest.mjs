@@ -133,8 +133,8 @@ export function resolveScopeDir(scope) {
 
 /**
  * Reads and parses a single manifest JSON file. Applies backward-compat defaults
- * for missing `type` (→ "unknown") and `status` (→ "active"). Returns null if
- * the file cannot be read or parsed.
+ * for missing `type` (→ "unknown"), `status` (→ "active"), and `origin` (→ null).
+ * Returns null if the file cannot be read or parsed.
  *
  * @param {string} filePath
  * @returns {ManifestEntry|null}
@@ -155,6 +155,7 @@ function readManifestFile(filePath) {
   // Apply backward-compat defaults
   if (parsed.type === undefined) parsed.type = "unknown";
   if (parsed.status === undefined) parsed.status = "active";
+  if (parsed.origin === undefined) parsed.origin = null;
   return parsed;
 }
 
@@ -225,19 +226,45 @@ export function addEntry(data, opts = {}) {
     throw err;
   }
 
+  const typeRaw = String(data.type);
+  if (!VALID_TYPES.has(typeRaw)) {
+    const err = new Error(
+      `Invalid type "${typeRaw}": must be one of ${[...VALID_TYPES].join(", ")}`,
+    );
+    err.code = "VALIDATION_ERROR";
+    throw err;
+  }
+
+  if (data.status !== undefined && !VALID_STATUSES.has(String(data.status))) {
+    const err = new Error(
+      `Invalid status "${String(data.status)}": must be "proposed" or "active"`,
+    );
+    err.code = "VALIDATION_ERROR";
+    throw err;
+  }
+
+  // `components` is required; reject a malformed (non-array) value rather than
+  // silently coercing it to [] and dropping data.
+  if (!Array.isArray(data.components)) {
+    const err = new Error('Invalid components: must be an array (use [] for none)');
+    err.code = "VALIDATION_ERROR";
+    throw err;
+  }
+
   // Apply defaults
   const entry = {
     slug,
-    type: data.type !== undefined ? String(data.type) : "unknown",
+    type: typeRaw,
     description: String(data.description),
     scope: scopeRaw,
     assistant: data.assistant !== undefined ? String(data.assistant) : "claude",
     status: data.status !== undefined ? String(data.status) : "active",
+    origin: data.origin ?? null,
     created:
       data.created !== undefined
         ? String(data.created)
         : opts.now ?? new Date().toISOString(),
-    components: Array.isArray(data.components) ? data.components : [],
+    components: data.components,
   };
 
   const scopeDir = resolveScopeDir(scopeRaw);
@@ -572,7 +599,7 @@ export async function main(argv) {
       process.stdout.write(`Written: ${writtenPath}\n`);
     } catch (err) {
       process.stderr.write(`Error: ${err.message}\n`);
-      process.exit(err.code === "VALIDATION_ERROR" || err.code === "ALREADY_EXISTS" ? 1 : 1);
+      process.exit(1);
     }
     return;
   }
