@@ -22,10 +22,28 @@ function copyFile(src: string, dest: string): void {
   fs.copyFileSync(src, dest);
 }
 
-function copyDir(src: string, dest: string, filter?: (name: string) => boolean): void {
+/**
+ * Whether a directory entry belongs in a shipped standalone export.
+ *
+ * Test/spec sources and test directories are authoring-time artifacts — a plugin
+ * author may colocate `foo.test.mjs` next to `foo.mjs` inside `skills/`, but those
+ * files must never be copied into `dist/` (they would be shipped to end users and,
+ * for a runner that auto-discovers tests, executed redundantly from the export).
+ * Applied to every directory copy, so no shipped export can contain them.
+ */
+export function isDistributable(name: string): boolean {
+  // *.test.* / *.spec.* with any JS/TS extension (js, mjs, cjs, jsx, ts, mts, cts, tsx).
+  if (/\.(test|spec)\.[cm]?[jt]sx?$/.test(name)) return false;
+  // Conventional test/cache directories.
+  if (name === "__tests__" || name === "node_modules") return false;
+  return true;
+}
+
+export function copyDir(src: string, dest: string, filter?: (name: string) => boolean): void {
   if (!fs.existsSync(src)) return;
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    if (!isDistributable(entry.name)) continue;
     if (filter && !filter(entry.name)) continue;
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
