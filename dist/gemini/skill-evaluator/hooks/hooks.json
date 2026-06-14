@@ -1,6 +1,6 @@
 {
   "hooks": {
-    "PostToolUse": [
+    "AfterTool": [
       {
         "matcher": "write_file",
         "description": "Log evaluation report writes to a structured log file",
