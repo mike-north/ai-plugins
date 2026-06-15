@@ -11,7 +11,9 @@ description: >-
 # Git utilities
 
 Deterministic scripts for local git work. **Never estimate or approximate git statistics —
-always run the appropriate script.** These tools are local-VCS only; they need no GitHub auth.
+always run the appropriate script.** `diff-stats.sh` is purely local (no GitHub needed); `gst`
+is also local for branch/stack management, but its PR-facing operations (`gst submit`, and the
+PR-status column in `gst list`) call the `gh` CLI and require an authenticated GitHub CLI.
 
 ## Setup (invocation)
 

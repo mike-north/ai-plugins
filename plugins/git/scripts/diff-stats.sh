@@ -82,17 +82,11 @@ BINARY_FILES=0
 
 is_generated() {
   local filepath="$1"
-  for pattern in "${GENERATED_PATTERNS[@]}"; do
-    # Convert glob to a form compatible with bash pattern matching
-    # Handle ** (any path), * (any segment), and direct matches
-    # Use git's own check-attr for accuracy
-    local attr
-    attr=$(git check-attr linguist-generated -- "$filepath" 2>/dev/null || true)
-    if echo "$attr" | grep -q ': true$\|: set$'; then
-      return 0
-    fi
-  done
-  return 1
+  # git's own attribute lookup is authoritative — one check-attr per file.
+  # (GENERATED_PATTERNS is only the cheap "any patterns declared?" gate at the call site.)
+  local attr
+  attr=$(git check-attr linguist-generated -- "$filepath" 2>/dev/null || true)
+  echo "$attr" | grep -q ': true$\|: set$'
 }
 
 is_test() {

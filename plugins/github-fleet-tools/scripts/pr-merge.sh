@@ -72,7 +72,7 @@ fi
 
 # Guard 3: a Copilot review is present, and its latest verdict isn't CHANGES_REQUESTED.
 copilot_latest=$(printf '%s' "$meta" | jq -r --arg re "$COPILOT_RE" '
-  [ .reviews[] | select(.author.login | test($re; "i")) ]
+  [ (.reviews // [])[] | select(.author.login | test($re; "i")) ]
   | sort_by(.submittedAt) | last | .state // "NONE"')
 [[ "$copilot_latest" != "NONE" ]] || refuse "no Copilot review present (looked for author login matching /$COPILOT_RE/i)"
 [[ "$copilot_latest" != "CHANGES_REQUESTED" ]] || refuse "the latest Copilot review requests changes"

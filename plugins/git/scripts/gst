@@ -175,16 +175,11 @@ gst_behind_count() {
 # ---------------------------------------------------------------------------
 
 gst_gh() {
-  local remote_url
-  remote_url="$(git remote get-url origin 2>/dev/null)" || remote_url=""
-
-  if printf '%s' "$remote_url" | grep -qE '(stripe-internal|stripe|git\.corp\.stripe\.com)'; then
-    gh auth switch --user mnorth-stripe 2>/dev/null || true
-  else
-    gh auth switch --user mike-north 2>/dev/null || true
-  fi
-
-  gh "$@"
+  # Pure wrapper: honors GH (binary override) and GH_HOST, performs no auth
+  # switching, and does not assume any particular org/account. Select the right
+  # GitHub account/host in your own gh config or environment (e.g. GH_HOST, or
+  # `gh auth switch`) before running gst.
+  "${GH:-gh}" "$@"
 }
 
 # ---------------------------------------------------------------------------

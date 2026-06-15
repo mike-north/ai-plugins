@@ -120,5 +120,5 @@ if [[ "$dry" == "1" ]]; then
 else
   echo "resolved $count thread(s) on PR #$pr"
 fi
-[[ "$hasNext" == "true" ]] && echo "note: PR has >100 threads; only the first page was processed — re-run to catch the rest." >&2
+[[ "$hasNext" == "true" ]] && echo "warning: PR has >100 review threads; only the first 100 were processed. This script does not paginate, so re-running re-processes the SAME first page — resolve the remainder manually or via the GitHub UI." >&2
 exit 0

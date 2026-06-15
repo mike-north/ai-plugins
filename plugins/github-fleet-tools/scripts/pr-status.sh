@@ -53,6 +53,7 @@ query($owner:String!, $repo:String!, $pr:Int!) {
   repository(owner:$owner, name:$repo) {
     pullRequest(number:$pr) {
       reviewThreads(first:100) {
+        pageInfo { hasNextPage }
         nodes {
           isResolved
           isOutdated
@@ -64,11 +65,12 @@ query($owner:String!, $repo:String!, $pr:Int!) {
     }
   }
 }' --jq '
-  .data.repository.pullRequest.reviewThreads.nodes
-  | map(select(.isResolved == false))
-  | if length == 0 then "  (none — all threads resolved)"
-    else (.[] | "  • [\(.comments.nodes[0].author.login)] \(.path):\(.line // "?")\(if .isOutdated then " (outdated)" else "" end)  thread_comment_id=\(.comments.nodes[0].databaseId)\n      \(.comments.nodes[0].body | gsub("[\n\r]+"; " ") | .[0:140])")
-    end
+  .data.repository.pullRequest.reviewThreads as $rt
+  | ($rt.nodes | map(select(.isResolved == false))) as $u
+  | (if ($u | length) == 0 then "  (none — all threads resolved)"
+     else ($u[] | "  • [\(.comments.nodes[0].author.login)] \(.path):\(.line // "?")\(if .isOutdated then " (outdated)" else "" end)  thread_comment_id=\(.comments.nodes[0].databaseId)\n      \(.comments.nodes[0].body | gsub("[\n\r]+"; " ") | .[0:140])")
+     end),
+    (if $rt.pageInfo.hasNextPage then "  ⚠ this PR has >100 review threads; only the first 100 were checked — the list above may be incomplete." else empty end)
 '
 echo
 echo "=== END PR #$pr ==="
