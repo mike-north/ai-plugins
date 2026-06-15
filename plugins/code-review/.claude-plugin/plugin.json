@@ -12,8 +12,6 @@
   "skills": [
     "./skills"
   ],
-  "agents": [],
-  "commands": [],
   "hooks": "./hooks/claude.json",
   "mcpServers": "./.mcp.json"
 }
