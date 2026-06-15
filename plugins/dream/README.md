@@ -34,15 +34,17 @@ and wired into the `customizations` plugin.
 Dreaming is split into a deterministic **scheduler** (`skills/dream/scripts/should-dream.mjs`)
 and the agentic **runner** (the `/dream` skill):
 
-- **Where hooks exist** (Claude `Stop`, Gemini `AfterAgent`, …) — a session-end hook
-  runs `should-dream.mjs tick`, dropping a `~/.claude/.dream-pending` flag when the
-  interval has elapsed.
-- **Everywhere** — a session-start trigger runs `/dream check` and launches a full
-  `/dream` when one is due. This is the portable mechanism and the only one needed on
-  hosts without hooks.
+- **Queue (deterministic, via a hook)** — a session-end/turn-end hook runs
+  `should-dream.mjs tick`, dropping a `~/.claude/.dream-pending` flag when the interval has
+  elapsed. This ships for every host with hooks: Claude `Stop`, Codex `Stop`, Gemini
+  `AfterAgent` — built from one `hooks/claude.yaml` source.
+- **Launch (agentic, via root guidance)** — a session-start instruction runs `/dream check`
+  and launches a full `/dream` when one is due. A hook can't run an agentic skill, so this
+  step is always root guidance, on every host. It's also the complete fallback on a host that
+  has no hooks at all.
 
-The trigger ships as `steering/auto-dream.md` (auto-loaded by Kiro) and in `GEMINI.md`
-(auto-loaded by Gemini CLI). On hosts whose root guidance a plugin can't populate
+The launch instruction ships as `steering/auto-dream.md` (auto-loaded by Kiro) and in
+`GEMINI.md` (auto-loaded by Gemini CLI). On hosts whose root guidance a plugin can't populate
 automatically, add the snippet yourself:
 
 **Claude Code** — add to your `CLAUDE.md`:
@@ -52,7 +54,7 @@ automatically, add the snippet yourself:
 At session start, run `/dream check`; if a dream is due or pending, run `/dream`.
 ```
 
-**Codex** (no hook system — this is the polyfill) — add to your `AGENTS.md`:
+**Codex** — add to your `AGENTS.md` (Codex's Stop hook handles queuing; this launches it):
 
 ```markdown
 ## Auto Dream

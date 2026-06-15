@@ -22,29 +22,29 @@ CLI:
 
 ## Two trigger surfaces
 
-### 1. Session-end hook (`hooks/claude.yaml`) — where hooks exist
+### 1. Turn-end hook (`hooks/claude.yaml`) — where hooks exist
 
-On `Stop` (Claude) — translated to `AfterAgent` on Gemini by `build:hooks` — run
-`should-dream.mjs tick`. This *queues* a dream by dropping the flag; it never runs
-the skill itself (a hook runs a command, not an agentic skill). ~10ms no-op when not
-due.
+On `Stop` (Claude **and Codex** — both fire it when a turn completes; `build:hooks`
+translates it to `AfterAgent` for Gemini) — run `should-dream.mjs tick`. This *queues* a
+dream by dropping the flag; it never runs the skill itself (a hook runs a command, not an
+agentic skill). ~10ms no-op when not due. One `hooks/claude.yaml` source builds the
+per-host files: `claude.json`, `codex.json` (PLUGIN_ROOT env), and the Gemini `hooks.json`.
 
-### 2. Session-start rule (`steering/auto-dream.md`) — the portable trigger
+### 2. Session-start rule (`steering/auto-dream.md`) — launches the skill
 
 An always-on rule instructs the agent, at session start, to consult
-`should-dream.mjs status` and, if a dream is pending/due, run `/dream`. This is the
-**portable** mechanism: it works on every host with root guidance/rules — including
-those with no hook system at all.
+`should-dream.mjs status` and, if a dream is pending/due, run `/dream`. This is **always**
+root guidance, on every host: a hook drops the flag but can't run an agentic skill, so the
+launch is never a hook. It's delivered as `steering/auto-dream.md` (Kiro), `GEMINI.md`
+(Gemini), and an `AGENTS.md` / `CLAUDE.md` snippet (Codex / Claude).
 
-The hook is an optimization (proactively queues at end of activity); the rule is what
-actually launches the skill. Together: hook flags it → rule catches it next session.
+Together: hook flags it → rule catches it next session.
 
-## Hook-less hosts (e.g. Codex) — the polyfill
+## Hosts with no hooks at all — the fallback
 
-Hooks require runtime event interception and can't be polyfilled for *gating*. But a
-*periodic* trigger is not a gate — it degrades to **root guidance**, which is fully
-polyfillable. On a host with no hooks (Codex), there is no `tick`; instead the
-session-start rule (delivered via `AGENTS.md`) runs `should-dream.mjs status` itself
-at startup and launches `/dream` when due. Same script, same `/dream` skill — only the
-trigger delivery changes. See the customizations plugin's `authoring/hook.md` for the
-general "gating vs periodic" polyfill rule.
+Claude, Codex, and Gemini all have hooks, so they get the deterministic flag-drop. On a
+host with **no** hook system, there is no `tick` — but the trigger still works: the
+session-start rule runs `should-dream.mjs status` itself at startup and launches `/dream`
+when due. A *gating* hook can't be polyfilled, but this is a *periodic* trigger, which
+degrades cleanly to root guidance. See the customizations plugin's `authoring/hook.md` for
+the general "gating vs periodic" rule.

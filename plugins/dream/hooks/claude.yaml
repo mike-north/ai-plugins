@@ -5,10 +5,10 @@
 # flag. The session-start trigger (the auto-dream rule, or an AGENTS.md polyfill
 # on hook-less hosts) consumes that flag next session and runs /dream.
 #
-# This is the OPTIMIZATION path (where hooks exist). The portable trigger is the
-# rule, which checks `should-dream.mjs status` at session start regardless of any
-# hook. Stop translates to Gemini's AfterAgent via build:hooks; hosts without a
-# hook system (e.g. Codex) rely on the rule polyfill alone.
+# This is the queueing path. The launch is always the session-start rule (a hook
+# can't run an agentic skill). build:hooks emits this for every host with hooks:
+# claude.json (Claude Stop), codex.json (Codex Stop, PLUGIN_ROOT env), and the Gemini
+# hooks.json (Stop -> AfterAgent). A host with no hooks at all relies on the rule alone.
 hooks:
   Stop:
     - hooks:

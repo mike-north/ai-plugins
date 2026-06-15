@@ -27,11 +27,11 @@ Dreaming never self-authors customizations or silently rewrites your guidance.
 ## When it runs
 
 - **Manually:** you invoke `/dream`.
-- **Automatically:** a session-end hook (`Stop`) queues a dream when the interval
-  has elapsed (drops a `.dream-pending` flag); the **auto-dream rule** consumes that
-  flag at the next session start and invokes this skill. On hosts without hooks
-  (e.g. Codex) the rule alone drives it via an AGENTS.md polyfill. See
-  `reference/scheduling.md`.
+- **Automatically:** a turn-end hook (`Stop` on Claude and Codex, `AfterAgent` on
+  Gemini) queues a dream when the interval has elapsed (drops a `.dream-pending` flag);
+  the **auto-dream rule** consumes that flag at the next session start and invokes this
+  skill (launching the skill is always root guidance — a hook can't run it). A host with
+  no hooks at all relies on the rule alone. See `reference/scheduling.md`.
 
 If invoked with `check`, run `scripts/should-dream.mjs status` and report whether a
 dream is due — do nothing else.

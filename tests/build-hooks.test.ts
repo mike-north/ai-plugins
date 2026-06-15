@@ -1,17 +1,24 @@
 /**
- * Tests for Claude → Gemini hook translation in src/build-hooks.ts.
+ * Tests for Claude → Gemini / Codex hook translation in src/build-hooks.ts.
  *
  * Hooks are authored once in `hooks/claude.yaml` (Claude's event vocabulary) and
- * built into Gemini's `hooks.json`. Gemini uses different event NAMES for the same
- * lifecycle points, so the build must rename event keys — not just tool matchers —
- * and omit events Gemini has no equivalent for (rather than emit an invalid event).
+ * built per platform. Gemini uses different event NAMES for the same lifecycle
+ * points (rename keys, omit unsupported events). Codex shares Claude's event names
+ * but uses the PLUGIN_ROOT env var and an `apply_patch` edit tool.
  *
  * @see https://code.claude.com/docs/en/hooks.md — Claude Code event names
  * @see https://geminicli.com/docs/hooks/ — Gemini CLI event names
+ * @see https://developers.openai.com/codex/hooks — Codex CLI event names
  */
 import { describe, expect, it, vi } from "vitest";
 
-import { geminiEventNameFor, translateHooksForGemini } from "../src/build-hooks.js";
+import {
+  geminiEventNameFor,
+  translateHooksForGemini,
+  codexEventNameFor,
+  codexCommand,
+  translateHooksForCodex,
+} from "../src/build-hooks.js";
 
 describe("geminiEventNameFor", () => {
   it("maps Claude tool/agent events to their Gemini equivalents", () => {
@@ -96,5 +103,72 @@ describe("translateHooksForGemini", () => {
 
   it("handles a hooks file with no hooks key", () => {
     expect(translateHooksForGemini({})).toEqual({});
+  });
+});
+
+describe("codexEventNameFor", () => {
+  it("passes through events Codex supports under the same name", () => {
+    for (const e of ["Stop", "PreToolUse", "PostToolUse", "SessionStart", "UserPromptSubmit", "SubagentStop"]) {
+      expect(codexEventNameFor(e)).toBe(e);
+    }
+  });
+
+  it("returns null for events Codex lacks (negative)", () => {
+    for (const e of ["SessionEnd", "Notification", "BeforeTool", "Bogus"]) {
+      expect(codexEventNameFor(e)).toBeNull();
+    }
+  });
+});
+
+describe("codexCommand", () => {
+  it("rewrites CLAUDE_PLUGIN_ROOT to PLUGIN_ROOT in both ${} and $ forms", () => {
+    expect(codexCommand('node "${CLAUDE_PLUGIN_ROOT}/x.mjs" tick')).toBe('node "${PLUGIN_ROOT}/x.mjs" tick');
+    expect(codexCommand("sh $CLAUDE_PLUGIN_ROOT/x.sh")).toBe("sh $PLUGIN_ROOT/x.sh");
+  });
+
+  it("leaves other commands unchanged (negative)", () => {
+    expect(codexCommand("echo hi")).toBe("echo hi");
+  });
+});
+
+describe("translateHooksForCodex", () => {
+  it("keeps the Stop event name and rewrites the command to PLUGIN_ROOT", () => {
+    const out = translateHooksForCodex({
+      hooks: {
+        Stop: [{ hooks: [{ type: "command", command: 'node "${CLAUDE_PLUGIN_ROOT}/s.mjs" tick' }] }],
+      },
+    });
+    expect(out.hooks).toHaveProperty("Stop");
+    expect(out.hooks?.["Stop"]?.[0]?.hooks?.[0]?.command).toBe('node "${PLUGIN_ROOT}/s.mjs" tick');
+  });
+
+  it("translates Write/Edit matchers to apply_patch", () => {
+    const out = translateHooksForCodex({
+      hooks: { PostToolUse: [{ matcher: "Write", hooks: [{ type: "command", command: "x" }] }] },
+    });
+    expect(out.hooks?.["PostToolUse"]?.[0]?.matcher).toBe("apply_patch");
+  });
+
+  it("omits events Codex lacks and warns (negative)", () => {
+    const warnings: string[] = [];
+    const out = translateHooksForCodex(
+      {
+        hooks: {
+          Stop: [{ hooks: [{ type: "command", command: "keep" }] }],
+          SessionEnd: [{ hooks: [{ type: "command", command: "drop" }] }],
+        },
+      },
+      (m) => warnings.push(m),
+    );
+    expect(out.hooks).toHaveProperty("Stop");
+    expect(out.hooks).not.toHaveProperty("SessionEnd");
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("SessionEnd");
+  });
+
+  it("does not mutate the source object", () => {
+    const source = { hooks: { Stop: [{ hooks: [{ type: "command", command: "${CLAUDE_PLUGIN_ROOT}/x" }] }] } };
+    translateHooksForCodex(source, () => {});
+    expect(source.hooks.Stop[0]?.hooks?.[0]?.command).toBe("${CLAUDE_PLUGIN_ROOT}/x");
   });
 });

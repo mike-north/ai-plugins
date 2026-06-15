@@ -74,9 +74,11 @@ script? **(T) cheaper tier** — could a cheaper model do the remaining reasonin
   action, not an agent event — that's a deterministic **script** wired to format-on-save or a git
   pre-commit hook (delivery mechanism, not a `hook` primitive). A *world* change (an external file, a
   URL) is a **monitor**. Only "every time **you** (the agent) edit/run X" is a hook.
-- **Portability:** hooks exist on ~13 harnesses (not Claude-only); event vocabularies differ and the
-  build translates them. Hook-less hosts (e.g. Codex) can't gate, but a *periodic* reaction degrades
-  to a root-guidance session-start trigger + script. See `authoring/hook.md`.
+- **Portability:** hooks exist on ~13+ harnesses (Claude, Codex, Gemini, Kiro, Cursor, …) — not
+  Claude-only; event vocabularies differ and the build translates them (Codex shares Claude's events
+  but uses `PLUGIN_ROOT`; Gemini renames them). On a genuinely hook-less host a *gating* hook can't be
+  polyfilled, but a *periodic* reaction degrades to a root-guidance session-start trigger + script.
+  See `authoring/hook.md`.
 - **Author/delegate:** `update-config` skill; else read `authoring/hook.md` fresh. The action is
   *usually* a deterministic script/command, but it can also fire an **agentic** step (e.g. a
   guaranteed security review of every edit) — the hook's job is to *guarantee the reaction fires*,
