@@ -9,8 +9,8 @@
 #
 #   1. The PR is OPEN and not a draft.
 #   2. It is NOT a release/Version PR (those are a human's deliberate release gate).
-#   3. A matching reviewer review is present (PLEF_COPILOT_LOGIN_RE, default /copilot/i)
-#      and its latest verdict is not "changes requested".
+#   3. A matching reviewer review is present (author login matches PLEF_COPILOT_LOGIN_RE,
+#      default "copilot", matched case-insensitively) and its latest verdict isn't "changes requested".
 #   4. Required status checks have passed (`gh pr checks --required` exits clean).
 #
 # It always merges with --squash and never deletes the branch (avoids breaking stacked PRs).

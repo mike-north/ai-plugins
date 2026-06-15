@@ -15,9 +15,9 @@ Apply when working any repo that uses the product-led-eng-fleet pattern.
   `gh-merge`, …) plus `gh`-native verbs (`gh issue comment`/`create`/`close`, …) for actions.
   Never re-pull and diff issues in your own context, and never trust a stale local
   checkout — `git fetch` first.
-- **Writes go through the bounded tools or scoped `gh`-native verbs, never raw `gh api`.** Each script wraps one `gh`
-  mutation with no arbitrary-API escape hatch, so it's allowlistable; arbitrary `gh api`
-  stays human-gated on purpose.
+- **Writes go through the bounded tools or scoped `gh`-native verbs, never raw `gh api`.**
+  Each bounded tool wraps one operation with no arbitrary-API escape hatch, so it's
+  allowlistable; arbitrary `gh api` stays human-gated on purpose.
 - **Ground-truth before claiming.** An open PR (even draft) referencing an issue means it's
   in flight — do not duplicate. A claimed-but-silent issue with no PR is a stalled claim,
   takeable only after announcing intent on the issue.

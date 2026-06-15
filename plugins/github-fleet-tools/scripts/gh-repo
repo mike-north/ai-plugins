@@ -126,13 +126,17 @@ cmd_compare() {
     exit 2
   fi
 
-  local range
-  if [[ "$target" == *...* ]]; then
-    range="$target"
-  else
+  if [[ "$target" != *...* ]]; then
     echo "argument must be a 'base...head' range (got: $target). For a PR's files use 'gh pr view N --json files'." >&2
     exit 2
   fi
+  # URI-encode each ref before interpolating into the compare path — branch names
+  # often contain '/' (e.g. feature/foo), which would otherwise malform the path and 404.
+  # The literal '...' separator is kept between the two encoded refs.
+  local base head range
+  base="$(jq -rn --arg s "${target%%...*}" '$s|@uri')"
+  head="$(jq -rn --arg s "${target##*...}" '$s|@uri')"
+  range="${base}...${head}"
 
   if [[ "$json" == "1" ]]; then
     "$GH" api "repos/$repo/compare/$range" \
