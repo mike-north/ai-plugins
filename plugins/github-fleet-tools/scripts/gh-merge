@@ -9,7 +9,8 @@
 #
 #   1. The PR is OPEN and not a draft.
 #   2. It is NOT a release/Version PR (those are a human's deliberate release gate).
-#   3. A Copilot review is present (and its latest verdict is not "changes requested").
+#   3. A matching reviewer review is present (PLEF_COPILOT_LOGIN_RE, default /copilot/i)
+#      and its latest verdict is not "changes requested".
 #   4. Required status checks have passed (`gh pr checks --required` exits clean).
 #
 # It always merges with --squash and never deletes the branch (avoids breaking stacked PRs).
@@ -70,12 +71,12 @@ if printf '%s' "$title" | grep -qiE "$VERSION_TITLE_RE" || printf '%s' "$head" |
   refuse "this looks like a release/Version PR (\"$title\" on $head) — those are a human's release gate"
 fi
 
-# Guard 3: a Copilot review is present, and its latest verdict isn't CHANGES_REQUESTED.
-copilot_latest=$(printf '%s' "$meta" | jq -r --arg re "$COPILOT_RE" '
+# Guard 3: a matching reviewer review is present, and its latest verdict isn't CHANGES_REQUESTED.
+reviewer_latest=$(printf '%s' "$meta" | jq -r --arg re "$COPILOT_RE" '
   [ (.reviews // [])[] | select(.author.login | test($re; "i")) ]
   | sort_by(.submittedAt) | last | .state // "NONE"')
-[[ "$copilot_latest" != "NONE" ]] || refuse "no Copilot review present (looked for author login matching /$COPILOT_RE/i)"
-[[ "$copilot_latest" != "CHANGES_REQUESTED" ]] || refuse "the latest Copilot review requests changes"
+[[ "$reviewer_latest" != "NONE" ]] || refuse "no review from a matching reviewer (author login matching /$COPILOT_RE/i — set PLEF_COPILOT_LOGIN_RE to change)"
+[[ "$reviewer_latest" != "CHANGES_REQUESTED" ]] || refuse "the latest matching-reviewer review requests changes"
 
 # Guard 4: required status checks have passed.
 if ! "$GH" pr checks "$num" --required >/dev/null 2>&1; then
@@ -83,7 +84,7 @@ if ! "$GH" pr checks "$num" --required >/dev/null 2>&1; then
 fi
 
 if [[ "$dry" == "1" ]]; then
-  echo "would merge PR #$num (squash): all guards pass — open, non-draft, not a release PR, Copilot review present ($copilot_latest), required checks green"
+  echo "would merge PR #$num (squash): all guards pass — open, non-draft, not a release PR, matching reviewer review present ($reviewer_latest), required checks green"
   exit 0
 fi
 
