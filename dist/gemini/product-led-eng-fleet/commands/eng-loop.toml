@@ -5,12 +5,12 @@ product-led-eng-fleet skill (resources/orchestrator-loop.md).
 
 Drive it through the deterministic engine — do not re-pull and diff issues in context:
 1. git fetch origin <default-branch>; read the repo's fleet-conventions doc from the remote.
-2. Run gh-queue.mjs `status` then `list` (from the github-fleet-tools plugin) for the ranked ready queue.
-3. For each chosen issue: verify it reproduces, `gh-queue.mjs ground-truth <N>`, claim with
-   `issue-label.sh <N> add "in progress"` + `issue-comment.sh`, then dispatch a fleet implementer
+2. Run gh-queue `status` then `list` (from the github-fleet-tools plugin) for the ranked ready queue.
+3. For each chosen issue: verify it reproduces, `gh-queue ground-truth <N>`, claim with
+   `gh-label <N> add "in progress"` + `gh issue comment`, then dispatch a fleet implementer
    with a fully self-contained brief.
 4. Monitor each PR by number; dispatch a fix pass on CI/review feedback (reply to every thread via
-   pr-reply-resolve.sh); merge with `pr-merge.sh <PR>` (prompts + guards) and close with issue-close.sh
+   gh-reviews reply); merge with `gh-merge <PR>` (prompts + guards) and close with gh issue close
    when green and resolved.
 
 Never touch release/Version PRs. Don't manufacture work when the queue is saturated.

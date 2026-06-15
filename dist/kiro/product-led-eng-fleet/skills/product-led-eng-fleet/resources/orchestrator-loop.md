@@ -18,11 +18,11 @@ Read the repo's fleet-conventions file (often `ENG_TEAM_INSTRUCTIONS.md`) from
 
 ## 2. Triage the queue (deterministically)
 
-Run the engine, never an in-context diff (scripts come from the `github-fleet-tools` plugin):
+Run the engine, never an in-context diff (tools come from the `github-fleet-tools` plugin):
 
 ```
-gh-queue.mjs list
-gh-queue.mjs status
+gh-queue list
+gh-queue status
 ```
 
 `list` is already ranked (deadline → priority label → issue number). Your only judgment
@@ -36,10 +36,10 @@ Before committing an agent to an issue, confirm it's both real and free:
 
 - Re-confirm the problem still reproduces against `origin/<default-branch>` (not the local
   working copy or a stale read).
-- `gh-queue.mjs ground-truth <N>` — exit 2 means an open PR already covers it or it's
+- `gh-queue ground-truth <N>` — exit 2 means an open PR already covers it or it's
   actively claimed; do not duplicate. A `STALE-CLAIM` verdict is takeable _after_ you
   announce intent on the issue.
-- Claim = `issue-label.sh <N> add "in progress"` then `issue-comment.sh <N> "<intent>"`.
+- Claim = `gh-label <N> add "in progress"` then `gh issue comment <N> "<intent>"`.
   Always ground-truth first; only act on a `SAFE`/`STALE-CLAIM` verdict.
 
 ## 4. Delegate to a fleet implementer
@@ -72,17 +72,17 @@ sub-agents cannot monitor PRs themselves; they report back and you monitor.
 When the monitor reports CI failures or review comments, dispatch a **fix** sub-agent that
 addresses every item **and replies to every review thread** (what changed, or why you
 respectfully didn't — silence is debt), then re-monitor. Reply + resolve a thread with
-`pr-reply-resolve.sh <PR> <thread-comment-id> "<reply>"`, or clear an addressed batch with
-`pr-resolve-threads.sh <PR>`.
+`gh-reviews reply <PR> <thread-comment-id> "<reply>"`, or clear an addressed batch with
+`gh-reviews resolve <PR>`.
 
 ## 6. Merge and close
 
-On green CI + all review threads resolved, squash-merge with `pr-merge.sh <PR>`. That script
+On green CI + all review threads resolved, squash-merge with `gh-merge <PR>`. That tool
 **prompts for approval by design** (merge is the one high-consequence write — grant it to the
 PM/orchestrator context only) and additionally _refuses_ unless the PR is open, non-draft,
 **not a release/Version PR**, has a **Copilot review present**, and has **passed required
 checks**. Then close the issue with a criteria-met summary via
-`issue-close.sh <N> "<summary>"` — PRs reference issues with `Refs`, so the merge won't
+`gh issue close <N> --comment "<summary>"` — PRs reference issues with `Refs`, so the merge won't
 auto-close them.
 
 ## 7. Reflect

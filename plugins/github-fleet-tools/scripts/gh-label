@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 #
-# issue-label.sh — add or remove a single label on an issue (or PR).
+# gh-label — add or remove a single label on an issue (or PR).
 #
 # The bounded WRITE primitive behind "claim" / "release" in the product-led-eng-fleet
-# loop: claim = `issue-label.sh <N> add "in progress"`, release = `… remove …`. It does
-# exactly one label mutation via `gh issue edit` — no arbitrary API surface — so it is
-# safe to allowlist and run autonomously.
+# loop: claim = `gh-label <N> add "in progress"`, release = `… remove …`. It does exactly
+# one label mutation via `gh issue edit` — no arbitrary issue-editing surface — so it can
+# be allowlisted for label-only autonomy while broad `gh issue edit` stays gated.
 #
 # Usage:
-#   issue-label.sh <ISSUE_NUMBER> <add|remove> <LABEL>
+#   gh-label <ISSUE_NUMBER> <add|remove> <LABEL>
 #
-#   issue-label.sh 142 add "in progress"
-#   issue-label.sh 142 remove "in progress"
+#   gh-label 142 add "in progress"
+#   gh-label 142 remove "in progress"
 #
 # Exit codes: 0 success; 1 gh/API error; 2 bad usage.
 #
@@ -29,7 +29,7 @@ op="${2:-}"
 label="${3:-}"
 
 if [[ -z "$num" || -z "$op" || -z "$label" ]]; then
-  echo "usage: issue-label.sh <ISSUE_NUMBER> <add|remove> <LABEL>" >&2
+  echo "usage: gh-label <ISSUE_NUMBER> <add|remove> <LABEL>" >&2
   exit 2
 fi
 if ! [[ "$num" =~ ^[0-9]+$ ]]; then

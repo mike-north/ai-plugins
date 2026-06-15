@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // @ts-check
 /**
- * gh-queue.mjs — read-only work-queue engine for a GitHub-issue-driven agent fleet.
+ * gh-queue — read-only work-queue engine for a GitHub-issue-driven agent fleet.
  *
  * The queue mechanics — listing ready issues, ranking them, and the "who actually has
  * what" ground-truth check — are pure git/gh reads. This is the DETECTION half of the
  * product-led-eng-fleet pattern: it never mutates anything, so it is safe to allowlist
  * and run autonomously. The RESPONSE half (claim/comment/merge/...) is the separate
- * bounded write-scripts in this directory (issue-label.sh, issue-comment.sh, ...).
+ * bounded write tools in this directory (gh-label, gh-reviews, ...) and gh-native verbs.
  *
  * Subcommands (all read-only):
  *   list [--json]               Ranked ready queue (deadline -> priority label -> number).
@@ -139,7 +139,7 @@ function cmdList(flags) {
 }
 
 function cmdGroundTruth(n, flags) {
-  if (!n || !/^\d+$/.test(n)) fail("ground-truth needs a numeric issue number: gh-queue.mjs ground-truth <N>");
+  if (!n || !/^\d+$/.test(n)) fail("ground-truth needs a numeric issue number: gh-queue ground-truth <N>");
   tryRun("git", ["fetch", "origin", "--quiet"]);
 
   const issue = ghJson([
@@ -239,13 +239,13 @@ function main() {
     default:
       out(
         [
-          "Usage: gh-queue.mjs <list|ground-truth|status> [args]   (read-only)",
+          "Usage: gh-queue <list|ground-truth|status> [args]   (read-only)",
           "",
           "  list [--json]               Ranked ready queue.",
           "  ground-truth <N> [--json]   Is #N safe to claim? exit 0 = safe, 2 = blocked.",
           "  status [--json]             ready / in-progress / open-PR rollup.",
           "",
-          "Writes (claim, comment, merge, ...) are the bounded *.sh scripts in this directory.",
+          "Writes (claim, comment, merge, ...) are the bounded tools in this directory + gh-native verbs.",
         ].join("\n"),
       );
       process.exit(sub ? 2 : 0);

@@ -21,24 +21,24 @@ one iteration is:
 
 1. **Sync** — `git fetch origin <default-branch>`; read the repo's fleet-conventions doc
    from the remote (it changes).
-2. **Triage deterministically** — run `gh-queue.mjs list` and `gh-queue.mjs status` (the
-   bounded scripts from the `github-fleet-tools` plugin). Never re-pull and diff issues in your
-   own context; the script is the detector. Your judgment is only choosing among
+2. **Triage deterministically** — run `gh-queue list` and `gh-queue status` (the
+   bounded tools from the `github-fleet-tools` plugin). Never re-pull and diff issues in your
+   own context; the tool is the detector. Your judgment is only choosing among
    equally-ready items and parallelism.
 3. **Verify + claim** — re-confirm the issue reproduces against the remote, then
-   `gh-queue.mjs ground-truth <N>` (exit 2 = do not duplicate; `STALE-CLAIM` = takeable after
-   announcing intent), then claim with `issue-label.sh <N> add "in progress"` +
-   `issue-comment.sh <N> "<intent>"`.
+   `gh-queue ground-truth <N>` (exit 2 = do not duplicate; `STALE-CLAIM` = takeable after
+   announcing intent), then claim with `gh-label <N> add "in progress"` +
+   `gh issue comment <N> "<intent>"`.
 4. **Delegate** — dispatch a `fleet-implementer` per ready issue (up to ~5 parallel for
    independent work) with a fully self-contained brief. Premium tier for spec-normative or
    edge-heavy issues; mid tier for contained changes.
 5. **Monitor by PR number** — launch a background PR monitor per PR (not "current branch").
    On CI failures or review comments, dispatch a fix sub-agent that addresses every item and
-   replies to every review thread (`pr-reply-resolve.sh` / `pr-resolve-threads.sh`), then
+   replies to every review thread (`gh-reviews reply` / `gh-reviews resolve`), then
    re-monitor.
-6. **Merge + close** — on green CI and resolved threads, merge with `pr-merge.sh <PR>` (it
+6. **Merge + close** — on green CI and resolved threads, merge with `gh-merge <PR>` (it
    prompts for approval and refuses anything that isn't open, non-draft, non-release, with a
-   Copilot review and passing required checks), then `issue-close.sh <N> "<criteria-met
+   Copilot review and passing required checks), then `gh issue close <N> --comment "<criteria-met
    summary>"`. **Never touch release/Version PRs.**
 7. **Reflect** — capture recurring friction; propose (don't self-apply) durable fixes.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# pr-merge.sh — squash-merge a PR, but ONLY when it is genuinely safe to.
+# gh-merge — squash-merge a PR, but ONLY when it is genuinely safe to.
 #
 # This is the highest-consequence write in the fleet, so it is deliberately NOT on the
 # autonomous allowlist — it prompts every time (grant it to the PM/orchestrator context
@@ -16,7 +16,7 @@
 # Use --dry-run to evaluate the guards and print the verdict without merging.
 #
 # Usage:
-#   pr-merge.sh <PR_NUMBER> [--dry-run]
+#   gh-merge <PR_NUMBER> [--dry-run]
 #
 # Exit codes: 0 merged (or --dry-run: would merge); 1 gh/API error;
 #             2 bad usage; 3 a guard refused the merge.
@@ -41,7 +41,7 @@ mode="${2:-}"
 dry=0
 
 if [[ -z "$num" ]]; then
-  echo "usage: pr-merge.sh <PR_NUMBER> [--dry-run]" >&2
+  echo "usage: gh-merge <PR_NUMBER> [--dry-run]" >&2
   exit 2
 fi
 if ! [[ "$num" =~ ^[0-9]+$ ]]; then
