@@ -2,10 +2,24 @@
   "name": "customizations",
   "version": "0.0.1",
   "description": "Route any agent-customization need to the right primitive — script, memory, rule, hook, skill, agent, MCP, monitor, plugin, or marketplace — determinism-first, authoring the light ones and delegating the rest. Includes /customizations create|list|remove.",
-  "keywords": ["customization", "routing", "determinism", "skills", "hooks", "monitors", "plugins", "memory", "agents", "meta"],
-  "skills": ["./skills"],
-  "agents": [],
-  "commands": ["./commands/customizations.md"],
+  "keywords": [
+    "customization",
+    "routing",
+    "determinism",
+    "skills",
+    "hooks",
+    "monitors",
+    "plugins",
+    "memory",
+    "agents",
+    "meta"
+  ],
+  "skills": [
+    "./skills"
+  ],
+  "commands": [
+    "./commands/customizations.md"
+  ],
   "hooks": "./hooks/claude.json",
   "mcpServers": "./.mcp.json"
 }
