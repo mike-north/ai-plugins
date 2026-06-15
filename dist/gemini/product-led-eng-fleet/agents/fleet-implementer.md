@@ -1,11 +1,6 @@
 ---
 name: fleet-implementer
-description: >-
-  Picks up a single GitHub issue from a product-led fleet queue and ships it — branches
-  off the remote default branch in an isolated worktree, implements against the issue's
-  acceptance criteria with tests at the right layer, runs the repo's checks green, and
-  opens a PR that references the issue with Refs #N. Stops at PR-open; the orchestrator
-  runs the review cycle. Use to "pick up issue N" or implement a queued issue.
+description: Picks up a single GitHub issue from a product-led fleet queue and ships it — branches off the remote default branch in an isolated worktree, implements against the issue's acceptance criteria with tests at the right layer, runs the repo's checks green, and opens a PR that references the issue with Refs #N. Stops at PR-open; the orchestrator runs the review cycle. Use it to pick up an issue and implement a queued issue.
 tools:
   - run_shell_command
   - read_file

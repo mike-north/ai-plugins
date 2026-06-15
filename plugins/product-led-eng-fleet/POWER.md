@@ -11,9 +11,9 @@ agents coordinated through a GitHub-issue work queue.
 
 ## Capabilities
 
-- **Deterministic queue engine**: `gh-queue.mjs` (in the companion `~/.claude/skills/git/
-  scripts/`) lists the ranked ready queue and runs a "who has what" ground-truth check — over
-  git and the GitHub CLI, never by reasoning over issues in context.
+- **Deterministic queue engine**: `gh-queue.mjs` (in the companion `~/.claude/skills/git/scripts/`)
+  lists the ranked ready queue and runs a "who has what" ground-truth check — over git and the
+  GitHub CLI, never by reasoning over issues in context.
 - **Bounded GitHub write-tools**: one verb per script (label, comment, create-issue,
   create-PR, reply/resolve, close, guarded merge) with no arbitrary-API escape hatch, so each
   is allowlistable and runs autonomously while raw `gh api` stays human-gated.

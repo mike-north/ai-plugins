@@ -1,12 +1,6 @@
 ---
 name: eng-orchestrator
-description: >-
-  Runs one iteration of the product-led engineering fleet loop — syncs the remote,
-  triages the GitHub-issue queue with the deterministic engine, claims and delegates
-  ready issues to implementer sub-agents, monitors each PR by number, drives the
-  review/fix cycle, and merges + closes finished work. Use to "run the eng loop" or
-  orchestrate multiple coding agents over an issue queue. Does not write feature code
-  itself.
+description: Runs one iteration of the product-led engineering fleet loop — syncs the remote, triages the GitHub-issue queue with the deterministic engine, claims and delegates ready issues to implementer sub-agents, monitors each PR by number, drives the review/fix cycle, and merges + closes finished work. Use it to run the eng loop or orchestrate multiple coding agents over an issue queue. Does not write feature code itself.
 tools:
   - Agent
   - Bash

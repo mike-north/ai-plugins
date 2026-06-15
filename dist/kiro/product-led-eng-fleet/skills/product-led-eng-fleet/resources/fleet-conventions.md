@@ -13,7 +13,7 @@ PM-maintained doc (commonly `ENG_TEAM_INSTRUCTIONS.md`) and are enforced by the 
 2. **Acceptance criteria are the contract.** They're written to be testable — implement
    against them and say so in the PR ("criterion N covered by test X"). If a criterion is
    wrong or unachievable, comment on the issue _before_ building around it.
-3. **Deadlines and priority outrank file order.** `queue.mjs list` already encodes this;
+3. **Deadlines and priority outrank file order.** `gh-queue.mjs list` already encodes this;
    don't reorder by hand.
 4. **Don't implement issues marked undecided or deferred.** Labels like `needs-decision`
    (design unresolved) or `backlog` (deferred to a later cycle) mean "not for pickup." If
