@@ -92,6 +92,20 @@
         "workflow",
         "fleet"
       ]
+    },
+    {
+      "name": "github-fleet-tools",
+      "source": "./plugins/github-fleet-tools",
+      "description": "Opinionated, allowlistable command-line tools for an agent to engage with GitHub: read-only PR/issue-queue inspection plus bounded write verbs (label, comment, review reply/resolve, create issue/PR, guarded merge). Each wraps one gh op with no arbitrary-API escape hatch.",
+      "tags": [
+        "github",
+        "gh",
+        "pull-requests",
+        "issues",
+        "code-review",
+        "automation",
+        "agents"
+      ]
     }
   ]
 }
