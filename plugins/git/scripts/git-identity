@@ -265,6 +265,17 @@ function cmdApply(cfg, opts) {
     const res = git(["config", "--local", k, v]);
     if (res.status !== 0) fail(`git config ${k} failed: ${res.stderr}`);
   };
+  // Clear any previously-applied identity first, so switching identities never leaves
+  // stale identity.field.*, user.signingkey, or commit.gpgsign behind.
+  const prev = git(["config", "--local", "--get-regexp", "^identity\\.field\\."]);
+  if (prev.status === 0) {
+    for (const line of prev.stdout.split("\n").filter(Boolean)) {
+      git(["config", "--local", "--unset-all", line.slice(0, line.indexOf(" "))]);
+    }
+  }
+  git(["config", "--local", "--unset", "user.signingkey"]); // no-op if unset
+  git(["config", "--local", "--unset", "commit.gpgsign"]);
+
   set("user.name", a.name);
   set("user.email", a.email);
   set("identity.name", r.name);
@@ -293,8 +304,8 @@ function cmdDoctor(cfg) {
   const ids = new Set();
   for (const r of rs) {
     const id = r.host ? index[r.host] : undefined;
-    const naked = r.host && !r.host.includes("-") && !index[r.host]; // heuristic: real host, no alias, no match
-    out(`  ${r.name}: ${r.url || "(no url)"}  host=${r.host || "?"} → ${id || "(no match)"}${naked ? "  ⚠ naked/ambiguous" : ""}`);
+    const unmatched = !!r.host && !index[r.host]; // host not listed under any identity
+    out(`  ${r.name}: ${r.url || "(no url)"}  host=${r.host || "?"} → ${id || "(no match — uses default/none)"}${unmatched ? "  ⚠ host not in any identity" : ""}`);
     if (id) ids.add(id);
   }
   if (ids.size > 1) out(`  ⚠ multiple identities across remotes (${[...ids].join(", ")}) — author is per-repo; pin with: git-identity apply --identity <name>`);
@@ -316,6 +327,9 @@ function cmdValidate(cfg) {
 
   // default identity exists
   if (cfg.default_identity && !cfg.identities[cfg.default_identity]) warn(`default_identity "${cfg.default_identity}" is not a defined identity`);
+
+  // on_no_match is a known enum
+  if (!["silent", "warn", "block"].includes(cfg.on_no_match)) warn(`on_no_match "${cfg.on_no_match}" is invalid (expected: silent | warn | block)`);
 
   // per-identity checks
   for (const [name, id] of Object.entries(cfg.identities)) {
@@ -384,8 +398,8 @@ function parseOpts(argv) {
 function main() {
   const [cmd, ...rest] = process.argv.slice(2);
   const { opts, pos } = parseOpts(rest);
-  // A bare positional that looks like a URL is treated as --url for resolve/field.
-  if (pos.length && /[:/]/.test(pos[pos.length - 1]) && (cmd === "resolve")) opts.url = pos.pop();
+  // For `resolve` only, a bare positional that looks like a URL is treated as the target URL.
+  if (pos.length && /[:/]/.test(pos[pos.length - 1]) && cmd === "resolve") opts.url = pos.pop();
 
   switch (cmd) {
     case "resolve":
@@ -406,9 +420,9 @@ function main() {
           "Usage: git-identity <command>  (also works as `git identity <command>`)",
           "",
           "  resolve [--remote <name> | <url>]   Print the identity a remote resolves to.",
-          "  field <key> [--required] [--remote|--identity <name>]   Print one field value.",
-          "  fields [--identity <name>] [--remote]   List the resolved identity's fields.",
-          "  apply [--identity <name>] [--remote]   Write author/gpg/fields to this repo's local config.",
+          "  field <key> [--required] [--remote <name> | --identity <name>]   Print one field value.",
+          "  fields [--remote <name> | --identity <name>]   List the resolved identity's fields.",
+          "  apply [--identity <name>] [--remote <name>]   Write author/gpg/fields to this repo's local config.",
           "  doctor                              Diagnose this repo (remotes, identity, conflicts).",
           "  validate                            Check the config invariants (+ ssh/gpg best-effort).",
         ].join("\n"),

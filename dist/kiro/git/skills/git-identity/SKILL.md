@@ -32,9 +32,9 @@ values without each reinventing the mapping.
 
 ```
 git-identity resolve [--remote <name> | <url>]      # which identity does this remote map to?
-git-identity apply  [--identity <name>] [--remote]  # write author/gpg/fields to THIS repo's local config
-git-identity field  <key> [--required] [--remote|--identity <name>]   # one field value (exit 3 if unset)
-git-identity fields [--identity <name>]             # list the resolved identity's fields
+git-identity apply  [--identity <name>] [--remote <name>]  # write author/gpg/fields to THIS repo's local config
+git-identity field  <key> [--required] [--remote <name> | --identity <name>]   # one field value (exit 3 if unset)
+git-identity fields [--remote <name> | --identity <name>]  # list the resolved identity's fields
 git-identity doctor                                 # diagnose this repo (remotes, identity, conflicts)
 git-identity validate                               # check config invariants (+ ssh/gpg best-effort)
 ```
