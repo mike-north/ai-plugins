@@ -1,0 +1,17 @@
+{
+  "name": "spec-skills",
+  "version": "0.0.1",
+  "description": "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
+  "keywords": [
+    "specs",
+    "skills",
+    "quality"
+  ],
+  "skills": [
+    "./skills"
+  ],
+  "agents": [],
+  "commands": [],
+  "hooks": "./hooks/claude.json",
+  "mcpServers": "./.mcp.json"
+}
