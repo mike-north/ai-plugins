@@ -1,0 +1,7 @@
+{
+  "name": "product-led-eng-fleet",
+  "version": "0.0.1",
+  "description": "Run a product-led engineering fleet over a GitHub-issue work queue.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {}
+}

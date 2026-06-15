@@ -1,0 +1,17 @@
+description = "Draft and file a self-contained, pickup-ready issue for the fleet"
+prompt = """
+Draft a pickup-ready GitHub issue for the engineering fleet about: {{args}}
+
+Follow the product-led-eng-fleet skill's resources/issue-authoring.md. The implementer has
+no conversation context, so the issue must stand alone. Include:
+- Problem (what's wrong/missing, why now)
+- Governing references (spec sections / docs)
+- Acceptance criteria (concrete, testable — the contract)
+- Non-goals
+- Proof (test or observable behavior)
+
+Size to ~one agent's unit of work; split separable tracks. Put real deadlines in the title
+as (due YYYY-MM-DD) and apply priority labels. Label unresolved design choices needs-decision
+and don't queue them. Show the draft and confirm before creating it with
+`issue-create.sh --title <T> --body-file <draft.md> [--label …]` (in ~/.claude/skills/git/scripts/).
+"""

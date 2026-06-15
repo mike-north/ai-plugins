@@ -1,0 +1,23 @@
+{
+  "name": "product-led-eng-fleet",
+  "version": "0.0.1",
+  "description": "Run a product-led engineering fleet over a GitHub-issue work queue.",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["engineering", "orchestration", "agents", "github-issues", "workflow", "fleet"],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Product-led Eng Fleet",
+    "shortDescription": "PM/orchestrator loop + implementer sub-agents coordinated through a GitHub-issue queue.",
+    "longDescription": "A reusable operating model for running software delivery as a fleet of autonomous coding agents coordinated through a GitHub-issue work queue. The PM files self-contained, pickup-ready issues; an orchestrator loop triages a deterministically-ranked queue, claims issues, delegates to implementer sub-agents, monitors each PR, and merges; implementers each take one issue, build against its acceptance criteria, open a PR, and stop. The queue state — what's ready, what's ranked first, who actually has what — is computed by a deterministic git/gh engine rather than by agent reasoning.",
+    "category": "developer-tools",
+    "capabilities": [
+      "Deterministic GitHub-issue queue engine (ranked list, ground-truth, claim, release, status)",
+      "Orchestrator loop that delegates issues to implementer sub-agents and owns the review/merge cycle",
+      "Fleet conventions enforced as rules: acceptance-criteria-as-contract, Refs-not-Closes, agents stop at PR-open"
+    ],
+    "defaultPrompt": "Run one iteration of the engineering fleet loop: triage the ready queue, claim and delegate the top issues, and report what you merged."
+  }
+}

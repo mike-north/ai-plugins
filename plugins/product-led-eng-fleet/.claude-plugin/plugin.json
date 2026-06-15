@@ -1,0 +1,14 @@
+{
+  "name": "product-led-eng-fleet",
+  "version": "0.0.1",
+  "description": "Run a product-led engineering fleet: a PM/orchestrator loop that ships work via self-contained GitHub issues, with implementer sub-agents that pick them up, build against acceptance criteria, and open PRs. The work queue is detected by a deterministic git/gh engine, not by agent reasoning.",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["engineering", "orchestration", "agents", "github-issues", "workflow", "fleet"],
+  "skills": ["./skills/product-led-eng-fleet"],
+  "agents": ["./agents/eng-orchestrator.md", "./agents/fleet-implementer.md"],
+  "commands": ["./commands/eng-loop.md", "./commands/queue.md", "./commands/file-issue.md"],
+  "hooks": "./hooks/claude.json",
+  "mcpServers": "./.mcp.json"
+}
