@@ -1,0 +1,14 @@
+{{- /*
+  Linux systemd service unit paired with chezmoi-watch.path.
+  Deployed to: ~/.config/systemd/user/chezmoi-watch.service
+
+  Chezmoi source path: dot_config/systemd/user/chezmoi-watch.service.tmpl
+*/ -}}
+{{- if eq .chezmoi.os "linux" -}}
+[Unit]
+Description=Run chezmoi watch handler on file changes
+
+[Service]
+Type=oneshot
+ExecStart={{ .chezmoi.homeDir }}/.local/bin/chezmoi-watch-handler
+{{- end }}

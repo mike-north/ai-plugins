@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Merge or sync managed plist keys with macOS preference files.
+
+Two modes of operation:
+
+  Merge (chezmoi modify_ scripts):
+    plist-merge <managed.plist> < current.plist > merged.plist
+
+    Reads the current target plist from stdin, merges keys from the managed
+    XML plist, and writes the result to stdout. If all managed keys already
+    match, outputs the original bytes unchanged to avoid spurious diffs.
+
+  Sync (capture app settings back to source):
+    plist-merge --sync <live.plist> <managed.plist>
+
+    Reads the live plist (binary or XML), extracts only the keys that exist
+    in the managed plist, and overwrites the managed plist with updated values
+    in sorted XML format. Prints a summary of what changed.
+
+Chezmoi source path: dot_local/bin/executable_plist-merge
+"""
+
+import plistlib
+import sys
+
+
+def merge(managed_path):
+    """Merge managed keys into current plist (stdin → stdout)."""
+    current_bytes = sys.stdin.buffer.read()
+    if not current_bytes:
+        current = {}
+    else:
+        current = plistlib.loads(current_bytes)
+
+    with open(managed_path, "rb") as f:
+        managed = plistlib.load(f)
+
+    all_match = all(
+        key in current and current[key] == managed[key] for key in managed
+    )
+
+    if all_match:
+        sys.stdout.buffer.write(current_bytes)
+    else:
+        current.update(managed)
+        sys.stdout.buffer.write(plistlib.dumps(current, fmt=plistlib.FMT_BINARY))
+
+
+def sync(live_path, managed_path):
+    """Sync managed plist from live app preferences."""
+    with open(live_path, "rb") as f:
+        live = plistlib.load(f)
+
+    with open(managed_path, "rb") as f:
+        managed = plistlib.load(f)
+
+    updated = {}
+    changed = []
+    unchanged = []
+
+    for key in sorted(managed):
+        if key in live:
+            updated[key] = live[key]
+            if live[key] != managed[key]:
+                changed.append(key)
+            else:
+                unchanged.append(key)
+        else:
+            # Key exists in managed but not in live — app removed it.
+            # Keep it so the user can decide whether to drop it.
+            updated[key] = managed[key]
+            print(f"  warning: {key} not found in live plist (kept existing value)", file=sys.stderr)
+
+    if not changed:
+        print("No changes — managed plist is already in sync.", file=sys.stderr)
+        return
+
+    with open(managed_path, "wb") as f:
+        plistlib.dump(updated, f, fmt=plistlib.FMT_XML, sort_keys=True)
+
+    print(f"Updated {managed_path}:", file=sys.stderr)
+    for key in changed:
+        print(f"  changed: {key}", file=sys.stderr)
+    print(f"  ({len(unchanged)} keys unchanged)", file=sys.stderr)
+
+
+def main():
+    if len(sys.argv) == 2 and sys.argv[1] != "--sync":
+        merge(sys.argv[1])
+    elif len(sys.argv) == 4 and sys.argv[1] == "--sync":
+        sync(sys.argv[2], sys.argv[3])
+    else:
+        print(
+            "Usage:\n"
+            f"  {sys.argv[0]} <managed.plist>                  (merge, stdin/stdout)\n"
+            f"  {sys.argv[0]} --sync <live.plist> <managed.plist>  (sync app → source)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

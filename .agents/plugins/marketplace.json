@@ -49,6 +49,78 @@
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
       }
+    },
+    {
+      "name": "dotfiles",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dotfiles"
+      },
+      "description": "Dotfiles management — chezmoi, fish shell, and environment configuration",
+      "tags": [
+        "chezmoi",
+        "dotfiles",
+        "fish",
+        "devtools"
+      ],
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      }
+    },
+    {
+      "name": "spec-skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/spec-skills"
+      },
+      "description": "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
+      "tags": [
+        "specs",
+        "skills",
+        "quality"
+      ],
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      }
+    },
+    {
+      "name": "project-room-preparation",
+      "source": {
+        "source": "local",
+        "path": "./plugins/project-room-preparation"
+      },
+      "description": "Organize messy project sources into an inspectable \"project room\" before drafting begins — source inventory, duplicate log, conflict log, missing-context list, and working brief.",
+      "tags": [
+        "skills",
+        "writing",
+        "research",
+        "knowledge-management"
+      ],
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      }
+    },
+    {
+      "name": "code-review",
+      "source": {
+        "source": "local",
+        "path": "./plugins/code-review"
+      },
+      "description": "Adaptive, host-neutral code review — detects the stack, routes to specialist reviewer lenses dispatched as agents with their own context windows, and records findings as SARIF.",
+      "tags": [
+        "code-review",
+        "review",
+        "sarif",
+        "code-quality",
+        "multi-language"
+      ],
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      }
     }
   ]
 }
