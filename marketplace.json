@@ -39,6 +39,18 @@
         "research",
         "knowledge-management"
       ]
+    },
+    {
+      "name": "code-review",
+      "source": "./plugins/code-review",
+      "description": "Adaptive, host-neutral code review — detects the stack, routes to specialist reviewer lenses dispatched as agents with their own context windows, and records findings as SARIF.",
+      "tags": [
+        "code-review",
+        "review",
+        "sarif",
+        "code-quality",
+        "multi-language"
+      ]
     }
   ]
 }

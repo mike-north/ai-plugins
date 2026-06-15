@@ -1,0 +1,7 @@
+# Skill `resources/` and `references/` directories hold LLM-prompt content —
+# reviewer personas, knowledge files, embedded code examples, checklists, and
+# bracket notation (e.g. arr[i], [CRITICAL], [ ]). These are not rendered prose,
+# so Markdown doc-lint rules like no-undefined-references produce only noise here.
+# Authored docs (README, SKILL.md, POWER.md, GEMINI.md) are still linted.
+plugins/*/skills/*/resources/
+plugins/*/skills/*/references/
