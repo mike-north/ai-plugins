@@ -1,15 +1,18 @@
 # Git Utilities
 
-Deterministic local-git tooling for agents. **Never estimate git statistics — run the
-scripts.** Local-VCS only; no GitHub auth required.
+Deterministic git tooling for agents. **Never estimate git statistics — run the scripts.**
 
 ## Tools
 
 - **`diff-stats.sh [BASE] [HEAD]`** — exact change metrics: meaningful (generated-file-excluded)
-  vs raw line counts and an implementation-vs-test split.
+  vs raw line counts and an implementation-vs-test split. (Local; no GitHub auth.)
 - **`gst`** — stacked-PR manager for chains of dependent branches:
   `create` / `list` / `restack` / `submit` / `up` / `down` / `log` / `adopt` / `orphan`, with
-  stack metadata stored in git config.
+  stack metadata stored in git config. (`submit` and the PR-status column in `list` use the `gh` CLI.)
+- **`git-identity`** — per-host identity router: resolve a remote → commit author + optional GPG
+  signing key + arbitrary namespaced fields, and `apply` them to a repo. Provider-agnostic; the
+  SSH key stays owned by ssh config. `resolve` / `apply` / `field` / `fields` / `doctor` /
+  `validate` (also works as `git identity <cmd>`). See `skills/git-identity/SKILL.md`.
 
 Plus worktree-discipline guidance for working a stack. Full reference: `skills/git/SKILL.md`.
 
