@@ -11,7 +11,7 @@ re-pull and diff issues in context:
 
 1. `git fetch origin <default-branch>` and read the repo's fleet-conventions doc from the remote.
 2. `gh-queue.mjs status` and `gh-queue.mjs list` to see the ranked ready queue (scripts in
-   `~/.claude/skills/git/scripts/`).
+   the `github-fleet-tools` plugin).
 3. For each issue you choose to run: verify it reproduces, `gh-queue.mjs ground-truth <N>`,
    then claim with `issue-label.sh <N> add "in progress"` + `issue-comment.sh <N> "<intent>"`,
    then dispatch a `fleet-implementer` agent with a self-contained brief.

@@ -1,0 +1,7 @@
+{
+  "name": "github-fleet-tools",
+  "version": "0.0.1",
+  "description": "Opinionated, allowlistable command-line tools for an agent to engage with GitHub.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {}
+}

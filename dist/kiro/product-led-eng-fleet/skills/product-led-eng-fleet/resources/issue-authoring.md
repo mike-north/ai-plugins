@@ -29,7 +29,7 @@ has **no conversation context** — the issue must stand entirely on its own.
 
 ## Filing it
 
-Create the issue with the bounded `issue-create.sh` (in `~/.claude/skills/git/scripts/`),
+Create the issue with the bounded `issue-create.sh` (from the `github-fleet-tools` plugin),
 passing the body as a file so multi-line Markdown survives intact:
 
 ```

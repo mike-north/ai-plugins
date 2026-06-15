@@ -5,7 +5,7 @@ product-led-eng-fleet skill (resources/orchestrator-loop.md).
 
 Drive it through the deterministic engine — do not re-pull and diff issues in context:
 1. git fetch origin <default-branch>; read the repo's fleet-conventions doc from the remote.
-2. Run gh-queue.mjs `status` then `list` (in ~/.claude/skills/git/scripts/) for the ranked ready queue.
+2. Run gh-queue.mjs `status` then `list` (from the github-fleet-tools plugin) for the ranked ready queue.
 3. For each chosen issue: verify it reproduces, `gh-queue.mjs ground-truth <N>`, claim with
    `issue-label.sh <N> add "in progress"` + `issue-comment.sh`, then dispatch a fleet implementer
    with a fully self-contained brief.

@@ -21,7 +21,7 @@ one iteration is:
 1. **Sync** — `git fetch origin <default-branch>`; read the repo's fleet-conventions doc
    from the remote (it changes).
 2. **Triage deterministically** — run `gh-queue.mjs list` and `gh-queue.mjs status` (the
-   bounded scripts in `~/.claude/skills/git/scripts/`). Never re-pull and diff issues in your
+   bounded scripts from the `github-fleet-tools` plugin). Never re-pull and diff issues in your
    own context; the script is the detector. Your judgment is only choosing among
    equally-ready items and parallelism.
 3. **Verify + claim** — re-confirm the issue reproduces against the remote, then

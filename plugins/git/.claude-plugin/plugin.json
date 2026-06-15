@@ -1,0 +1,12 @@
+{
+  "name": "git",
+  "version": "0.0.1",
+  "description": "Deterministic local-git utilities for agents: exact diff statistics (meaningful vs raw line counts, implementation vs test split) and a stacked-PR manager (gst) for chains of dependent branches. Run the scripts for exact results — never estimate.",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["git", "diff", "stacked-prs", "branches", "metrics", "worktrees"],
+  "skills": ["./skills/git"],
+  "hooks": "./hooks/claude.json",
+  "mcpServers": "./.mcp.json"
+}

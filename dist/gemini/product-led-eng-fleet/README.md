@@ -32,8 +32,7 @@ security boundary.
 
 ## Requirements: the bounded GitHub scripts
 
-The deterministic GitHub I/O is a companion set of scripts (the `git-utilities` family). On
-this machine they live at `~/.claude/skills/git/scripts/` and are invoked by stable path:
+The deterministic GitHub I/O is the companion **`github-fleet-tools`** plugin, invoked by name (symlink its scripts onto your PATH):
 
 ```
 # detection (read-only — already safe to allowlist)

@@ -3,7 +3,7 @@
 Apply when working any repo that uses the product-led-eng-fleet pattern.
 
 - **Detect the queue with code, not context.** Use the companion scripts in
-  `~/.claude/skills/git/scripts/`: read-only `gh-queue.mjs` (`list` / `ground-truth` /
+  the `github-fleet-tools` plugin: read-only `gh-queue.mjs` (`list` / `ground-truth` /
   `status`) for detection, and the bounded write-scripts (`issue-label.sh`,
   `issue-comment.sh`, `pr-merge.sh`, …) for actions. Never re-pull and diff issues in your
   own context, and never trust a stale local checkout — `git fetch` first.

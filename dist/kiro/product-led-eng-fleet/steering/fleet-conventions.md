@@ -13,7 +13,7 @@ always-available steering summary.
 
 ## Non-negotiables
 
-- Detect the queue with `gh-queue.mjs` (in `~/.claude/skills/git/scripts/`), not by reasoning
+- Detect the queue with `gh-queue.mjs` (from the `github-fleet-tools` plugin), not by reasoning
   over issues in context; `git fetch` before trusting any local state. Do writes through the
   bounded scripts there (label/comment/create/merge), never raw `gh api`.
 - Ground-truth before claiming — never duplicate an open PR or an active claim.
