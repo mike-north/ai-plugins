@@ -33,10 +33,10 @@ stalls, while raw `gh api`/`gh issue edit`/`gh pr merge` stays human-gated.
 
 ## Setup (invocation + allowlisting)
 
-Scripts live in `scripts/` under this plugin. Two ways to call them:
+Scripts live in `scripts/` alongside this skill (`skills/github-fleet-tools/scripts/`). Two ways to call them:
 
-- **By path:** `${CLAUDE_PLUGIN_ROOT}/scripts/<name>` — portable, works anywhere.
-- **By name (recommended):** symlink them onto your `PATH` (e.g. `ln -s <plugin>/scripts/* ~/bin/`)
+- **By path:** `${CLAUDE_PLUGIN_ROOT}/skills/github-fleet-tools/scripts/<name>` — portable, works anywhere.
+- **By name (recommended):** symlink them onto your `PATH` (e.g. `ln -s <plugin>/skills/github-fleet-tools/scripts/* ~/bin/`)
   and call them bare — `gh-queue.mjs list`, `pr-merge.sh 10`. Bare names give **stable
   allowlist entries** that don't churn with the plugin's install path or version.
 

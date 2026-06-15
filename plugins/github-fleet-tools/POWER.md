@@ -23,7 +23,7 @@ hatch, so it can be allowlisted and run without a prompt — while raw `gh api` 
 ## Related Files
 
 - `skills/github-fleet-tools/SKILL.md` — the tool reference, doctrine, and setup/allowlisting.
-- `scripts/` — the bounded `gh`-wrapping scripts.
+- `skills/github-fleet-tools/scripts/` — the bounded `gh`-wrapping scripts.
 - `mcp.json` — MCP server configuration (none required).
 
 Requires `git` and an authenticated GitHub CLI (`gh`).
