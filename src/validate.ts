@@ -20,6 +20,9 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
+import { parseFrontmatterField } from "./frontmatter.js";
+
+export { parseFrontmatterField };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -66,14 +69,6 @@ function readJson(filePath: string): unknown {
  * Extract a named field from YAML frontmatter (between --- markers).
  * Returns undefined if not found.
  */
-export function parseFrontmatterField(content: string, field: string): string | undefined {
-  const fmMatch = /^---\s*\n([\s\S]*?)\n---/m.exec(content);
-  if (!fmMatch) return undefined;
-  const frontmatter = fmMatch[1] ?? "";
-  const fieldMatch = new RegExp(`^${field}:\\s*(.+)$`, "m").exec(frontmatter);
-  return fieldMatch ? (fieldMatch[1]?.trim() ?? undefined) : undefined;
-}
-
 function getPluginDirectories(): string[] {
   if (!fs.existsSync(PLUGINS_DIR)) {
     return [];
