@@ -6,7 +6,7 @@ description: Show the ranked ready queue and fleet status (deterministic, via th
 Show the current fleet work queue using the deterministic engine — never by reading and
 diffing issues in context.
 
-Run (scripts in `~/.claude/skills/git/scripts/`):
+Run (scripts from the `github-fleet-tools` plugin):
 
 ```
 gh-queue.mjs status

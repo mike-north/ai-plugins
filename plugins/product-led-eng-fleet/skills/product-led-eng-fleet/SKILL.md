@@ -29,8 +29,8 @@ the queue_ — what's ready, what's ranked first, and "who actually has what." T
 detector (no loop that re-pulls and diffs issues in its context window; no reliance on a
 stale local checkout).
 
-This pattern's GitHub I/O is a set of **bounded, allowlistable scripts** (the
-`git-utilities` companion; on this machine: `~/.claude/skills/git/scripts/`). They split
+This pattern's GitHub I/O is a set of **bounded, allowlistable scripts** — the companion
+**`github-fleet-tools`** plugin (install it alongside this one). They split
 cleanly along the agent's boundary:
 
 **Detection (read-only) — `gh-queue.mjs`:**

@@ -11,7 +11,7 @@ agents coordinated through a GitHub-issue work queue.
 
 ## Capabilities
 
-- **Deterministic queue engine**: `gh-queue.mjs` (in the companion `~/.claude/skills/git/scripts/`)
+- **Deterministic queue engine**: `gh-queue.mjs` (from the companion `github-fleet-tools` plugin)
   lists the ranked ready queue and runs a "who has what" ground-truth check — over git and the
   GitHub CLI, never by reasoning over issues in context.
 - **Bounded GitHub write-tools**: one verb per script (label, comment, create-issue,
@@ -27,5 +27,5 @@ agents coordinated through a GitHub-issue work queue.
 
 - `skills/product-led-eng-fleet/SKILL.md` — the operating model and routing.
 - `steering/fleet-conventions.md` — always-on steering summary for Kiro.
-- `~/.claude/skills/git/scripts/` — the companion bounded GitHub scripts (detection + writes).
+- the `github-fleet-tools` plugin — the companion bounded GitHub scripts (detection + writes).
 - `mcp.json` — MCP server configuration (none required).

@@ -9,7 +9,7 @@ PM-maintained doc (commonly `ENG_TEAM_INSTRUCTIONS.md`) and are enforced by the 
 1. **GitHub issues are the queue.** Before starting one, run
    `gh-queue.mjs ground-truth <N>`; if safe, claim it with `issue-label.sh <N> add
    "in progress"` + `issue-comment.sh <N> "<intent>"`. Don't duplicate an open PR or
-   another claimed issue. (All scripts live in `~/.claude/skills/git/scripts/`.)
+   another claimed issue. (All scripts come from the `github-fleet-tools` plugin, invoked by name.)
 2. **Acceptance criteria are the contract.** They're written to be testable — implement
    against them and say so in the PR ("criterion N covered by test X"). If a criterion is
    wrong or unachievable, comment on the issue _before_ building around it.

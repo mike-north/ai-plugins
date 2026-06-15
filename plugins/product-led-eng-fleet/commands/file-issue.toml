@@ -13,5 +13,5 @@ no conversation context, so the issue must stand alone. Include:
 Size to ~one agent's unit of work; split separable tracks. Put real deadlines in the title
 as (due YYYY-MM-DD) and apply priority labels. Label unresolved design choices needs-decision
 and don't queue them. Show the draft and confirm before creating it with
-`issue-create.sh --title <T> --body-file <draft.md> [--label …]` (in ~/.claude/skills/git/scripts/).
+`issue-create.sh --title <T> --body-file <draft.md> [--label …]` (from the github-fleet-tools plugin).
 """

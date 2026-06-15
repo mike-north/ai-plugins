@@ -106,6 +106,19 @@
         "automation",
         "agents"
       ]
+    },
+    {
+      "name": "git",
+      "source": "./plugins/git",
+      "description": "Deterministic local-git utilities for agents: exact diff statistics (meaningful vs raw line counts, implementation vs test split) and a stacked-PR manager (gst) for chains of dependent branches. Run the scripts for exact results — never estimate.",
+      "tags": [
+        "git",
+        "diff",
+        "stacked-prs",
+        "branches",
+        "metrics",
+        "worktrees"
+      ]
     }
   ]
 }

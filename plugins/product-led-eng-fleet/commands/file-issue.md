@@ -23,5 +23,5 @@ Size it to ~one agent's unit of work (split separable tracks into separate issue
 real deadline in the title as `(due YYYY-MM-DD)` and apply priority labels — the queue ranks
 on those. If a design choice is unresolved, label it `needs-decision` and do not queue it for
 pickup. Show me the drafted issue and confirm before creating it with `issue-create.sh
---title <T> --body-file <draft.md> [--label …]` (in `~/.claude/skills/git/scripts/`; it
+--title <T> --body-file <draft.md> [--label …]` (from the `github-fleet-tools` plugin; it
 wraps a single `gh issue create`).

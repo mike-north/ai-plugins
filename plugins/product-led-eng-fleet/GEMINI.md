@@ -15,5 +15,5 @@ of autonomous coding agents coordinated through GitHub issues:
 
 The queue state is detected by a deterministic engine (`gh-queue.mjs`, over `git` and the
 GitHub CLI), not by reasoning over issues in context, and every GitHub write goes through a
-bounded, allowlistable script (the companion `~/.claude/skills/git/scripts/` family) rather
+bounded, allowlistable script (the companion `github-fleet-tools` plugin) rather
 than arbitrary `gh api`. Commands: `eng-loop`, `queue`, `file-issue`.

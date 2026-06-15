@@ -18,7 +18,7 @@ Read the repo's fleet-conventions file (often `ENG_TEAM_INSTRUCTIONS.md`) from
 
 ## 2. Triage the queue (deterministically)
 
-Run the engine, never an in-context diff (scripts live in `~/.claude/skills/git/scripts/`):
+Run the engine, never an in-context diff (scripts come from the `github-fleet-tools` plugin):
 
 ```
 gh-queue.mjs list

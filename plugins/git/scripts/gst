@@ -1,0 +1,1065 @@
+#!/usr/bin/env bash
+# gst — stacked PR manager
+# Bash 3 compatible (macOS /bin/bash)
+
+GST_VERSION="0.1.0"
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Color / output helpers
+# ---------------------------------------------------------------------------
+
+if [ -t 1 ]; then
+  C_RESET="$(tput sgr0 2>/dev/null || printf '\033[0m')"
+  C_BOLD="$(tput bold 2>/dev/null || printf '\033[1m')"
+  C_DIM="$(tput dim 2>/dev/null || printf '\033[2m')"
+  C_RED="$(tput setaf 1 2>/dev/null || printf '\033[31m')"
+  C_GREEN="$(tput setaf 2 2>/dev/null || printf '\033[32m')"
+  C_YELLOW="$(tput setaf 3 2>/dev/null || printf '\033[33m')"
+  C_BLUE="$(tput setaf 4 2>/dev/null || printf '\033[34m')"
+  C_CYAN="$(tput setaf 6 2>/dev/null || printf '\033[36m')"
+else
+  C_RESET="" C_BOLD="" C_DIM="" C_RED="" C_GREEN="" C_YELLOW="" C_BLUE="" C_CYAN=""
+fi
+
+gst_die() {
+  printf '%s%sERROR:%s %s\n' "$C_BOLD" "$C_RED" "$C_RESET" "$*" >&2
+  exit 1
+}
+
+gst_warn() {
+  printf '%s%sWARN:%s %s\n' "$C_BOLD" "$C_YELLOW" "$C_RESET" "$*" >&2
+}
+
+gst_info() {
+  printf '%s%s%s\n' "$C_CYAN" "$*" "$C_RESET"
+}
+
+# ---------------------------------------------------------------------------
+# Core helpers
+# ---------------------------------------------------------------------------
+
+gst_require_git() {
+  git rev-parse --git-dir >/dev/null 2>&1 || gst_die "Not inside a git repository"
+}
+
+gst_current_branch() {
+  local branch
+  branch="$(git symbolic-ref --short HEAD 2>/dev/null)" || gst_die "Detached HEAD — cannot determine current branch"
+  printf '%s' "$branch"
+}
+
+gst_detect_trunk() {
+  if git rev-parse --verify main >/dev/null 2>&1; then
+    printf 'main'
+  elif git rev-parse --verify master >/dev/null 2>&1; then
+    printf 'master'
+  elif git rev-parse --verify origin/HEAD >/dev/null 2>&1; then
+    git rev-parse --abbrev-ref origin/HEAD | sed 's|origin/||'
+  else
+    printf 'main'
+  fi
+}
+
+gst_get_parent() {
+  local branch="$1"
+  git config "branch.${branch}.stack-parent" 2>/dev/null || true
+}
+
+gst_set_parent() {
+  local branch="$1" parent="$2"
+  git config "branch.${branch}.stack-parent" "$parent"
+}
+
+gst_unset_parent() {
+  local branch="$1"
+  git config --unset "branch.${branch}.stack-parent" 2>/dev/null || true
+}
+
+# Load all stack metadata into parallel arrays.
+# GST_META_BRANCHES and GST_META_PARENTS are populated.
+GST_META_BRANCHES=()
+GST_META_PARENTS=()
+
+gst_get_all_metadata() {
+  GST_META_BRANCHES=()
+  GST_META_PARENTS=()
+  local line key val branch
+  while IFS= read -r line; do
+    key="${line%% *}"
+    val="${line#* }"
+    # key format: branch.<name>.stack-parent
+    branch="${key#branch.}"
+    branch="${branch%.stack-parent}"
+    GST_META_BRANCHES=("${GST_META_BRANCHES[@]+"${GST_META_BRANCHES[@]}"}" "$branch")
+    GST_META_PARENTS=("${GST_META_PARENTS[@]+"${GST_META_PARENTS[@]}"}" "$val")
+  done < <(git config --get-regexp '^branch\..*\.stack-parent$' 2>/dev/null || true)
+}
+
+# Look up parent from already-loaded metadata arrays (avoids extra git config calls)
+gst_parent_from_meta() {
+  local branch="$1"
+  local i
+  for i in $(seq 0 $((${#GST_META_BRANCHES[@]} - 1))); do
+    if [ "${GST_META_BRANCHES[$i]}" = "$branch" ]; then
+      printf '%s' "${GST_META_PARENTS[$i]}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Walk up the stack from a branch, returning root (stops at trunk or no parent)
+# Prints each branch from root down to the given branch (inclusive)
+# Also detects cycles.
+gst_walk_up() {
+  local branch="$1"
+  local visited=()
+  local chain=()
+  local current="$branch"
+  local parent
+
+  while true; do
+    # Cycle detection
+    local v
+    for v in "${visited[@]+"${visited[@]}"}"; do
+      if [ "$v" = "$current" ]; then
+        gst_warn "Cycle detected at branch '$current' — breaking"
+        break 2
+      fi
+    done
+    visited=("${visited[@]+"${visited[@]}"}" "$current")
+    chain=("$current" "${chain[@]+"${chain[@]}"}") # prepend
+
+    parent="$(gst_parent_from_meta "$current" 2>/dev/null)" || parent=""
+    if [ -z "$parent" ]; then
+      break
+    fi
+    current="$parent"
+  done
+
+  printf '%s\n' "${chain[@]+"${chain[@]}"}"
+}
+
+# Find direct children of a branch from loaded metadata
+gst_find_children() {
+  local branch="$1"
+  local i
+  for i in $(seq 0 $((${#GST_META_BRANCHES[@]} - 1))); do
+    if [ "${GST_META_PARENTS[$i]}" = "$branch" ]; then
+      printf '%s\n' "${GST_META_BRANCHES[$i]}"
+    fi
+  done
+}
+
+# Is the working tree dirty?
+gst_is_dirty() {
+  ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null
+}
+
+# Commits ahead of parent
+gst_ahead_count() {
+  local branch="$1" parent="$2"
+  git rev-list --count "${parent}..${branch}" 2>/dev/null || printf '?'
+}
+
+# Commits behind parent
+gst_behind_count() {
+  local branch="$1" parent="$2"
+  git rev-list --count "${branch}..${parent}" 2>/dev/null || printf '?'
+}
+
+# ---------------------------------------------------------------------------
+# gh auth helper
+# ---------------------------------------------------------------------------
+
+gst_gh() {
+  local remote_url
+  remote_url="$(git remote get-url origin 2>/dev/null)" || remote_url=""
+
+  if printf '%s' "$remote_url" | grep -qE '(stripe-internal|stripe|git\.corp\.stripe\.com)'; then
+    gh auth switch --user mnorth-stripe 2>/dev/null || true
+  else
+    gh auth switch --user mike-north 2>/dev/null || true
+  fi
+
+  gh "$@"
+}
+
+# ---------------------------------------------------------------------------
+# PR status cache: single gh pr list call
+# ---------------------------------------------------------------------------
+# After calling gst_load_pr_cache, use gst_pr_for_branch <branch>
+# to get "number|state|url" or empty string.
+
+GST_PR_CACHE_LOADED=0
+declare -a GST_PR_CACHE_BRANCHES 2>/dev/null || GST_PR_CACHE_BRANCHES=()
+declare -a GST_PR_CACHE_DATA 2>/dev/null || GST_PR_CACHE_DATA=()
+
+gst_load_pr_cache() {
+  if [ "$GST_PR_CACHE_LOADED" = "1" ]; then return 0; fi
+  GST_PR_CACHE_BRANCHES=()
+  GST_PR_CACHE_DATA=()
+
+  local json line head number state url isDraft
+  json="$(gst_gh pr list --limit 200 --json number,headRefName,state,isDraft,url 2>/dev/null)" || json="[]"
+
+  # Parse JSON with basic shell — one entry per line using python if available, else awk
+  if command -v python3 >/dev/null 2>&1; then
+    while IFS=$'\t' read -r head number state isDraft url; do
+      GST_PR_CACHE_BRANCHES=("${GST_PR_CACHE_BRANCHES[@]+"${GST_PR_CACHE_BRANCHES[@]}"}" "$head")
+      # Normalise state label
+      local label
+      if [ "$isDraft" = "True" ] || [ "$isDraft" = "true" ]; then
+        label="draft"
+      else
+        case "$state" in
+          OPEN|open) label="open" ;;
+          MERGED|merged) label="merged" ;;
+          CLOSED|closed) label="closed" ;;
+          *) label="$(printf '%s' "$state" | tr '[:upper:]' '[:lower:]')" ;;
+        esac
+      fi
+      GST_PR_CACHE_DATA=("${GST_PR_CACHE_DATA[@]+"${GST_PR_CACHE_DATA[@]}"}" "${number}|${label}|${url}")
+    done < <(python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for pr in data:
+    print(pr['headRefName'] + '\t' + str(pr['number']) + '\t' + pr['state'] + '\t' + str(pr.get('isDraft', False)) + '\t' + pr['url'])
+" <<< "$json" 2>/dev/null || true)
+  fi
+
+  GST_PR_CACHE_LOADED=1
+}
+
+gst_pr_for_branch() {
+  local branch="$1"
+  local i
+  for i in $(seq 0 $((${#GST_PR_CACHE_BRANCHES[@]} - 1))); do
+    if [ "${GST_PR_CACHE_BRANCHES[$i]}" = "$branch" ]; then
+      printf '%s' "${GST_PR_CACHE_DATA[$i]}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+gst_pr_label() {
+  local data="$1"
+  local number state
+  number="${data%%|*}"
+  state="${data#*|}"
+  state="${state%%|*}"
+  printf '#%s (%s)' "$number" "$state"
+}
+
+# ---------------------------------------------------------------------------
+# Tree printing helper
+# ---------------------------------------------------------------------------
+
+# Print one node in the tree
+# Args: branch prefix is_last current_branch
+gst_print_node() {
+  local branch="$1"
+  local prefix="$2"
+  local is_last="$3"
+  local current="$4"
+  local parent
+
+  parent="$(gst_parent_from_meta "$branch" 2>/dev/null)" || parent=""
+
+  local connector child_prefix
+  if [ "$is_last" = "1" ]; then
+    connector="└── "
+    child_prefix="${prefix}    "
+  else
+    connector="├── "
+    child_prefix="${prefix}│   "
+  fi
+
+  # Ahead/behind
+  local ahead behind status_str
+  if [ -n "$parent" ] && git rev-parse --verify "$parent" >/dev/null 2>&1 && git rev-parse --verify "$branch" >/dev/null 2>&1; then
+    ahead="$(gst_ahead_count "$branch" "$parent")"
+    behind="$(gst_behind_count "$branch" "$parent")"
+    status_str=""
+    if [ "$ahead" != "0" ] && [ "$ahead" != "?" ]; then
+      status_str="${ahead}${C_GREEN}↑${C_RESET}"
+    fi
+    if [ "$behind" != "0" ] && [ "$behind" != "?" ]; then
+      status_str="${status_str} ${behind}${C_RED}↓${C_RESET}"
+    fi
+    if [ -z "$status_str" ]; then
+      status_str="${C_DIM}up-to-date${C_RESET}"
+    fi
+  else
+    status_str=""
+  fi
+
+  # PR info
+  local pr_str=""
+  local pr_data
+  if pr_data="$(gst_pr_for_branch "$branch" 2>/dev/null)"; then
+    pr_str="  ${C_BLUE}$(gst_pr_label "$pr_data")${C_RESET}"
+  else
+    pr_str="  ${C_DIM}(no PR)${C_RESET}"
+  fi
+
+  # Current branch marker (inline after connector, before branch name)
+  local name_str
+  if [ "$branch" = "$current" ]; then
+    name_str="${C_BOLD}${branch} *${C_RESET}"
+  else
+    name_str="$branch"
+  fi
+
+  printf '  %s%s%s  %s%s\n' \
+    "$prefix" "$connector" "$name_str" "$status_str" "$pr_str"
+
+  # Recurse into children
+  local children=()
+  while IFS= read -r child; do
+    [ -n "$child" ] && children=("${children[@]+"${children[@]}"}" "$child")
+  done < <(gst_find_children "$branch")
+
+  local n="${#children[@]}"
+  local idx=0
+  for child in "${children[@]+"${children[@]}"}"; do
+    idx=$((idx + 1))
+    if [ "$idx" = "$n" ]; then
+      gst_print_node "$child" "$child_prefix" "1" "$current"
+    else
+      gst_print_node "$child" "$child_prefix" "0" "$current"
+    fi
+  done
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: create
+# ---------------------------------------------------------------------------
+
+cmd_create() {
+  local name="${1:-}"
+  [ -n "$name" ] || gst_die "Usage: gst create <name>"
+
+  gst_require_git
+  local current
+  current="$(gst_current_branch)"
+
+  git checkout -b "$name"
+  gst_set_parent "$name" "$current"
+
+  printf '%sCreated branch %s%s%s from %s%s%s\n' \
+    "$C_RESET" "$C_BOLD" "$name" "$C_RESET" "$C_BOLD" "$current" "$C_RESET"
+  printf '\nStack:\n'
+  gst_get_all_metadata
+  gst_load_pr_cache
+
+  # Print mini stack view
+  printf '  %s\n' "$current"
+  printf '  └── %s%s%s *\n' "$C_BOLD" "$name" "$C_RESET"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: list
+# ---------------------------------------------------------------------------
+
+cmd_list() {
+  gst_require_git
+  local current
+  current="$(gst_current_branch)"
+
+  gst_get_all_metadata
+  gst_load_pr_cache
+
+  # Walk up to find stack root
+  local root=""
+  local chain=()
+  while IFS= read -r b; do
+    chain=("${chain[@]+"${chain[@]}"}" "$b")
+  done < <(gst_walk_up "$current")
+
+  if [ "${#chain[@]}" -gt 0 ]; then
+    root="${chain[0]}"
+  else
+    root="$current"
+  fi
+
+  # Check if root has a parent (i.e., root's parent exists)
+  local root_parent
+  root_parent="$(gst_parent_from_meta "$root" 2>/dev/null)" || root_parent=""
+
+  # Print from the very root
+  if [ -n "$root_parent" ]; then
+    printf '  %s\n' "$root_parent"
+    gst_print_node "$root" "" "1" "$current"
+  else
+    # root is trunk or standalone; print children directly
+    local children=()
+    while IFS= read -r child; do
+      [ -n "$child" ] && children=("${children[@]+"${children[@]}"}" "$child")
+    done < <(gst_find_children "$root")
+
+    local marker=""
+    if [ "$root" = "$current" ]; then
+      marker="${C_BOLD}*${C_RESET} "
+      printf '%s  %s%s%s\n' "$marker" "$C_BOLD" "$root" "$C_RESET"
+    else
+      printf '    %s\n' "$root"
+    fi
+
+    local n="${#children[@]}"
+    local idx=0
+    for child in "${children[@]+"${children[@]}"}"; do
+      idx=$((idx + 1))
+      if [ "$idx" = "$n" ]; then
+        gst_print_node "$child" "" "1" "$current"
+      else
+        gst_print_node "$child" "" "0" "$current"
+      fi
+    done
+
+    if [ "${#children[@]}" = "0" ] && [ "$root" != "$current" ]; then
+      printf '%s(no stack branches found — use gst create <name> to start a stack)%s\n' "$C_DIM" "$C_RESET"
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: restack
+# ---------------------------------------------------------------------------
+
+GST_RESTACK_STATE_FILE=""
+
+gst_restack_state_file() {
+  local git_dir
+  git_dir="$(git rev-parse --git-dir)"
+  GST_RESTACK_STATE_FILE="${git_dir}/gst-restack-state"
+}
+
+cmd_restack() {
+  gst_require_git
+  gst_restack_state_file
+
+  local continue_flag=0 abort_flag=0
+  for arg in "$@"; do
+    case "$arg" in
+      --continue) continue_flag=1 ;;
+      --abort)    abort_flag=1 ;;
+    esac
+  done
+
+  # Handle --abort
+  if [ "$abort_flag" = "1" ]; then
+    if [ -f "$GST_RESTACK_STATE_FILE" ]; then
+      local orig_branch
+      orig_branch="$(head -1 "$GST_RESTACK_STATE_FILE")"
+      git rebase --abort 2>/dev/null || true
+      if [ -n "$orig_branch" ]; then
+        git checkout "$orig_branch" 2>/dev/null || true
+      fi
+      rm -f "$GST_RESTACK_STATE_FILE"
+      printf '%sRestack aborted.%s\n' "$C_YELLOW" "$C_RESET"
+    else
+      gst_warn "No restack in progress"
+    fi
+    return 0
+  fi
+
+  # Handle --continue
+  if [ "$continue_flag" = "1" ]; then
+    if [ ! -f "$GST_RESTACK_STATE_FILE" ]; then
+      gst_die "No restack in progress (no state file found)"
+    fi
+
+    git rebase --continue || {
+      printf '\n%sRebase conflict persists. Resolve conflicts and run:%s\n' "$C_YELLOW" "$C_RESET"
+      printf '  git add <files>\n'
+      printf '  gst restack --continue\n'
+      printf '\nOr to abort:\n  gst restack --abort\n'
+      exit 1
+    }
+
+    # Remove the top entry from state and continue
+    local remaining
+    remaining="$(tail -n +3 "$GST_RESTACK_STATE_FILE")"
+    local orig_branch
+    orig_branch="$(head -1 "$GST_RESTACK_STATE_FILE")"
+
+    if [ -z "$remaining" ]; then
+      rm -f "$GST_RESTACK_STATE_FILE"
+      git checkout "$orig_branch" 2>/dev/null || true
+      printf '%sRestack complete.%s\n' "$C_GREEN" "$C_RESET"
+      return 0
+    fi
+
+    printf '%s\n%s' "$orig_branch" "$remaining" > "$GST_RESTACK_STATE_FILE"
+    printf '%sRemaining branches to restack — run gst restack --continue again.%s\n' "$C_YELLOW" "$C_RESET"
+    return 0
+  fi
+
+  # Fresh restack
+  if gst_is_dirty; then
+    gst_die "Working tree is dirty. Commit or stash changes before restacking."
+  fi
+
+  local current
+  current="$(gst_current_branch)"
+
+  gst_get_all_metadata
+
+  # Build topological order: BFS from root
+  local root=""
+  local chain=()
+  while IFS= read -r b; do
+    chain=("${chain[@]+"${chain[@]}"}" "$b")
+  done < <(gst_walk_up "$current")
+
+  if [ "${#chain[@]}" -gt 0 ]; then
+    root="${chain[0]}"
+  else
+    root="$current"
+  fi
+
+  # BFS to get all branches in topological order
+  local queue=("$root")
+  local ordered=()
+  local visited_restack=()
+
+  while [ "${#queue[@]}" -gt 0 ]; do
+    local head="${queue[0]}"
+    queue=("${queue[@]:1}")
+
+    # Skip if already visited
+    local already=0
+    local vr
+    for vr in "${visited_restack[@]+"${visited_restack[@]}"}"; do
+      if [ "$vr" = "$head" ]; then already=1; break; fi
+    done
+    [ "$already" = "1" ] && continue
+
+    visited_restack=("${visited_restack[@]+"${visited_restack[@]}"}" "$head")
+    ordered=("${ordered[@]+"${ordered[@]}"}" "$head")
+
+    while IFS= read -r child; do
+      [ -n "$child" ] && queue=("${queue[@]+"${queue[@]}"}" "$child")
+    done < <(gst_find_children "$head")
+  done
+
+  # Save state: first line = orig branch, subsequent lines = pending branches
+  {
+    printf '%s\n' "$current"
+    for b in "${ordered[@]+"${ordered[@]}"}"; do
+      [ "$b" != "$root" ] && printf '%s\n' "$b"
+    done
+  } > "$GST_RESTACK_STATE_FILE"
+
+  printf '%sRestacking %d branch(es)...%s\n' "$C_CYAN" "$((${#ordered[@]} - 1))" "$C_RESET"
+
+  local any_rebased=0
+  for branch in "${ordered[@]+"${ordered[@]}"}"; do
+    # Skip the root itself (no parent to rebase onto)
+    local parent
+    parent="$(gst_parent_from_meta "$branch" 2>/dev/null)" || parent=""
+    [ -z "$parent" ] && continue
+
+    # Check if parent branch still exists
+    if ! git rev-parse --verify "$parent" >/dev/null 2>&1; then
+      gst_warn "Parent '$parent' of '$branch' not found — skipping (orphaned)"
+      continue
+    fi
+
+    # Check if already up-to-date
+    local merge_base
+    merge_base="$(git merge-base "$parent" "$branch" 2>/dev/null)" || merge_base=""
+    local parent_tip
+    parent_tip="$(git rev-parse "$parent" 2>/dev/null)" || parent_tip=""
+
+    if [ -n "$merge_base" ] && [ "$merge_base" = "$parent_tip" ]; then
+      printf '  %s%s%s: already up-to-date\n' "$C_DIM" "$branch" "$C_RESET"
+      continue
+    fi
+
+    printf '  Rebasing %s%s%s onto %s...\n' "$C_BOLD" "$branch" "$C_RESET" "$parent"
+    any_rebased=1
+
+    git checkout "$branch" 2>/dev/null
+
+    if ! git rebase --onto "$parent" "$merge_base" "$branch" 2>/dev/null; then
+      printf '\n%sConflict while rebasing %s onto %s.%s\n' "$C_RED" "$branch" "$parent" "$C_RESET"
+      printf 'Resolve conflicts, then:\n'
+      printf '  git add <files>\n'
+      printf '  gst restack --continue\n\n'
+      printf 'Or to abort:\n  gst restack --abort\n'
+      exit 1
+    fi
+  done
+
+  rm -f "$GST_RESTACK_STATE_FILE"
+  git checkout "$current" 2>/dev/null || true
+
+  if [ "$any_rebased" = "0" ]; then
+    printf '%sAll branches are already up-to-date.%s\n' "$C_GREEN" "$C_RESET"
+  else
+    printf '%sRestack complete.%s\n' "$C_GREEN" "$C_RESET"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Stack table for PR bodies
+# ---------------------------------------------------------------------------
+
+gst_build_stack_table() {
+  # Args: current_pr_branch  branch1 pr1  branch2 pr2  ...
+  # Prints the markdown stack table block
+  local current_pr_branch="$1"
+  shift
+
+  local table
+  table="<!-- gst:stack -->"$'\n'
+  table="${table}| | Branch | PR |"$'\n'
+  table="${table}|---|--------|-----|"$'\n'
+
+  while [ "$#" -ge 2 ]; do
+    local b="$1" pr="$2"
+    shift 2
+    if [ "$b" = "$current_pr_branch" ]; then
+      table="${table}| ▶ | **${b}** | **${pr}** |"$'\n'
+    else
+      table="${table}| | ${b} | ${pr} |"$'\n'
+    fi
+  done
+
+  table="${table}<!-- /gst:stack -->"
+  printf '%s' "$table"
+}
+
+gst_inject_stack_table() {
+  local body="$1"
+  local new_block="$2"
+
+  if printf '%s' "$body" | grep -q '<!-- gst:stack -->'; then
+    # Replace existing block using python3
+    if command -v python3 >/dev/null 2>&1; then
+      printf '%s' "$body" | python3 -c "
+import sys, re
+body = sys.stdin.read()
+new_block = sys.argv[1]
+result = re.sub(r'<!-- gst:stack -->.*?<!-- /gst:stack -->', new_block, body, flags=re.DOTALL)
+print(result, end='')
+" "$new_block"
+    else
+      # Fallback: prepend
+      printf '%s\n\n%s' "$new_block" "$body"
+    fi
+  else
+    printf '%s\n\n%s' "$new_block" "$body"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: submit
+# ---------------------------------------------------------------------------
+
+cmd_submit() {
+  gst_require_git
+
+  local draft_flag=0 fill_flag=0 push_delay=10
+  for arg in "$@"; do
+    case "$arg" in
+      --draft) draft_flag=1 ;;
+      --fill)  fill_flag=1 ;;
+      --no-delay) push_delay=0 ;;
+      --push-delay=*)
+        push_delay="${arg#--push-delay=}"
+        if [ "$push_delay" -gt 0 ] 2>/dev/null && [ "$push_delay" -lt 3 ]; then
+          gst_die "Push delay must be 0 (disabled) or >= 3 seconds (got ${push_delay}s)"
+        fi
+        ;;
+    esac
+  done
+
+  local current
+  current="$(gst_current_branch)"
+
+  gst_get_all_metadata
+  gst_load_pr_cache
+
+  local trunk
+  trunk="$(gst_detect_trunk)"
+
+  # Build ordered branch list (root to current, plus siblings/children)
+  local chain=()
+  while IFS= read -r b; do
+    chain=("${chain[@]+"${chain[@]}"}" "$b")
+  done < <(gst_walk_up "$current")
+
+  if [ "${#chain[@]}" = "0" ]; then
+    chain=("$current")
+  fi
+
+  # Filter out trunk — it's not a PR branch
+  local submit_chain=()
+  for b in "${chain[@]+"${chain[@]}"}"; do
+    if [ "$b" != "$trunk" ]; then
+      submit_chain=("${submit_chain[@]+"${submit_chain[@]}"}" "$b")
+    fi
+  done
+
+  if [ "${#submit_chain[@]}" = "0" ]; then
+    gst_warn "No stack branches to submit (only trunk found)"
+    return 0
+  fi
+
+  printf '%sSubmitting stack (%d branch(es))...%s\n' "$C_CYAN" "${#submit_chain[@]}" "$C_RESET"
+
+  # Push all branches and create/update PRs, collecting PR numbers
+  local pr_branches=()
+  local pr_numbers=()
+  local first_push=1
+
+  for branch in "${submit_chain[@]+"${submit_chain[@]}"}"; do
+    local parent
+    parent="$(gst_parent_from_meta "$branch" 2>/dev/null)" || parent=""
+    if [ -z "$parent" ]; then
+      parent="$trunk"
+    fi
+
+    # Skip if branch doesn't exist locally
+    if ! git rev-parse --verify "$branch" >/dev/null 2>&1; then
+      gst_warn "Branch '$branch' not found locally — skipping"
+      continue
+    fi
+
+    # Delay between pushes to avoid SSH throttling (skip before first push)
+    if [ "$first_push" = "1" ]; then
+      first_push=0
+    elif [ "$push_delay" -gt 0 ] 2>/dev/null; then
+      printf '  %sWaiting %ds...%s\n' "$C_DIM" "$push_delay" "$C_RESET"
+      sleep "$push_delay"
+    fi
+
+    printf '\n  %sPushing %s%s...\n' "$C_BOLD" "$branch" "$C_RESET"
+    if ! git push origin "$branch" --force-with-lease 2>&1 | sed 's/^/    /'; then
+      gst_warn "Push failed for $branch — retrying after 15s..."
+      sleep 15
+      git push origin "$branch" --force-with-lease 2>&1 | sed 's/^/    /' || {
+        gst_warn "Push retry failed for $branch — skipping"
+        continue
+      }
+    fi
+
+    # Check if PR exists
+    local existing_pr
+    existing_pr="$(gst_pr_for_branch "$branch" 2>/dev/null)" || existing_pr=""
+
+    if [ -n "$existing_pr" ]; then
+      local pr_num
+      pr_num="${existing_pr%%|*}"
+      printf '  %sUpdating PR #%s for %s%s\n' "$C_YELLOW" "$pr_num" "$branch" "$C_RESET"
+
+      # Check if base is correct
+      local current_base
+      current_base="$(gst_gh pr view "$pr_num" --json baseRefName --jq '.baseRefName' 2>/dev/null)" || current_base=""
+      if [ -n "$current_base" ] && [ "$current_base" != "$parent" ]; then
+        printf '    Updating base: %s → %s\n' "$current_base" "$parent"
+        gst_gh pr edit "$pr_num" --base "$parent" >/dev/null
+      fi
+
+      pr_branches=("${pr_branches[@]+"${pr_branches[@]}"}" "$branch")
+      pr_numbers=("${pr_numbers[@]+"${pr_numbers[@]}"}" "$pr_num")
+    else
+      printf '  %sCreating PR for %s%s\n' "$C_GREEN" "$branch" "$C_RESET"
+      local create_args=(pr create --head "$branch" --base "$parent")
+      [ "$draft_flag" = "1" ] && create_args=("${create_args[@]}" --draft)
+      [ "$fill_flag"  = "1" ] && create_args=("${create_args[@]}" --fill)
+
+      local pr_url
+      pr_url="$(gst_gh "${create_args[@]}" 2>&1)" || {
+        gst_warn "Failed to create PR for $branch: $pr_url"
+        continue
+      }
+      printf '  Created: %s%s%s\n' "$C_BLUE" "$pr_url" "$C_RESET"
+
+      # Reload PR cache for this branch
+      local new_pr_num
+      new_pr_num="$(gst_gh pr view --head "$branch" --json number --jq '.number' 2>/dev/null)" || new_pr_num=""
+      if [ -n "$new_pr_num" ]; then
+        pr_branches=("${pr_branches[@]+"${pr_branches[@]}"}" "$branch")
+        pr_numbers=("${pr_numbers[@]+"${pr_numbers[@]}"}" "$new_pr_num")
+      fi
+    fi
+  done
+
+  # Inject stack tables into each PR body
+  if [ "${#pr_branches[@]}" -gt 1 ]; then
+    printf '\n%sInjecting stack tables...%s\n' "$C_CYAN" "$C_RESET"
+
+    # Build flat list: branch pr_num branch pr_num ...
+    local table_args=()
+    local ti
+    for ti in $(seq 0 $((${#pr_branches[@]} - 1))); do
+      table_args=("${table_args[@]+"${table_args[@]}"}" "${pr_branches[$ti]}" "#${pr_numbers[$ti]}")
+    done
+
+    for ti in $(seq 0 $((${#pr_branches[@]} - 1))); do
+      local tbranch="${pr_branches[$ti]}"
+      local tpr="${pr_numbers[$ti]}"
+
+      local stack_block
+      stack_block="$(gst_build_stack_table "$tbranch" "${table_args[@]+"${table_args[@]}"}")"
+
+      local current_body
+      current_body="$(gst_gh pr view "$tpr" --json body --jq '.body' 2>/dev/null)" || current_body=""
+
+      local new_body
+      new_body="$(gst_inject_stack_table "$current_body" "$stack_block")"
+
+      gst_gh pr edit "$tpr" --body "$new_body" >/dev/null
+      printf '  Updated PR #%s stack table\n' "$tpr"
+    done
+  fi
+
+  # Summary
+  if [ "${#pr_branches[@]}" -gt 0 ]; then
+    printf '\n%sSummary:%s\n' "$C_BOLD" "$C_RESET"
+    for ti in $(seq 0 $((${#pr_branches[@]} - 1))); do
+      local pr_url_display
+      pr_url_display="$(gst_gh pr view "${pr_numbers[$ti]}" --json url --jq '.url' 2>/dev/null)" || pr_url_display="(unknown)"
+      printf '  %s%s%s → %s%s%s\n' \
+        "$C_BOLD" "${pr_branches[$ti]}" "$C_RESET" \
+        "$C_BLUE" "$pr_url_display" "$C_RESET"
+    done
+  else
+    printf '\n%sNo PRs were created or updated.%s\n' "$C_YELLOW" "$C_RESET"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: up / down
+# ---------------------------------------------------------------------------
+
+cmd_up() {
+  gst_require_git
+  if gst_is_dirty; then
+    gst_die "Working tree is dirty. Commit or stash changes before navigating."
+  fi
+
+  local steps="${1:-1}"
+  local current
+  current="$(gst_current_branch)"
+  gst_get_all_metadata
+
+  local target="$current"
+  local i
+  for i in $(seq 1 "$steps"); do
+    local children=()
+    while IFS= read -r child; do
+      [ -n "$child" ] && children=("${children[@]+"${children[@]}"}" "$child")
+    done < <(gst_find_children "$target")
+
+    if [ "${#children[@]}" = "0" ]; then
+      gst_warn "Already at the top of the stack"
+      break
+    elif [ "${#children[@]}" = "1" ]; then
+      target="${children[0]}"
+    else
+      printf 'Multiple children — choose one:\n'
+      local idx=0
+      for child in "${children[@]}"; do
+        idx=$((idx + 1))
+        printf '  %d) %s\n' "$idx" "$child"
+      done
+      local choice
+      printf 'Enter number: '
+      read -r choice
+      if [ "$choice" -ge 1 ] && [ "$choice" -le "${#children[@]}" ] 2>/dev/null; then
+        target="${children[$((choice - 1))]}"
+      else
+        gst_die "Invalid choice"
+      fi
+    fi
+  done
+
+  if [ "$target" != "$current" ]; then
+    git checkout "$target"
+    printf '%sSwitched to %s%s%s\n' "$C_RESET" "$C_BOLD" "$target" "$C_RESET"
+  fi
+}
+
+cmd_down() {
+  gst_require_git
+  if gst_is_dirty; then
+    gst_die "Working tree is dirty. Commit or stash changes before navigating."
+  fi
+
+  local steps="${1:-1}"
+  local current
+  current="$(gst_current_branch)"
+  gst_get_all_metadata
+
+  local target="$current"
+  local i
+  for i in $(seq 1 "$steps"); do
+    local parent
+    parent="$(gst_parent_from_meta "$target" 2>/dev/null)" || parent=""
+    if [ -z "$parent" ]; then
+      gst_warn "Already at the bottom of the stack"
+      break
+    fi
+    target="$parent"
+  done
+
+  if [ "$target" != "$current" ]; then
+    git checkout "$target"
+    printf '%sSwitched to %s%s%s\n' "$C_RESET" "$C_BOLD" "$target" "$C_RESET"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: log
+# ---------------------------------------------------------------------------
+
+cmd_log() {
+  gst_require_git
+  local current
+  current="$(gst_current_branch)"
+  gst_get_all_metadata
+
+  local chain=()
+  while IFS= read -r b; do
+    chain=("${chain[@]+"${chain[@]}"}" "$b")
+  done < <(gst_walk_up "$current")
+
+  if [ "${#chain[@]}" -le 1 ]; then
+    # Standalone branch — show last 20 commits
+    printf '%s%s%s (no parent in stack):\n' "$C_BOLD" "$current" "$C_RESET"
+    git log --oneline -20
+    return 0
+  fi
+
+  local i
+  for i in $(seq 0 $((${#chain[@]} - 1))); do
+    local branch="${chain[$i]}"
+    local parent=""
+    if [ "$i" -gt 0 ]; then
+      parent="${chain[$((i - 1))]}"
+    fi
+
+    if [ "$branch" = "$current" ]; then
+      printf '\n%s%s%s (current):\n' "$C_BOLD" "$branch" "$C_RESET"
+    else
+      printf '\n%s%s%s:\n' "$C_DIM" "$branch" "$C_RESET"
+    fi
+
+    if [ -n "$parent" ]; then
+      git log --oneline "${parent}..${branch}" 2>/dev/null || true
+    else
+      git log --oneline -10 "$branch" 2>/dev/null || true
+    fi
+  done
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: adopt
+# ---------------------------------------------------------------------------
+
+cmd_adopt() {
+  local branch="${1:-}"
+  [ -n "$branch" ] || gst_die "Usage: gst adopt <branch>"
+
+  gst_require_git
+  local current
+  current="$(gst_current_branch)"
+
+  # Verify the branch exists
+  git rev-parse --verify "$branch" >/dev/null 2>&1 || gst_die "Branch '$branch' not found"
+
+  gst_set_parent "$branch" "$current"
+  printf '%sAdopted %s%s%s as a child of %s%s%s\n' \
+    "$C_RESET" "$C_BOLD" "$branch" "$C_RESET" "$C_BOLD" "$current" "$C_RESET"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: orphan
+# ---------------------------------------------------------------------------
+
+cmd_orphan() {
+  local branch="${1:-}"
+  [ -n "$branch" ] || gst_die "Usage: gst orphan <branch>"
+
+  gst_require_git
+  gst_unset_parent "$branch"
+  printf '%sRemoved stack-parent metadata for %s%s%s\n' \
+    "$C_RESET" "$C_BOLD" "$branch" "$C_RESET"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: help
+# ---------------------------------------------------------------------------
+
+cmd_help() {
+  printf '%sgst%s v%s — Stacked PR manager\n\n' "$C_BOLD" "$C_RESET" "$GST_VERSION"
+  printf 'USAGE\n'
+  printf '  gst <subcommand> [args]\n\n'
+  printf 'SUBCOMMANDS\n\n'
+  printf '  %screate <name>%s\n' "$C_BOLD" "$C_RESET"
+  printf '    Create a new branch as a child of the current branch.\n\n'
+  printf '  %slist%s\n' "$C_BOLD" "$C_RESET"
+  printf '    Show the full stack tree with ahead/behind counts and PR status.\n\n'
+  printf '  %srestack [--continue] [--abort]%s\n' "$C_BOLD" "$C_RESET"
+  printf '    Rebase all stack branches onto their updated parents.\n\n'
+  printf '  %ssubmit [--draft] [--fill] [--push-delay=N] [--no-delay]%s\n' "$C_BOLD" "$C_RESET"
+  printf '    Push all branches and create/update GitHub PRs.\n'
+  printf '    --draft          Create PRs as drafts\n'
+  printf '    --fill           Auto-fill PR title/body from commits\n'
+  printf '    --push-delay=N   Seconds between pushes (default: 10, min: 3)\n'
+  printf '    --no-delay       Disable delay between pushes\n\n'
+  printf '  %sup [N]%s\n' "$C_BOLD" "$C_RESET"
+  printf '    Navigate N steps toward the top (leaf) of the stack (default: 1).\n\n'
+  printf '  %sdown [N]%s\n' "$C_BOLD" "$C_RESET"
+  printf '    Navigate N steps toward the bottom (root) of the stack (default: 1).\n\n'
+  printf '  %slog%s\n' "$C_BOLD" "$C_RESET"
+  printf '    Show git log for each branch in the stack.\n\n'
+  printf '  %sadopt <branch>%s\n' "$C_BOLD" "$C_RESET"
+  printf '    Set the stack-parent of <branch> to the current branch.\n\n'
+  printf '  %sorphan <branch>%s\n' "$C_BOLD" "$C_RESET"
+  printf '    Remove stack-parent metadata from <branch>.\n\n'
+  printf '  %shelp%s / %s--help%s\n' "$C_BOLD" "$C_RESET" "$C_BOLD" "$C_RESET"
+  printf '    Show this help.\n\n'
+  printf 'METADATA\n'
+  printf '  Stored in .git/config as branch.<name>.stack-parent\n\n'
+  printf 'VERSION\n'
+  printf '  %s\n' "$GST_VERSION"
+}
+
+# ---------------------------------------------------------------------------
+# Dispatch
+# ---------------------------------------------------------------------------
+
+main() {
+  local subcommand="${1:-help}"
+  shift || true
+
+  case "$subcommand" in
+    create)  cmd_create "$@" ;;
+    list|ls) cmd_list "$@" ;;
+    restack) cmd_restack "$@" ;;
+    submit)  cmd_submit "$@" ;;
+    up)      cmd_up "$@" ;;
+    down)    cmd_down "$@" ;;
+    log)     cmd_log "$@" ;;
+    adopt)   cmd_adopt "$@" ;;
+    orphan)  cmd_orphan "$@" ;;
+    help|--help|-h) cmd_help ;;
+    version|--version|-v) printf 'gst %s\n' "$GST_VERSION" ;;
+    *)
+      gst_warn "Unknown subcommand: $subcommand"
+      cmd_help
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"
