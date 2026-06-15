@@ -48,9 +48,9 @@ Allowlist the read tools and bounded writes (auto-approve); leave `pr-merge.sh` 
 "allow": [
   "Bash(gh-queue.mjs:*)", "Bash(pr-status.sh:*)", "Bash(pr-thread-status.sh:*)",
   "Bash(pr-review-comment-count.sh:*)", "Bash(pr-reply-resolve.sh:*)",
-  "Bash(pr-resolve-threads.sh:*)", "Bash(issue-label.sh:*)", "Bash(issue-comment.sh:*)",
-  "Bash(issue-close.sh:*)", "Bash(issue-create.sh:*)", "Bash(pr-comment.sh:*)",
-  "Bash(pr-ready.sh:*)", "Bash(pr-create.sh:*)"
+  "Bash(pr-resolve-threads.sh:*)", "Bash(gh-changed-files.sh:*)", "Bash(gh-file-at.sh:*)",
+  "Bash(issue-label.sh:*)", "Bash(issue-comment.sh:*)", "Bash(issue-close.sh:*)",
+  "Bash(issue-create.sh:*)", "Bash(pr-comment.sh:*)", "Bash(pr-ready.sh:*)", "Bash(pr-create.sh:*)"
 ],
 "ask":  [ "Bash(gh api:*)", "Bash(pr-merge.sh:*)" ]
 ```
@@ -71,6 +71,13 @@ require `git` and an authenticated GitHub CLI (`gh`).
   allowlist matches.
 - **`pr-thread-status.sh <PR> [COMMENT_ID…]`** — per-thread resolved/reply status; with ids,
   exit 2 if any still needs action (so a monitor-driven loop skips already-handled threads).
+- **`gh-changed-files.sh (<PR> | <base>...<head>) [--repo owner/name] [--json]`** — changed
+  files + line stats for a PR or compare range, via the API (any repo, no local checkout). The
+  remote complement to the `git` plugin's local `diff-stats.sh` (that one aggregates
+  review-effort line counts from a checkout; this one is per-file status for any PR/ref). Refs
+  resolve server-side.
+- **`gh-file-at.sh <ref> <path> [--repo owner/name]`** — print a file's contents at a ref
+  (commit/branch/tag) — the remote analog of `git show <ref>:<path>`. (Contents API caps ~1 MB.)
 - **`pr-review-comment-count.sh [PR] [author]`** — inline review-comment totals + resolved/
   unresolved thread split; `unresolved: 0` with a completed reviewer = "feedback acted on".
 
