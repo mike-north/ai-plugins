@@ -3,7 +3,13 @@
  * Converts hooks YAML source files to JSON for platforms that require JSON configuration.
  *
  * For each plugin in plugins/, finds hooks/*.yaml files and writes corresponding hooks/*.json files.
- * Only YAML sources are committed to git; JSON files are generated and gitignored.
+ *
+ * The YAML source and the generated Claude-format `hooks/claude.json` are BOTH committed:
+ * Claude Code installs a plugin from its `plugins/<name>/` source directly, so the path
+ * `plugin.json`'s "hooks" field resolves to (`./hooks/claude.json`) must exist in git. The
+ * generated Gemini-format `hooks/hooks.json` is a build intermediate and stays gitignored —
+ * Gemini installs from the committed `dist/` export, which carries its own hooks.json. CI
+ * re-runs this build and fails if a committed `claude.json` drifts from its YAML source.
  *
  * A Claude-source YAML (typically hooks/claude.yaml) is emitted once for each of the
  * supported target formats:
