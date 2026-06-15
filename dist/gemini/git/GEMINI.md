@@ -11,5 +11,8 @@ Local-VCS tooling for agents (no GitHub auth required):
   estimated.
 - **`gst`** — stacked-PR manager for chains of dependent branches: create, list, restack,
   submit (push + create/update PRs), navigate, adopt, orphan; metadata in git config.
+- **`git-identity`** — per-host identity router: resolve a remote → commit author + optional GPG
+  signing key + arbitrary fields and apply them to a repo (provider-agnostic; SSH key stays owned
+  by ssh config). See `skills/git-identity/SKILL.md`.
 
 Plus worktree-discipline guidance for working a branch stack. See `skills/git/SKILL.md`.

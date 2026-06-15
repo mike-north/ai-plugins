@@ -15,9 +15,13 @@ Deterministic local-git tooling for agents. No GitHub auth required.
 - **Stacked-PR management** (`gst`): create / list / restack / submit / navigate / adopt /
   orphan chains of dependent branches, with stack metadata stored in git config.
 - **Worktree discipline** guidance for working a stack.
+- **Per-host identity routing** (`git-identity`): resolve a remote → commit author + optional GPG
+  signing key + arbitrary fields and `apply` to a repo; provider-agnostic; SSH key stays owned by
+  ssh config.
 
 ## Related Files
 
-- `skills/git/SKILL.md` — the tool reference and rules.
-- `scripts/` — `diff-stats.sh`, `gst`.
+- `skills/git/SKILL.md` — diff-stats + gst reference and rules.
+- `skills/git-identity/SKILL.md` — the identity router (+ `config.example.json`).
+- `scripts/` — `diff-stats.sh`, `gst`, `git-identity`.
 - `mcp.json` — MCP server configuration (none required).

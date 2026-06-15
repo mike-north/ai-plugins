@@ -1,0 +1,434 @@
+#!/usr/bin/env node
+// @ts-check
+/**
+ * git-identity — per-host git identity resolution + extensible field store.
+ *
+ * Resolves the git remote you're working with to an *identity* (commit author + optional
+ * GPG signing key + arbitrary namespaced key/value fields) and applies it to the repo. The
+ * SSH key is NOT managed here — that's owned by ssh config (the alias in the remote URL);
+ * this layer owns host -> {author, gpg, fields}. The host (alias or real hostname, as it
+ * appears in the remote) is the pivot; one source of truth per edge, no mixed signals.
+ *
+ * Installed as `git-identity` (no extension) so it also works as `git identity <cmd>`.
+ *
+ * Commands:
+ *   resolve  [--remote <name> | <url>]        Print the identity a remote resolves to (read-only).
+ *   field    <key> [--required] [--remote|--identity]   Print one field value (exit 3 if unset).
+ *   fields   [--identity <name>] [--remote]   List the resolved identity's fields.
+ *   apply    [--identity <name>] [--remote]   Write author/gpg/fields into THIS repo's local config.
+ *   doctor                                    Diagnose the current repo (remotes, identity, conflicts).
+ *   validate                                  Check the config's invariants (+ ssh/gpg best-effort).
+ *
+ * Config: JSON at $GIT_IDENTITY_CONFIG, else $XDG_CONFIG_HOME/git-identity/config.json, else
+ * ~/.config/git-identity/config.json. (A YAML/TOML authoring layer compiling to this is a
+ * planned follow-up — see the plugin skill.)
+ *
+ *   {
+ *     "identities": {
+ *       "personal": { "author": {"name":"…","email":"…"}, "signing_key":"ABC123",
+ *                     "fields": {"github.username":"…","claude.profile":"personal"},
+ *                     "hosts": ["github.com","github-personal","gitlab.com"] },
+ *       "work":     { "author": {"name":"…","email":"…"}, "hosts": ["github-stripe","ghe.corp"] }
+ *     },
+ *     "default_identity": "personal",
+ *     "on_no_match": "silent"        // silent | warn | block
+ *   }
+ *
+ * Exit codes: 0 ok; 1 config/IO/git error; 2 bad usage; 3 unset field / no identity resolved.
+ */
+
+import { spawnSync } from "node:child_process";
+import { readFileSync, existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+function fail(msg, code = 1) {
+  process.stderr.write(`git-identity: ${msg}\n`);
+  process.exit(code);
+}
+function out(s) {
+  process.stdout.write(`${s}\n`);
+}
+
+/** Run a command; return {status, stdout, stderr}. Never throws. */
+function run(cmd, args, opts = {}) {
+  const r = spawnSync(cmd, args, { encoding: "utf8", ...opts });
+  return { status: r.status ?? 1, stdout: (r.stdout || "").trim(), stderr: (r.stderr || "").trim() };
+}
+function git(args) {
+  return run("git", args);
+}
+
+// ---- config --------------------------------------------------------------
+
+function configPath() {
+  if (process.env.GIT_IDENTITY_CONFIG) return process.env.GIT_IDENTITY_CONFIG;
+  const base = process.env.XDG_CONFIG_HOME || join(homedir(), ".config");
+  return join(base, "git-identity", "config.json");
+}
+
+function loadConfig() {
+  const path = configPath();
+  if (!existsSync(path)) fail(`config not found at ${path} (set GIT_IDENTITY_CONFIG to override)`);
+  let cfg;
+  try {
+    cfg = JSON.parse(readFileSync(path, "utf8"));
+  } catch (e) {
+    fail(`config at ${path} is not valid JSON: ${e.message}`);
+  }
+  if (!cfg || typeof cfg.identities !== "object") fail(`config must have an "identities" object`);
+  cfg.on_no_match = cfg.on_no_match || "silent";
+  return cfg;
+}
+
+/** Build host -> identityName, detecting duplicates (returned for `validate`). */
+function buildHostIndex(cfg) {
+  const index = {};
+  const dups = [];
+  for (const [name, id] of Object.entries(cfg.identities)) {
+    for (const host of id.hosts || []) {
+      if (index[host] && index[host] !== name) dups.push({ host, a: index[host], b: name });
+      else index[host] = name;
+    }
+  }
+  return { index, dups };
+}
+
+// ---- remote / host parsing ----------------------------------------------
+
+/** Extract the host token from a git remote URL (scp-like or URL form). */
+function hostOf(url) {
+  if (!url) return null;
+  // scp-like: [user@]host:path
+  const scp = /^(?:[^@/]+@)?([^/:]+):/.exec(url);
+  if (scp && !url.includes("://")) return scp[1];
+  // URL form: scheme://[user@]host[:port]/path
+  const m = /^[a-z]+:\/\/(?:[^@/]+@)?([^/:]+)/i.exec(url);
+  return m ? m[1] : null;
+}
+
+function remotes() {
+  const r = git(["remote"]);
+  if (r.status !== 0) return [];
+  return r.stdout
+    .split("\n")
+    .filter(Boolean)
+    .map((name) => {
+      const u = git(["remote", "get-url", name]);
+      const url = u.status === 0 ? u.stdout : "";
+      return { name, url, host: hostOf(url) };
+    });
+}
+
+/** Resolve which identity applies, from the repo's remotes (or an explicit --remote/--identity). */
+function resolve(cfg, opts) {
+  const { index } = buildHostIndex(cfg);
+  if (opts.identity) {
+    if (!cfg.identities[opts.identity]) fail(`no such identity: ${opts.identity}`, 2);
+    return { name: opts.identity, identity: cfg.identities[opts.identity], host: null, source: "explicit" };
+  }
+
+  let rs = remotes();
+  if (opts.url) rs = [{ name: "(url)", url: opts.url, host: hostOf(opts.url) }];
+  else if (opts.remote) {
+    rs = rs.filter((r) => r.name === opts.remote);
+    if (rs.length === 0) fail(`no remote named "${opts.remote}"`, 2);
+  }
+
+  // Map each remote to an identity via its host.
+  const hits = [];
+  for (const r of rs) {
+    const idName = r.host ? index[r.host] : undefined;
+    if (idName) hits.push({ ...r, idName });
+  }
+  const distinct = [...new Set(hits.map((h) => h.idName))];
+
+  if (distinct.length === 1) {
+    const name = distinct[0];
+    return { name, identity: cfg.identities[name], host: hits[0].host, source: "host" };
+  }
+  if (distinct.length > 1) {
+    return { ambiguous: true, candidates: distinct, hits };
+  }
+  // No host matched → default.
+  if (cfg.default_identity && cfg.identities[cfg.default_identity]) {
+    return { name: cfg.default_identity, identity: cfg.identities[cfg.default_identity], host: null, source: "default" };
+  }
+  return { none: true };
+}
+
+function requireResolved(cfg, opts, { forApply = false } = {}) {
+  const r = resolve(cfg, opts);
+  if (r.ambiguous) {
+    fail(
+      `this repo's remotes resolve to multiple identities (${r.candidates.join(", ")}). ` +
+        `A commit has one author, so pick explicitly: git-identity ${forApply ? "apply" : "<cmd>"} --identity <name>.`,
+      forApply ? 2 : 3,
+    );
+  }
+  if (r.none) {
+    if (cfg.on_no_match === "block") fail(`no identity matched and on_no_match=block`, 3);
+    if (cfg.on_no_match === "warn") process.stderr.write(`git-identity: warning — no identity matched this remote\n`);
+    fail(`no identity resolved (no host match and no default_identity)`, 3);
+  }
+  return r;
+}
+
+// ---- commands ------------------------------------------------------------
+
+function cmdResolve(cfg, opts) {
+  const r = resolve(cfg, opts);
+  if (r.ambiguous) {
+    out(`AMBIGUOUS: remotes resolve to multiple identities: ${r.candidates.join(", ")}`);
+    for (const h of r.hits) out(`  ${h.name} (${h.host}) → ${h.idName}`);
+    process.exit(3);
+  }
+  if (r.none) {
+    out("no identity resolved (no host match, no default_identity)");
+    process.exit(3);
+  }
+  const a = r.identity.author || {};
+  out(`identity: ${r.name}  (via ${r.source}${r.host ? ` host=${r.host}` : ""})`);
+  out(`  author: ${a.name || "?"} <${a.email || "?"}>`);
+  if (r.identity.signing_key) out(`  signing-key: ${r.identity.signing_key}`);
+  const fields = r.identity.fields || {};
+  for (const [k, v] of Object.entries(fields)) out(`  field ${k} = ${v}`);
+}
+
+/** Read what `apply` wrote into this repo's local config (the authoritative per-repo truth). */
+function appliedFields() {
+  if (git(["rev-parse", "--is-inside-work-tree"]).status !== 0) return null;
+  const name = git(["config", "--local", "--get", "identity.name"]).stdout;
+  if (!name) return null;
+  const fields = {};
+  const r = git(["config", "--local", "--get-regexp", "^identity\\.field\\."]);
+  if (r.status === 0) {
+    for (const line of r.stdout.split("\n").filter(Boolean)) {
+      const sp = line.indexOf(" ");
+      const full = line.slice(0, sp);
+      fields[full.replace(/^identity\.field\./, "")] = line.slice(sp + 1);
+    }
+  }
+  return { name, fields };
+}
+
+function cmdField(cfg, opts, key) {
+  if (!key) fail("usage: git-identity field <key> [--required]", 2);
+  // Prefer the applied local config (authoritative per-repo) unless an explicit selector is given.
+  if (!opts.identity && !opts.url && !opts.remote) {
+    const ap = appliedFields();
+    if (ap) {
+      const av = ap.fields[key];
+      if (av === undefined || av === "") {
+        if (opts.required) fail(`field "${key}" is not set on applied identity "${ap.name}"`, 3);
+        process.exit(3);
+      }
+      out(String(av));
+      return;
+    }
+  }
+  const r = requireResolved(cfg, opts);
+  const v = (r.identity.fields || {})[key];
+  if (v === undefined || v === "") {
+    if (opts.required) fail(`field "${key}" is not set on identity "${r.name}"`, 3);
+    process.exit(3); // empty stdout, non-zero — safe for $(...)
+  }
+  out(String(v));
+}
+
+function cmdFields(cfg, opts) {
+  let name, fields;
+  if (!opts.identity && !opts.url && !opts.remote) {
+    const ap = appliedFields();
+    if (ap) ({ name, fields } = ap);
+  }
+  if (!fields) {
+    const r = requireResolved(cfg, opts);
+    name = r.name;
+    fields = r.identity.fields || {};
+  }
+  const keys = Object.keys(fields);
+  if (keys.length === 0) {
+    process.stderr.write(`(identity "${name}" has no fields)\n`);
+    return;
+  }
+  for (const k of keys) out(`${k}=${fields[k]}`);
+}
+
+function cmdApply(cfg, opts) {
+  if (git(["rev-parse", "--is-inside-work-tree"]).status !== 0) fail("not inside a git repository", 2);
+  const r = requireResolved(cfg, opts, { forApply: true });
+  const a = r.identity.author || {};
+  if (!a.name || !a.email) fail(`identity "${r.name}" is missing author name/email`, 1);
+
+  const set = (k, v) => {
+    const res = git(["config", "--local", k, v]);
+    if (res.status !== 0) fail(`git config ${k} failed: ${res.stderr}`);
+  };
+  // Clear any previously-applied identity first, so switching identities never leaves
+  // stale identity.field.*, user.signingkey, or commit.gpgsign behind.
+  const prev = git(["config", "--local", "--get-regexp", "^identity\\.field\\."]);
+  if (prev.status === 0) {
+    for (const line of prev.stdout.split("\n").filter(Boolean)) {
+      git(["config", "--local", "--unset-all", line.slice(0, line.indexOf(" "))]);
+    }
+  }
+  git(["config", "--local", "--unset", "user.signingkey"]); // no-op if unset
+  git(["config", "--local", "--unset", "commit.gpgsign"]);
+
+  set("user.name", a.name);
+  set("user.email", a.email);
+  set("identity.name", r.name);
+  if (r.identity.signing_key) {
+    set("user.signingkey", r.identity.signing_key);
+    set("commit.gpgsign", "true");
+  }
+  for (const [k, v] of Object.entries(r.identity.fields || {})) {
+    set(`identity.field.${k}`, String(v));
+  }
+  out(`applied identity "${r.name}" to this repo: ${a.name} <${a.email}>` + (r.identity.signing_key ? ` (signing ${r.identity.signing_key})` : ""));
+}
+
+function cmdDoctor(cfg) {
+  const inRepo = git(["rev-parse", "--is-inside-work-tree"]).status === 0;
+  out(`config: ${configPath()}`);
+  const { dups } = buildHostIndex(cfg);
+  if (dups.length) for (const d of dups) out(`  ⚠ host ${d.host} is claimed by both "${d.a}" and "${d.b}"`);
+  if (!inRepo) {
+    out("not inside a git repository — remote-based resolution unavailable");
+    return;
+  }
+  const rs = remotes();
+  out(`remotes (${rs.length}):`);
+  const { index } = buildHostIndex(cfg);
+  const ids = new Set();
+  for (const r of rs) {
+    const id = r.host ? index[r.host] : undefined;
+    const unmatched = !!r.host && !index[r.host]; // host not listed under any identity
+    out(`  ${r.name}: ${r.url || "(no url)"}  host=${r.host || "?"} → ${id || "(no match — uses default/none)"}${unmatched ? "  ⚠ host not in any identity" : ""}`);
+    if (id) ids.add(id);
+  }
+  if (ids.size > 1) out(`  ⚠ multiple identities across remotes (${[...ids].join(", ")}) — author is per-repo; pin with: git-identity apply --identity <name>`);
+  const applied = git(["config", "--local", "--get", "identity.name"]).stdout;
+  const email = git(["config", "--get", "user.email"]).stdout;
+  out(`effective: identity.name=${applied || "(unset)"}  user.email=${email || "(unset)"}`);
+}
+
+function cmdValidate(cfg) {
+  let problems = 0;
+  const warn = (m) => {
+    problems++;
+    process.stderr.write(`  ✗ ${m}\n`);
+  };
+
+  // host-uniqueness
+  const { dups } = buildHostIndex(cfg);
+  for (const d of dups) warn(`host "${d.host}" is claimed by both "${d.a}" and "${d.b}"`);
+
+  // default identity exists
+  if (cfg.default_identity && !cfg.identities[cfg.default_identity]) warn(`default_identity "${cfg.default_identity}" is not a defined identity`);
+
+  // on_no_match is a known enum
+  if (!["silent", "warn", "block"].includes(cfg.on_no_match)) warn(`on_no_match "${cfg.on_no_match}" is invalid (expected: silent | warn | block)`);
+
+  // per-identity checks
+  for (const [name, id] of Object.entries(cfg.identities)) {
+    if (!id.author || !id.author.name || !id.author.email) warn(`identity "${name}" is missing author.name/author.email`);
+    if (!Array.isArray(id.hosts) || id.hosts.length === 0) warn(`identity "${name}" lists no hosts`);
+    // gpg key present (best-effort; skip if gpg absent)
+    if (id.signing_key && run("gpg", ["--version"]).status === 0) {
+      if (run("gpg", ["--list-secret-keys", id.signing_key]).status !== 0) warn(`identity "${name}" signing_key ${id.signing_key} not found in gpg secret keyring`);
+    }
+  }
+
+  // ssh config: referenced Host aliases should exist and set IdentitiesOnly
+  const sshPath = join(homedir(), ".ssh", "config");
+  if (existsSync(sshPath)) {
+    const sshText = readFileSync(sshPath, "utf8");
+    const blocks = parseSshHostBlocks(sshText);
+    for (const id of Object.values(cfg.identities)) {
+      for (const host of id.hosts || []) {
+        const blk = blocks[host];
+        if (blk && !blk.identitiesOnly) warn(`ssh Host "${host}" does not set "IdentitiesOnly yes" — the one-key-per-host guarantee may leak`);
+      }
+    }
+  }
+
+  if (problems === 0) out("✓ config valid");
+  else process.exit(1);
+}
+
+/** Minimal ~/.ssh/config Host-block parser → { <alias>: {identityFile, identitiesOnly} }. */
+function parseSshHostBlocks(text) {
+  const blocks = {};
+  let current = [];
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (/^Host\s+/i.test(line)) {
+      current = line.split(/\s+/).slice(1);
+      for (const h of current) blocks[h] = blocks[h] || { identityFile: null, identitiesOnly: false };
+    } else if (current.length) {
+      const io = /^IdentitiesOnly\s+(yes|true)\b/i.exec(line);
+      const idf = /^IdentityFile\s+(.+)$/i.exec(line);
+      for (const h of current) {
+        if (io) blocks[h].identitiesOnly = true;
+        if (idf) blocks[h].identityFile = idf[1].trim();
+      }
+    }
+  }
+  return blocks;
+}
+
+// ---- arg parsing ---------------------------------------------------------
+
+function parseOpts(argv) {
+  const opts = {};
+  const pos = [];
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--required") opts.required = true;
+    else if (a === "--identity") opts.identity = argv[++i];
+    else if (a === "--remote") opts.remote = argv[++i];
+    else if (a.startsWith("--")) fail(`unknown option: ${a}`, 2);
+    else pos.push(a);
+  }
+  return { opts, pos };
+}
+
+function main() {
+  const [cmd, ...rest] = process.argv.slice(2);
+  const { opts, pos } = parseOpts(rest);
+  // For `resolve` only, a bare positional that looks like a URL is treated as the target URL.
+  if (pos.length && /[:/]/.test(pos[pos.length - 1]) && cmd === "resolve") opts.url = pos.pop();
+
+  switch (cmd) {
+    case "resolve":
+      return cmdResolve(loadConfig(), opts);
+    case "field":
+      return cmdField(loadConfig(), opts, pos[0]);
+    case "fields":
+      return cmdFields(loadConfig(), opts);
+    case "apply":
+      return cmdApply(loadConfig(), opts);
+    case "doctor":
+      return cmdDoctor(loadConfig());
+    case "validate":
+      return cmdValidate(loadConfig());
+    default:
+      out(
+        [
+          "Usage: git-identity <command>  (also works as `git identity <command>`)",
+          "",
+          "  resolve [--remote <name> | <url>]   Print the identity a remote resolves to.",
+          "  field <key> [--required] [--remote <name> | --identity <name>]   Print one field value.",
+          "  fields [--remote <name> | --identity <name>]   List the resolved identity's fields.",
+          "  apply [--identity <name>] [--remote <name>]   Write author/gpg/fields to this repo's local config.",
+          "  doctor                              Diagnose this repo (remotes, identity, conflicts).",
+          "  validate                            Check the config invariants (+ ssh/gpg best-effort).",
+        ].join("\n"),
+      );
+      process.exit(cmd ? 2 : 0);
+  }
+}
+
+main();
