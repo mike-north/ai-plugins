@@ -29,6 +29,26 @@
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
       }
+    },
+    {
+      "name": "dream",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dream"
+      },
+      "description": "Periodic memory consolidation and self-improvement — \"dream\". Consolidates a one-fact-per-file memory store and surfaces recurring friction as proposed customizations to review.",
+      "tags": [
+        "memory",
+        "consolidation",
+        "dream",
+        "self-improvement",
+        "customizations",
+        "meta"
+      ],
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      }
     }
   ]
 }

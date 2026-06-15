@@ -4,6 +4,7 @@
   "description": "Route any agent-customization need to the right primitive — script, memory, rule, hook, skill, agent, MCP, monitor, plugin, or marketplace — determinism-first, authoring the light ones and delegating the rest.",
   "keywords": ["customization", "routing", "determinism", "skills", "hooks", "monitors", "plugins", "memory", "agents", "meta"],
   "skills": "./skills",
+  "hooks": "./hooks/codex.json",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Customizations",

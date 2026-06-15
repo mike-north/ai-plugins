@@ -1,0 +1,7 @@
+{
+  "name": "dream",
+  "version": "0.0.1",
+  "description": "Periodic memory consolidation and self-improvement — \"dream\". Consolidates a one-fact-per-file memory store and surfaces recurring friction as proposed customizations to review.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {}
+}

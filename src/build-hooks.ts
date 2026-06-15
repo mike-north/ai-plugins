@@ -3,13 +3,21 @@
  * Converts hooks YAML source files to JSON for platforms that require JSON configuration.
  *
  * For each plugin in plugins/, finds hooks/*.yaml files and writes corresponding hooks/*.json files.
- * Only YAML sources are committed to git; JSON files are generated and gitignored.
+ *
+ * The YAML source and the source-installed JSON files `hooks/claude.json` (Claude) and
+ * `hooks/codex.json` (Codex) are BOTH committed: those hosts install a plugin from its
+ * `plugins/<name>/` source directly, so the paths their `plugin.json` "hooks" field
+ * resolves to must exist in git. The generated Gemini-format `hooks/hooks.json` is a build
+ * intermediate and stays gitignored — Gemini installs from the committed `dist/` export,
+ * which carries its own hooks.json. CI re-runs this build and fails if a committed
+ * claude.json/codex.json drifts from its YAML source.
  *
  * A Claude-source YAML (typically hooks/claude.yaml) is emitted once for each of the
  * supported target formats:
  *
  *   - `claude` target → hooks/claude.json (Claude Code's native tool names, e.g. "Write")
- *   - `gemini` target → hooks/hooks.json (Gemini CLI native tool names, e.g. "write_file")
+ *   - `codex`  target → hooks/codex.json  (Codex: Claude's events, but PLUGIN_ROOT + apply_patch)
+ *   - `gemini` target → hooks/hooks.json  (Gemini CLI native tool names, e.g. "write_file")
  *
  * Usage: pnpm run build:hooks
  *
@@ -25,7 +33,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const PLUGINS_DIR = path.join(ROOT, "plugins");
 
-export type HookTarget = "claude" | "gemini";
+export type HookTarget = "claude" | "gemini" | "codex";
 
 /**
  * Claude Code → Gemini CLI tool-name translations.
@@ -91,6 +99,55 @@ export function geminiEventNameFor(claudeEvent: string): string | null {
   if (mapped !== undefined) return mapped;
   if (GEMINI_NATIVE_EVENTS.has(claudeEvent)) return claudeEvent;
   return null;
+}
+
+/**
+ * Claude Code → Codex CLI tool-matcher translations.
+ * Codex's edit tool is `apply_patch`; Bash matches by name. Unmapped matchers
+ * (globs, MCP tool names) pass through unchanged.
+ */
+const CLAUDE_TO_CODEX_TOOL_MATCHERS: Record<string, string> = {
+  Write: "apply_patch",
+  Edit: "apply_patch",
+  MultiEdit: "apply_patch",
+  Bash: "Bash",
+};
+
+/**
+ * Hook event names Codex CLI supports. Codex shares Claude's event vocabulary,
+ * so supported events pass through by the SAME name (no rename); events Codex
+ * lacks (e.g. SessionEnd, Notification) are omitted with a warning.
+ *
+ * @see https://developers.openai.com/codex/hooks — Codex event names
+ */
+const CODEX_EVENTS = new Set([
+  "SessionStart",
+  "SubagentStart",
+  "PreToolUse",
+  "PermissionRequest",
+  "PostToolUse",
+  "PreCompact",
+  "PostCompact",
+  "UserPromptSubmit",
+  "SubagentStop",
+  "Stop",
+]);
+
+/**
+ * Resolve a Claude hook event name to its Codex equivalent (identity if supported,
+ * else null → omitted from the Codex hooks file).
+ */
+export function codexEventNameFor(claudeEvent: string): string | null {
+  return CODEX_EVENTS.has(claudeEvent) ? claudeEvent : null;
+}
+
+/**
+ * Rewrite a hook command for Codex: Codex exposes the plugin root as `PLUGIN_ROOT`,
+ * not Claude's `CLAUDE_PLUGIN_ROOT`. Both `${CLAUDE_PLUGIN_ROOT}` and bare
+ * `$CLAUDE_PLUGIN_ROOT` forms are handled.
+ */
+export function codexCommand(command: string): string {
+  return command.replace(/\$\{CLAUDE_PLUGIN_ROOT\}/g, "${PLUGIN_ROOT}").replace(/\$CLAUDE_PLUGIN_ROOT\b/g, "$PLUGIN_ROOT");
 }
 
 interface HookEntry {
@@ -165,8 +222,57 @@ export function translateHooksForGemini(
 }
 
 /**
+ * Deep-clone a hooks object and translate it for Codex CLI:
+ *   1. Events Codex lacks are omitted (and reported via `onWarn`); supported events
+ *      keep the same name (Codex shares Claude's event vocabulary).
+ *   2. `matcher` tool names are translated (Write/Edit → apply_patch, …).
+ *   3. Hook commands have `${CLAUDE_PLUGIN_ROOT}` rewritten to Codex's `${PLUGIN_ROOT}`.
+ *
+ * @param onWarn called once per omitted event (defaults to console.warn).
+ */
+export function translateHooksForCodex(
+  source: HooksFile,
+  onWarn: (message: string) => void = (m) => {
+    console.warn(m);
+  },
+): HooksFile {
+  const cloned = JSON.parse(JSON.stringify(source)) as HooksFile;
+  const hooks = cloned.hooks;
+  if (!hooks) return cloned;
+
+  const translatedHooks: Record<string, HookMatcher[]> = {};
+  for (const event of Object.keys(hooks)) {
+    const matchers = hooks[event];
+    if (!Array.isArray(matchers)) continue; // skip malformed (non-array) event values
+    if (codexEventNameFor(event) === null) {
+      onWarn(`hook event "${event}" has no Codex equivalent — omitted from codex.json`);
+      continue;
+    }
+    for (const m of matchers) {
+      if (typeof m.matcher === "string") {
+        const translated = CLAUDE_TO_CODEX_TOOL_MATCHERS[m.matcher];
+        if (translated !== undefined) {
+          m.matcher = translated;
+        }
+      }
+      if (Array.isArray(m.hooks)) {
+        for (const h of m.hooks) {
+          if (typeof h.command === "string") {
+            h.command = codexCommand(h.command);
+          }
+        }
+      }
+    }
+    translatedHooks[event] = matchers;
+  }
+
+  cloned.hooks = translatedHooks;
+  return cloned;
+}
+
+/**
  * Convert a single hooks YAML file for the given plugin to the requested target format.
- * Returns the output file basename (e.g. "claude.json" or "hooks.json") on success.
+ * Returns the output file basename (e.g. "claude.json", "codex.json" or "hooks.json").
  */
 export function convertHookFile(
   hooksDir: string,
@@ -187,6 +293,17 @@ export function convertHookFile(
     return outputName;
   }
 
+  if (target === "codex") {
+    // Codex shares Claude's hooks JSON shape and event vocabulary, but uses the
+    // PLUGIN_ROOT env var and `apply_patch` tool matcher. Emitted as codex.json,
+    // which the plugin's .codex-plugin/plugin.json "hooks" field points to.
+    const codexShape = translateHooksForCodex(parsed);
+    const outputName = "codex.json";
+    const outputPath = path.join(hooksDir, outputName);
+    fs.writeFileSync(outputPath, JSON.stringify(codexShape, null, 2) + "\n", "utf-8");
+    return outputName;
+  }
+
   // Gemini CLI canonically looks for `hooks/hooks.json`, regardless of source filename.
   const geminiShape = translateHooksForGemini(parsed);
   const outputName = "hooks.json";
@@ -202,7 +319,7 @@ export function convertHookFile(
 export function buildHooksForPlugin(
   pluginDir: string,
   pluginName: string,
-  targets: HookTarget[] = ["claude", "gemini"],
+  targets: HookTarget[] = ["claude", "gemini", "codex"],
 ): number {
   const hooksDir = path.join(pluginDir, "hooks");
   if (!fs.existsSync(hooksDir)) return 0;

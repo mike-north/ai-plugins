@@ -1,0 +1,23 @@
+{
+  "name": "dream",
+  "version": "0.0.1",
+  "description": "Periodic memory consolidation and self-improvement — \"dream\". Consolidates a one-fact-per-file memory store and surfaces recurring friction as proposed customizations to review.",
+  "keywords": ["memory", "consolidation", "dream", "self-improvement", "maintenance", "customizations", "sleep", "meta"],
+  "skills": "./skills",
+  "hooks": "./hooks/codex.json",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Dream",
+    "shortDescription": "Consolidate memory and surface customization opportunities, once per interval.",
+    "longDescription": "Periodic memory consolidation, modeled on sleep: review what accumulated across recent sessions, keep what matters, reconcile contradictions, convert relative dates to absolute, and prune the stale — into a one-fact-per-file memory store. It also turns recurring friction into PROPOSED customizations for you to review (never self-authored). A deterministic script owns the 24h scheduling: a plugin-bundled Codex Stop hook queues a due dream, and a session-start AGENTS.md instruction launches /dream (a hook can't run an agentic skill); /dream also runs on demand.",
+    "category": "developer-tools",
+    "capabilities": [
+      "Once-per-interval memory consolidation into a one-fact-per-file store with a synced index",
+      "Deterministic transcript signal-gathering for durable facts, corrections, and preferences",
+      "Detection of recurring friction, surfaced as proposed customizations for review",
+      "Deterministic 24h scheduling via a zero-dependency script (no agent timekeeping)",
+      "Native Codex Stop hook to queue a due dream, plus a session-start AGENTS.md instruction to launch it"
+    ],
+    "defaultPrompt": "Run a dream: consolidate my memory and surface any customization opportunities."
+  }
+}
