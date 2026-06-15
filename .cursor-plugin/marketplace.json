@@ -79,6 +79,19 @@
         "code-quality",
         "multi-language"
       ]
+    },
+    {
+      "name": "product-led-eng-fleet",
+      "source": "./plugins/product-led-eng-fleet",
+      "description": "Run a product-led engineering fleet over a GitHub-issue work queue: a PM/orchestrator loop that ships work via self-contained issues, with implementer sub-agents that build against acceptance criteria and open PRs. The queue is detected by a deterministic git/gh engine.",
+      "tags": [
+        "engineering",
+        "orchestration",
+        "agents",
+        "github-issues",
+        "workflow",
+        "fleet"
+      ]
     }
   ]
 }

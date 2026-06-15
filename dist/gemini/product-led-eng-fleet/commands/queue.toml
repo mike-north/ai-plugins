@@ -1,0 +1,11 @@
+description = "Show the ranked ready queue and fleet status (deterministic, via the engine)"
+prompt = """
+Show the current fleet work queue using the deterministic engine, not by reading and
+diffing issues in context.
+
+Run gh-queue.mjs `status` then `list` (in ~/.claude/skills/git/scripts/) and present the ranked
+ready queue (deadline → priority → number) plus the rollup (ready / in-progress / open PRs). If an
+issue number was given, also run `gh-queue.mjs ground-truth <N>` and report whether it is safe to claim.
+
+This command is read-only — do not claim or modify anything.
+"""
