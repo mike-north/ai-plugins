@@ -9,24 +9,6 @@
   },
   "plugins": [
     {
-      "name": "skill-evaluator",
-      "source": {
-        "source": "local",
-        "path": "./plugins/skill-evaluator"
-      },
-      "description": "Evaluate AI skills across model tiers with blind testing and refinement recommendations",
-      "tags": [
-        "evaluation",
-        "testing",
-        "skills",
-        "model-tiers"
-      ],
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      }
-    },
-    {
       "name": "customizations",
       "source": {
         "source": "local",
