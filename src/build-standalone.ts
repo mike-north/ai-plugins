@@ -128,7 +128,7 @@ function rewriteGeminiAgentTools(agentsDir: string): void {
   }
 }
 
-function buildGeminiStandalone(pluginDir: string, destDir: string): string[] {
+export function buildGeminiStandalone(pluginDir: string, destDir: string): string[] {
   cleanDir(destDir);
   const copied: string[] = [];
 
@@ -148,6 +148,9 @@ function buildGeminiStandalone(pluginDir: string, destDir: string): string[] {
   const dirs: [string, string][] = [
     ["skills", "skills"],
     ["agents", "agents"],
+    // scripts/: executable helpers referenced by skill docs. copyFile (fs.copyFileSync)
+    // preserves the source mode bits, so the +x bit survives the export.
+    ["scripts", "scripts"],
   ];
 
   for (const [src, dest] of dirs) {
@@ -258,7 +261,7 @@ function buildKiroAgents(agentsDir: string, destDir: string): boolean {
   return count > 0;
 }
 
-function buildKiroStandalone(pluginDir: string, destDir: string): string[] {
+export function buildKiroStandalone(pluginDir: string, destDir: string): string[] {
   cleanDir(destDir);
   const copied: string[] = [];
 
@@ -278,6 +281,9 @@ function buildKiroStandalone(pluginDir: string, destDir: string): string[] {
   const dirs: [string, string][] = [
     ["steering", "steering"],
     ["skills", "skills"],
+    // scripts/: executable helpers referenced by skill docs. copyFile (fs.copyFileSync)
+    // preserves the source mode bits, so the +x bit survives the export.
+    ["scripts", "scripts"],
   ];
 
   for (const [src, dest] of dirs) {
