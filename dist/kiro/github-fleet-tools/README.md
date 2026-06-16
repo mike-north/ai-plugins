@@ -28,12 +28,13 @@ the **product-led-eng-fleet** plugin, which depends on this one.
 
 ## Setup
 
-Scripts are in `scripts/`. Call them by path (`${CLAUDE_PLUGIN_ROOT}/scripts/<name>`) or — recommended —
+Scripts are in `skills/github-fleet-tools/scripts/`. Call them by path
+(`${CLAUDE_PLUGIN_ROOT}/skills/github-fleet-tools/scripts/<name>`) or — recommended —
 symlink them onto your `PATH` (e.g. `~/bin`) and call them by name, which gives stable allowlist
 entries independent of the install path:
 
 ```bash
-ln -sf "$PLUGIN/scripts/"* ~/bin/    # then `gh-queue.mjs list`, `pr-merge.sh 10`, …
+ln -sf "$PLUGIN/skills/github-fleet-tools/scripts/"* ~/bin/    # then `gh-queue.mjs list`, `pr-merge.sh 10`, …
 ```
 
 Allowlist the read tools + bounded writes; leave `pr-merge.sh` as `ask`; keep `gh api` gated.
