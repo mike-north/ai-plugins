@@ -10,6 +10,8 @@ import { describe, expect, it } from "vitest";
 import {
   isEnabledValue,
   parseMarker,
+  normalizePluginNames,
+  resolveBaseDir,
   computeEnabledPlugins,
   checkLinkedWorktree,
   runPreflight,
@@ -52,6 +54,33 @@ describe("parseMarker", () => {
   it("rejects non-string-array require/forbid (negative)", () => {
     expect(() => parseMarker('{"role":"eng","require":"x"}')).toThrowError(/"require" must be an array/i);
     expect(() => parseMarker('{"role":"eng","forbid":[1]}')).toThrowError(/"forbid" must be an array/i);
+  });
+  it("normalizes require/forbid entries to bare names (trim + strip @marketplace)", () => {
+    const m = parseMarker('{"role":"eng","require":["  github-fleet-tools  ","product-led-eng-fleet@ai-plugins"],"forbid":["github-fleet-pm@ai-plugins"]}');
+    expect(m.require).toEqual(["github-fleet-tools", "product-led-eng-fleet"]);
+    expect(m.forbid).toEqual(["github-fleet-pm"]);
+  });
+  it("rejects a blank/@-only plugin entry (negative)", () => {
+    expect(() => parseMarker('{"role":"eng","require":["  "]}')).toThrowError(/"require" contains a blank plugin name/i);
+    expect(() => parseMarker('{"role":"eng","forbid":["@ai-plugins"]}')).toThrowError(/"forbid" contains a blank plugin name/i);
+  });
+});
+
+describe("normalizePluginNames", () => {
+  it("trims and strips @marketplace", () => {
+    expect(normalizePluginNames([" a ", "b@mp"], "require")).toEqual(["a", "b"]);
+  });
+  it("throws on a blank entry (negative)", () => {
+    expect(() => normalizePluginNames(["  "], "forbid")).toThrowError(/"forbid" contains a blank plugin name/i);
+  });
+});
+
+describe("resolveBaseDir", () => {
+  it("prefers the git toplevel so the gate works from a subdirectory", () => {
+    expect(resolveBaseDir("/repo/sub/dir", "/repo")).toBe("/repo");
+  });
+  it("falls back to cwd when toplevel is unknown (negative)", () => {
+    expect(resolveBaseDir("/somewhere", null)).toBe("/somewhere");
   });
 });
 

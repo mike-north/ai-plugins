@@ -45,6 +45,25 @@ function isStringArray(v) {
 }
 
 /**
+ * Normalize a marker plugin list to bare names: trim each entry, drop any
+ * `@marketplace` suffix (enabled names are matched bare), and reject blanks. A
+ * stray space or a copied `name@marketplace` value would otherwise silently fail
+ * to match and produce a confusing false "not enabled".
+ * @param {string[]} list
+ * @param {string} field
+ * @returns {string[]}
+ */
+export function normalizePluginNames(list, field) {
+  return list.map((raw) => {
+    const bare = raw.trim().split("@")[0].trim();
+    if (bare === "") {
+      throw new Error(`.claude/fleet-role.json: "${field}" contains a blank plugin name`);
+    }
+    return bare;
+  });
+}
+
+/**
  * A plugin's enabledPlugins value is "enabled" when it is `true` or a non-empty
  * version-constraint array. `false`, `undefined`, `null`, and `[]` are disabled.
  * @param {unknown} v
@@ -82,7 +101,11 @@ export function parseMarker(text) {
   if (!isStringArray(forbid)) {
     throw new Error('.claude/fleet-role.json: "forbid" must be an array of plugin-name strings');
   }
-  return { role: obj.role.trim(), require: require_, forbid };
+  return {
+    role: obj.role.trim(),
+    require: normalizePluginNames(require_, "require"),
+    forbid: normalizePluginNames(forbid, "forbid"),
+  };
 }
 
 /**
@@ -159,24 +182,44 @@ function readJsonIfExists(p) {
   }
 }
 
+/**
+ * The marker and project settings live at the worktree ROOT. Resolve it from
+ * git's toplevel so the preflight works when run from a subdirectory; fall back
+ * to cwd when git can't tell us (e.g. not a repo).
+ * @param {string} cwd
+ * @param {string|null} toplevel
+ */
+export function resolveBaseDir(cwd, toplevel) {
+  return toplevel || cwd;
+}
+
 /** @param {string} cwd */
 function gatherGitDirs(cwd) {
   const git = (args) =>
     execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
   try {
     const gitDir = fs.realpathSync(path.resolve(cwd, git(["rev-parse", "--absolute-git-dir"])));
-    const commonRaw = git(["rev-parse", "--git-common-dir"]);
-    const commonDir = fs.realpathSync(path.resolve(cwd, commonRaw));
-    return { gitDir, commonDir };
+    const commonDir = fs.realpathSync(path.resolve(cwd, git(["rev-parse", "--git-common-dir"])));
+    let toplevel = null;
+    try {
+      toplevel = fs.realpathSync(git(["rev-parse", "--show-toplevel"]));
+    } catch {
+      toplevel = null;
+    }
+    return { gitDir, commonDir, toplevel };
   } catch {
-    return { gitDir: null, commonDir: null };
+    return { gitDir: null, commonDir: null, toplevel: null };
   }
 }
 
 function main() {
   const cwd = process.cwd();
   const asJson = process.argv.includes("--json");
-  const markerPath = path.join(cwd, ".claude", "fleet-role.json");
+
+  // Marker + project settings live at the worktree root, not necessarily cwd.
+  const { gitDir, commonDir, toplevel } = gatherGitDirs(cwd);
+  const baseDir = resolveBaseDir(cwd, toplevel);
+  const markerPath = path.join(baseDir, ".claude", "fleet-role.json");
 
   let marker;
   try {
@@ -184,7 +227,7 @@ function main() {
   } catch (e) {
     const isMissing = e && e.code === "ENOENT";
     const msg = isMissing
-      ? `no .claude/fleet-role.json in ${cwd} — this worktree is not marked as a fleet orchestrator worktree.\n` +
+      ? `no .claude/fleet-role.json in ${baseDir} — this worktree is not marked as a fleet orchestrator worktree.\n` +
         `Create one, e.g.:\n` +
         `  { "role": "eng", "require": ["product-led-eng-fleet", "github-fleet-tools"], "forbid": [] }`
       : `invalid .claude/fleet-role.json: ${(e && e.message) || e}`;
@@ -192,11 +235,10 @@ function main() {
     process.exit(1);
   }
 
-  const { gitDir, commonDir } = gatherGitDirs(cwd);
   const enabledNames = computeEnabledPlugins([
     readJsonIfExists(path.join(os.homedir(), ".claude", "settings.json")),
-    readJsonIfExists(path.join(cwd, ".claude", "settings.json")),
-    readJsonIfExists(path.join(cwd, ".claude", "settings.local.json")),
+    readJsonIfExists(path.join(baseDir, ".claude", "settings.json")),
+    readJsonIfExists(path.join(baseDir, ".claude", "settings.local.json")),
   ]);
 
   const verdict = runPreflight({ gitDir, commonDir, marker, enabledNames });
