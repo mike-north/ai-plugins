@@ -19,6 +19,12 @@ into merged work by delegating and owning the review cycle.
 Follow `skills/product-led-eng-fleet/resources/orchestrator-loop.md` exactly. In short,
 one iteration is:
 
+0. **Preflight** — run
+   `node "${CLAUDE_PLUGIN_ROOT}/skills/product-led-eng-fleet/scripts/orchestrator-preflight.mjs"`
+   and **stop if it exits non-zero**. It asserts you're in a dedicated role-scoped worktree
+   (a linked worktree, not the primary checkout) with the right plugins enabled and off-role
+   ones disabled per `.claude/fleet-role.json`. Implementer sub-agents run in their own
+   worktrees, so this never cascades to them.
 1. **Sync** — `git fetch origin <default-branch>`; read the repo's fleet-conventions doc
    from the remote (it changes).
 2. **Triage deterministically** — run `gh-queue list` and `gh-queue status` (the
