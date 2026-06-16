@@ -11,6 +11,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseFrontmatterField } from "./frontmatter.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -214,7 +215,7 @@ function buildGeminiStandalone(pluginDir: string, destDir: string): string[] {
  * Parses YAML frontmatter from a markdown agent file and generates
  * a Kiro CLI agent JSON config.
  */
-function buildKiroAgentJson(agentMdPath: string): Record<string, unknown> | null {
+export function buildKiroAgentJson(agentMdPath: string): Record<string, unknown> | null {
   const content = fs.readFileSync(agentMdPath, "utf-8");
   const fmMatch = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(content);
   if (!fmMatch) return null;
@@ -222,8 +223,11 @@ function buildKiroAgentJson(agentMdPath: string): Record<string, unknown> | null
   const frontmatter = fmMatch[1] ?? "";
   const body = fmMatch[2] ?? "";
 
-  const nameMatch = /^name:\s*(.+)$/m.exec(frontmatter);
-  const descMatch = /^description:\s*(.+)$/m.exec(frontmatter);
+  // Use a real YAML parser for name/description so folded (`>-`) and literal
+  // (`|-`) block scalars resolve to their string value rather than leaving the
+  // literal `>-`/`|-` indicator token in the generated Kiro JSON.
+  const name = parseFrontmatterField(content, "name");
+  const description = parseFrontmatterField(content, "description");
 
   const tools: string[] = [];
   const toolsBlockMatch = /^tools:\n((?:\s+-\s+\S+\n?)+)/m.exec(frontmatter);
@@ -239,8 +243,8 @@ function buildKiroAgentJson(agentMdPath: string): Record<string, unknown> | null
   }
 
   return {
-    name: nameMatch?.[1] ?? path.basename(agentMdPath, ".md"),
-    description: descMatch?.[1] ?? "",
+    name: name ?? path.basename(agentMdPath, ".md"),
+    description: description ?? "",
     prompt: body.trim(),
     mcpServers: {},
     tools,
@@ -258,7 +262,7 @@ function buildKiroAgentJson(agentMdPath: string): Record<string, unknown> | null
  * Converts Claude Code agent .md files to Kiro CLI agent JSON configs
  * under .kiro/agents/ in the destination directory.
  */
-function buildKiroAgents(agentsDir: string, destDir: string): boolean {
+export function buildKiroAgents(agentsDir: string, destDir: string): boolean {
   if (!fs.existsSync(agentsDir)) return false;
   const kiroAgentsDir = path.join(destDir, ".kiro", "agents");
   fs.mkdirSync(kiroAgentsDir, { recursive: true });
