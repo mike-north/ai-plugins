@@ -173,12 +173,26 @@ export function runPreflight({ gitDir, commonDir, marker, enabledNames }) {
 // I/O boundary (gather real state) + CLI
 // ---------------------------------------------------------------------------
 
-/** @param {string} p */
-function readJsonIfExists(p) {
+/**
+ * Read a JSON settings file. An ABSENT file is fine (returns `{}`), but a
+ * present-but-malformed file is surfaced as a clear error rather than silently
+ * treated as empty — otherwise a typo'd settings file masquerades downstream as a
+ * confusing "required plugin not enabled".
+ * @param {string} p
+ * @returns {Record<string, unknown>}
+ */
+export function readJsonIfExists(p) {
+  let text;
   try {
-    return JSON.parse(fs.readFileSync(p, "utf8"));
-  } catch {
-    return {};
+    text = fs.readFileSync(p, "utf8");
+  } catch (e) {
+    if (e && e.code === "ENOENT") return {};
+    throw new Error(`could not read ${p}: ${(e && e.message) || e}`);
+  }
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error(`${p} is not valid JSON: ${(e && e.message) || e}`);
   }
 }
 
@@ -235,11 +249,17 @@ function main() {
     process.exit(1);
   }
 
-  const enabledNames = computeEnabledPlugins([
-    readJsonIfExists(path.join(os.homedir(), ".claude", "settings.json")),
-    readJsonIfExists(path.join(baseDir, ".claude", "settings.json")),
-    readJsonIfExists(path.join(baseDir, ".claude", "settings.local.json")),
-  ]);
+  let enabledNames;
+  try {
+    enabledNames = computeEnabledPlugins([
+      readJsonIfExists(path.join(os.homedir(), ".claude", "settings.json")),
+      readJsonIfExists(path.join(baseDir, ".claude", "settings.json")),
+      readJsonIfExists(path.join(baseDir, ".claude", "settings.local.json")),
+    ]);
+  } catch (e) {
+    emit({ ok: false, role: marker.role, violations: [(e && e.message) || String(e)] }, asJson);
+    process.exit(1);
+  }
 
   const verdict = runPreflight({ gitDir, commonDir, marker, enabledNames });
   emit(verdict, asJson);

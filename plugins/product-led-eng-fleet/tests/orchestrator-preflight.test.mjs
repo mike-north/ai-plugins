@@ -6,12 +6,16 @@
  * primary-checkout, missing/forbidden plugins, malformed markers, settings precedence.
  */
 import { describe, expect, it } from "vitest";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import {
   isEnabledValue,
   parseMarker,
   normalizePluginNames,
   resolveBaseDir,
+  readJsonIfExists,
   computeEnabledPlugins,
   checkLinkedWorktree,
   runPreflight,
@@ -81,6 +85,26 @@ describe("resolveBaseDir", () => {
   });
   it("falls back to cwd when toplevel is unknown (negative)", () => {
     expect(resolveBaseDir("/somewhere", null)).toBe("/somewhere");
+  });
+});
+
+describe("readJsonIfExists", () => {
+  it("returns {} for an absent file", () => {
+    expect(readJsonIfExists(join(tmpdir(), "preflight-definitely-absent-xyz.json"))).toEqual({});
+  });
+  it("parses a valid JSON file", () => {
+    const dir = mkdtempSync(join(tmpdir(), "preflight-"));
+    const p = join(dir, "s.json");
+    writeFileSync(p, '{"enabledPlugins":{"a@mp":true}}');
+    expect(readJsonIfExists(p)).toEqual({ enabledPlugins: { "a@mp": true } });
+    rmSync(dir, { recursive: true, force: true });
+  });
+  it("throws a clear error for a present-but-malformed file instead of swallowing it (negative)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "preflight-"));
+    const p = join(dir, "bad.json");
+    writeFileSync(p, "{ not valid json");
+    expect(() => readJsonIfExists(p)).toThrowError(/is not valid JSON/i);
+    rmSync(dir, { recursive: true, force: true });
   });
 });
 
