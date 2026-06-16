@@ -19,8 +19,11 @@ context beyond this brief and the issue itself.
 
 Procedure (see `skills/product-led-eng-fleet/resources/fleet-conventions.md` for the why):
 
-1. **Branch off the remote.** `git fetch origin <default-branch>`, then create an isolated
-   worktree branched off `origin/<default-branch>` — never the stale local HEAD.
+1. **Branch off the remote in your own worktree.** `git fetch origin <default-branch>`, then
+   create an isolated worktree **of your own** — separate from the orchestrator's worktree —
+   branched off `origin/<default-branch>`, never the stale local HEAD. (Working in your own
+   worktree is what keeps the orchestrator's role-scoped environment from leaking into your
+   implementation, and vice versa.)
 2. **Treat acceptance criteria as the contract.** Map each criterion to a named test. State
    the mapping in the PR body ("criterion N covered by test X"). If a criterion is wrong or
    unachievable, comment on the issue _before_ building around it.

@@ -9,6 +9,11 @@ Use the `product-led-eng-fleet` skill and follow
 `resources/orchestrator-loop.md`. Drive it through the deterministic engine — do not
 re-pull and diff issues in context:
 
+0. **Preflight — stop if it fails.** Confirm you're in a dedicated, role-scoped orchestrator
+   worktree:
+   `node "${CLAUDE_PLUGIN_ROOT}/skills/product-led-eng-fleet/scripts/orchestrator-preflight.mjs"`.
+   It asserts a linked worktree (not the primary checkout) and that this worktree's
+   `.claude/fleet-role.json` role plugins are enabled / off-role ones disabled. Non-zero exit ⇒ do not start the loop.
 1. `git fetch origin <default-branch>` and read the repo's fleet-conventions doc from the remote.
 2. `gh-queue status` and `gh-queue list` to see the ranked ready queue (tools in
    the `github-fleet-tools` plugin).

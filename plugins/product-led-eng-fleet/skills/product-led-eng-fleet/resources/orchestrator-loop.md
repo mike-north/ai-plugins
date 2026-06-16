@@ -4,6 +4,34 @@ One iteration of the fleet orchestrator. The orchestrator turns a ranked queue i
 merged work by delegating to implementer sub-agents and owning the review cycle. It does
 **not** write feature code itself — it triages, delegates, monitors, reviews, and merges.
 
+## 0. Preflight: confirm a role-scoped orchestrator worktree
+
+Run each orchestrator from a **dedicated, role-scoped worktree** — typically one per role
+(a PM-TL worktree and an eng-TL worktree), each enabling only that role's plugins. The
+worktree *is* the scoping boundary: a worktree that doesn't have the merge tooling enabled
+simply cannot merge, with no per-call permission gymnastics. The check below also never
+cascades to implementer sub-agents — they spawn their own worktrees (step 4).
+
+Before anything else, run the deterministic gate and **stop if it exits non-zero**:
+
+```
+node "${CLAUDE_PLUGIN_ROOT}/skills/product-led-eng-fleet/scripts/orchestrator-preflight.mjs"
+```
+
+It fails unless (a) you are in a **linked worktree**, not the primary checkout; (b) a role
+marker `.claude/fleet-role.json` is present and well-formed; and (c) that marker's `require`
+plugins are enabled and its `forbid` plugins are not (merged user → project → local
+settings). Each orchestrator worktree carries the marker:
+
+```json
+{ "role": "eng", "require": ["product-led-eng-fleet", "github-fleet-tools"], "forbid": [] }
+```
+
+Plugin names match **bare** (the part before `@marketplace`). As the fleet tooling splits by
+role, set `require`/`forbid` to that role's plugins — e.g. an eng worktree `forbid`s the
+PM-only plugin and a PM worktree `forbid`s the merge-capable eng plugin — so each session
+structurally carries only its role's surface.
+
 ## 1. Sync ground truth first
 
 Local `HEAD` and the session's start-of-conversation snapshot are stale. Begin every
