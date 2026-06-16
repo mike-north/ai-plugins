@@ -42,8 +42,8 @@ wrapper): `gh issue comment`, `gh issue close`, `gh issue create`, `gh pr commen
 
 ## Setup
 
-Tools are in `scripts/` (extensionless, executable). Call them by path
-(`${CLAUDE_PLUGIN_ROOT}/scripts/<name>`) or — recommended — symlink them onto your `PATH`
+Tools are in `skills/github-fleet-tools/scripts/` (extensionless, executable). Call them by path
+(`${CLAUDE_PLUGIN_ROOT}/skills/github-fleet-tools/scripts/<name>`) or — recommended — symlink them onto your `PATH`
 (e.g. `~/bin`) and call them by name, which gives stable allowlist entries independent of the
 install path:
 

@@ -1,19 +1,29 @@
 /**
- * Tests for the standalone-export copy boundary in src/build-standalone.ts.
+ * Tests for src/build-standalone.ts.
  *
- * Regression guard: build:standalone copies plugin source (notably `skills/`)
- * into `dist/`. Before the fix it copied directories wholesale, so a test file
- * colocated inside a skill (e.g. `scripts/foo.test.mjs` next to `foo.mjs`) was
- * shipped into every standalone export — and, for a runner that auto-discovers
- * tests, executed redundantly from the copies. `isDistributable` must exclude
- * test/spec sources and test directories from every copy.
+ * Two regression guards live here:
+ *
+ *  1. Standalone-export copy boundary (`isDistributable` / `copyDir`):
+ *     build:standalone copies plugin source (notably `skills/`) into `dist/`.
+ *     Before the fix it copied directories wholesale, so a test file colocated
+ *     inside a skill (e.g. `scripts/foo.test.mjs` next to `foo.mjs`) was shipped
+ *     into every standalone export — and, for a runner that auto-discovers
+ *     tests, executed redundantly from the copies. Test/spec sources and test
+ *     directories must be excluded from every copy.
+ *
+ *  2. Kiro agent JSON generation: an agent frontmatter `description` written as a
+ *     YAML block scalar (folded `>-` / literal `|-`) must resolve to its text
+ *     value, not the literal indicator token (e.g. `">-"`).
+ *
+ * @see https://yaml.org/spec/1.2.2/#812-literal-style — literal `|` block scalars
+ * @see https://yaml.org/spec/1.2.2/#813-folded-style — folded `>` block scalars
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdtempSync, mkdirSync, writeFileSync, existsSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 
-import { isDistributable, copyDir } from "../src/build-standalone.js";
+import { buildKiroAgentJson, buildKiroAgents, copyDir, isDistributable } from "../src/build-standalone.js";
 
 describe("isDistributable", () => {
   it("accepts ordinary shipped files and directories", () => {
@@ -55,9 +65,7 @@ describe("isDistributable", () => {
 });
 
 describe("copyDir excludes test artifacts end-to-end", () => {
-  /** @type {string} */
   let src: string;
-  /** @type {string} */
   let dest: string;
 
   beforeEach(() => {
@@ -95,5 +103,94 @@ describe("copyDir excludes test artifacts end-to-end", () => {
     expect(existsSync(join(dest, "demo", "SKILL.md"))).toBe(true);
     expect(existsSync(join(dest, "demo", "scripts", "manifest.mjs"))).toBe(false); // filtered out (not .md)
     expect(existsSync(join(dest, "demo", "scripts", "manifest.test.mjs"))).toBe(false); // excluded by default
+  });
+});
+
+// --- Kiro agent JSON: block-scalar description resolution ---
+
+const createdDirs: string[] = [];
+
+function makeTmpDir(): string {
+  const dir = mkdtempSync(join(tmpdir(), "build-standalone-kiro-"));
+  createdDirs.push(dir);
+  return dir;
+}
+
+function writeAgentFile(dir: string, relPath: string, content: string): string {
+  const full = join(dir, relPath);
+  mkdirSync(dirname(full), { recursive: true });
+  writeFileSync(full, content);
+  return full;
+}
+
+afterEach(() => {
+  while (createdDirs.length > 0) {
+    const dir = createdDirs.pop();
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+describe("buildKiroAgents (full build path)", () => {
+  it("resolves a folded (>-) block-scalar description in the generated Kiro JSON", () => {
+    const dir = makeTmpDir();
+    const pluginDir = join(dir, "plugin");
+    const agentsDir = join(pluginDir, "agents");
+    writeAgentFile(
+      pluginDir,
+      "agents/folded-agent.md",
+      [
+        "---",
+        "name: folded-agent",
+        "description: >-",
+        "  Reviews code for quality issues",
+        "  across multiple dimensions.",
+        "tools:",
+        "  - Read",
+        "  - Bash",
+        "---",
+        "# Folded Agent",
+        "Body content.",
+      ].join("\n") + "\n",
+    );
+
+    const destDir = join(dir, "dist");
+    expect(buildKiroAgents(agentsDir, destDir)).toBe(true);
+
+    const jsonPath = join(destDir, ".kiro", "agents", "folded-agent.json");
+    const config = JSON.parse(readFileSync(jsonPath, "utf-8")) as Record<string, unknown>;
+
+    // The resolved text, NOT the ">-" indicator token.
+    expect(config["description"]).toBe("Reviews code for quality issues across multiple dimensions.");
+    expect(config["description"]).not.toBe(">-");
+    expect(config["name"]).toBe("folded-agent");
+    expect(config["tools"]).toEqual(["read", "shell"]);
+  });
+});
+
+describe("buildKiroAgentJson", () => {
+  it("resolves a literal (|-) block-scalar description preserving newlines", () => {
+    const dir = makeTmpDir();
+    const agentPath = writeAgentFile(
+      dir,
+      "agent.md",
+      ["---", "name: lit-agent", "description: |-", "  Line one", "  line two", "---", "# Body"].join("\n") + "\n",
+    );
+
+    const config = buildKiroAgentJson(agentPath);
+    expect(config).not.toBeNull();
+    expect(config?.["description"]).toBe("Line one\nline two");
+    expect(config?.["description"]).not.toBe("|-");
+  });
+
+  it("keeps a plain single-line description unchanged", () => {
+    const dir = makeTmpDir();
+    const agentPath = writeAgentFile(
+      dir,
+      "agent.md",
+      ["---", "name: plain-agent", "description: A plain description", "---", "# Body"].join("\n") + "\n",
+    );
+
+    const config = buildKiroAgentJson(agentPath);
+    expect(config?.["description"]).toBe("A plain description");
   });
 });
