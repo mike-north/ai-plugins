@@ -33,24 +33,24 @@ This pattern's GitHub I/O is a set of **bounded, allowlistable scripts** — the
 **`github-fleet-tools`** plugin (install it alongside this one). They split
 cleanly along the agent's boundary:
 
-**Detection (read-only) — `gh-queue.mjs`:**
+**Detection (read-only) — `gh-queue`:**
 
-- `gh-queue.mjs list` — the ranked ready queue (deadline → priority label → issue number).
-- `gh-queue.mjs ground-truth <N>` — is #N safe to claim? Fetches `origin`, cross-references
+- `gh-queue list` — the ranked ready queue (deadline → priority label → issue number).
+- `gh-queue ground-truth <N>` — is #N safe to claim? Fetches `origin`, cross-references
   open PRs and remote branches, flags stalled claims. Exit 0 = safe, 2 = blocked.
-- `gh-queue.mjs status` — ready / in-progress / open-PR rollup.
+- `gh-queue status` — ready / in-progress / open-PR rollup.
 
-**Response (bounded writes) — one verb per script, each wrapping a single `gh` mutation
-with no arbitrary-API escape hatch, so they can be pre-approved and run autonomously:**
+**Response — bounded tools (no arbitrary-API escape hatch, pre-approvable) plus scoped
+`gh`-native verbs:**
 
-- claim/release: `issue-label.sh <N> add|remove "in progress"` (+ `issue-comment.sh` for intent)
-- coordinate: `issue-comment.sh` · `pr-comment.sh` · `pr-reply-resolve.sh` · `pr-resolve-threads.sh`
-- create: `issue-create.sh` (PM) · `pr-create.sh` · `pr-ready.sh`
-- finish: `issue-close.sh` · `pr-merge.sh` (guarded; **prompts by design** — see the loop doc)
+- claim/release: `gh-label <N> add|remove "in progress"` (+ `gh issue comment` for intent)
+- coordinate: `gh issue comment` · `gh pr comment` · `gh-reviews reply` · `gh-reviews resolve`
+- create: `gh issue create` (PM) · `gh pr create` · `gh pr ready`
+- finish: `gh issue close` · `gh-merge` (guarded; **prompts by design** — see the loop doc)
 
 Reserve model reasoning for the **irreducible judgment core**: ranking _among_ equally
 ready issues, writing acceptance criteria, reviewing PR substance, and deciding to merge.
-`gh-queue.mjs` is configurable per repo via `PLEF_*` env vars (label names, priority order,
+`gh-queue` is configurable per repo via `PLEF_*` env vars (label names, priority order,
 staleness window) — see its header. **Arbitrary `gh api` is intentionally _not_ wrapped and
 stays human-gated.**
 

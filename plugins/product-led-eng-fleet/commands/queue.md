@@ -9,11 +9,11 @@ diffing issues in context.
 Run (scripts from the `github-fleet-tools` plugin):
 
 ```
-gh-queue.mjs status
-gh-queue.mjs list
+gh-queue status
+gh-queue list
 ```
 
 Present the ranked ready queue (deadline → priority → number) and the rollup (ready /
 in-progress / open PRs). If the caller named an issue number, also run
-`gh-queue.mjs ground-truth <N>` and report whether it is safe to claim. Do not claim or
+`gh-queue ground-truth <N>` and report whether it is safe to claim. Do not claim or
 modify anything — this command is read-only reporting.

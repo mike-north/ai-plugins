@@ -36,20 +36,20 @@ The deterministic GitHub I/O is the companion **`github-fleet-tools`** plugin, i
 
 ```
 # detection (read-only — already safe to allowlist)
-gh-queue.mjs list               # ranked ready queue (deadline → priority → number)
-gh-queue.mjs ground-truth <N>   # is #N safe to claim? exit 0 = safe, 2 = blocked
-gh-queue.mjs status             # ready / in-progress / open-PR rollup
+gh-queue list               # ranked ready queue (deadline → priority → number)
+gh-queue ground-truth <N>   # is #N safe to claim? exit 0 = safe, 2 = blocked
+gh-queue status             # ready / in-progress / open-PR rollup
 
-# response (bounded writes — one verb each, allowlistable)
-issue-label.sh <N> add|remove <label>     issue-comment.sh <N> <body>
-issue-create.sh --title … --body-file …   issue-close.sh <N> [summary]
-pr-comment.sh <N> <body>                  pr-ready.sh <N>
-pr-create.sh --title … --body-file …      pr-reply-resolve.sh / pr-resolve-threads.sh
-pr-merge.sh <N> [--dry-run]               # GUARDED + prompts by design (see below)
+# response (bounded tools + gh-native verbs, allowlistable)
+gh-label <N> add|remove <label>           gh issue comment <N> <body>
+gh issue create --title … --body-file …   gh issue close <N>
+gh pr comment <N> <body>                  gh pr ready <N>
+gh pr create --title … --body-file …      gh-reviews reply / gh-reviews resolve
+gh-merge <N> [--dry-run]                  # GUARDED + prompts by design (see below)
 ```
 
-`gh-queue.mjs` is configurable per repo via `PLEF_*` env vars (label names, priority order,
-staleness window). `pr-merge.sh` is the one high-consequence write: it is configured to
+`gh-queue` is configurable per repo via `PLEF_*` env vars (label names, priority order,
+staleness window). `gh-merge` is the one high-consequence write: it is configured to
 prompt for approval (an `ask` permission — approve once per session to let the orchestrator
 merge autonomously) and additionally refuses to merge unless the PR is open, non-draft,
 not a release/Version PR, has a Copilot review present, and has passed required checks.

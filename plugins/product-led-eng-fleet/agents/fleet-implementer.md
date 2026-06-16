@@ -33,10 +33,10 @@ Procedure (see `skills/product-led-eng-fleet/resources/fleet-conventions.md` for
    formatter **before every push** and re-check it — a format slip fails fast in CI and masks
    whether tests passed. Verify your own claims against CI, not just "green locally."
 6. **Commit** with the repo's required authorship and **no AI-attribution trailers**.
-7. **Open the PR** with `pr-create.sh --title <T> --body-file <PR.md> --reviewer
-   copilot-pull-request-reviewer` (from the `github-fleet-tools` plugin). Reference the issue
+7. **Open the PR** with `gh pr create --title <T> --body-file <PR.md> --reviewer
+   copilot-pull-request-reviewer`. Reference the issue
    with `Refs #N` in the body (never `Closes`/`Fixes` unless it truly completes the issue);
-   then comment the PR link on the issue with `issue-comment.sh`. Use `pr-ready.sh <PR>` if
+   then comment the PR link on the issue with `gh issue comment`. Use `gh pr ready <PR>` if
    you opened it as a draft and checks are now green.
 8. **STOP.** Report the PR number/link back. Do **not** self-address review comments, do not
    try to monitor the PR — the orchestrator does both. Continuing past PR-open is how

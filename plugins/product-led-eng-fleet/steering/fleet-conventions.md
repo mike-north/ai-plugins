@@ -13,9 +13,10 @@ always-available steering summary.
 
 ## Non-negotiables
 
-- Detect the queue with `gh-queue.mjs` (from the `github-fleet-tools` plugin), not by reasoning
+- Detect the queue with `gh-queue` (from the `github-fleet-tools` plugin), not by reasoning
   over issues in context; `git fetch` before trusting any local state. Do writes through the
-  bounded scripts there (label/comment/create/merge), never raw `gh api`.
+  bounded tools there (`gh-label`/`gh-reviews`/`gh-merge`) or scoped `gh`-native verbs
+  (`gh issue comment`/`create`/`close`, …), never raw `gh api`.
 - Ground-truth before claiming — never duplicate an open PR or an active claim.
 - Acceptance criteria are the contract; map each to a named test in the PR.
 - Reference issues with `Refs #N`, never closing keywords, unless the PR truly completes it.
