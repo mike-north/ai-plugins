@@ -4,35 +4,35 @@
     "name": "Mike North"
   },
   "metadata": {
-    "version": "0.0.1",
     "description": "Universal AI Plugin Marketplace — author once, distribute to all platforms"
   },
   "plugins": [
     {
+      "name": "code-review",
+      "source": "./plugins/code-review",
+      "description": "Adaptive, host-neutral code review — detects the stack, routes to specialist reviewer lenses dispatched as agents with their own context windows, and records findings as SARIF.",
+      "tags": [
+        "code-review",
+        "review",
+        "sarif",
+        "code-quality",
+        "multi-language"
+      ]
+    },
+    {
       "name": "customizations",
       "source": "./plugins/customizations",
-      "description": "Route any agent-customization need to the right primitive — determinism-first — authoring the light ones and delegating the rest",
+      "description": "Route any agent-customization need to the right primitive — script, memory, rule, hook, skill, agent, MCP, monitor, plugin, or marketplace — determinism-first, authoring the light ones and delegating the rest. Includes /customizations create|list|remove.",
       "tags": [
         "customization",
         "routing",
         "determinism",
         "skills",
+        "hooks",
         "monitors",
         "plugins",
         "memory",
-        "meta"
-      ]
-    },
-    {
-      "name": "dream",
-      "source": "./plugins/dream",
-      "description": "Periodic memory consolidation and self-improvement — \"dream\". Consolidates a one-fact-per-file memory store and surfaces recurring friction as proposed customizations to review.",
-      "tags": [
-        "memory",
-        "consolidation",
-        "dream",
-        "self-improvement",
-        "customizations",
+        "agents",
         "meta"
       ]
     },
@@ -48,55 +48,41 @@
       ]
     },
     {
-      "name": "spec-skills",
-      "source": "./plugins/spec-skills",
-      "description": "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
+      "name": "dream",
+      "source": "./plugins/dream",
+      "description": "Periodic memory consolidation and self-improvement — \"dream\". Consolidates a one-fact-per-file memory store and surfaces recurring friction as proposed customizations to review. Includes /dream.",
       "tags": [
-        "specs",
-        "skills",
-        "quality"
+        "memory",
+        "consolidation",
+        "dream",
+        "self-improvement",
+        "maintenance",
+        "customizations",
+        "sleep",
+        "meta"
       ]
     },
     {
-      "name": "project-room-preparation",
-      "source": "./plugins/project-room-preparation",
-      "description": "Organize messy project sources into an inspectable \"project room\" before drafting begins — source inventory, duplicate log, conflict log, missing-context list, and working brief.",
+      "name": "git",
+      "source": "./plugins/git",
+      "description": "Deterministic local-git utilities for agents: exact diff statistics (meaningful vs raw line counts, implementation vs test split), a stacked-PR manager (gst), and git-identity — per-host resolution of commit author + GPG key + arbitrary fields, keyed on the remote. Run the scripts for exact results — never estimate.",
       "tags": [
-        "skills",
-        "writing",
-        "research",
-        "knowledge-management"
-      ]
-    },
-    {
-      "name": "code-review",
-      "source": "./plugins/code-review",
-      "description": "Adaptive, host-neutral code review — detects the stack, routes to specialist reviewer lenses dispatched as agents with their own context windows, and records findings as SARIF.",
-      "tags": [
-        "code-review",
-        "review",
-        "sarif",
-        "code-quality",
-        "multi-language"
-      ]
-    },
-    {
-      "name": "product-led-eng-fleet",
-      "source": "./plugins/product-led-eng-fleet",
-      "description": "Run a product-led engineering fleet over a GitHub-issue work queue: a PM/orchestrator loop that ships work via self-contained issues, with implementer sub-agents that build against acceptance criteria and open PRs. The queue is detected by a deterministic git/gh engine.",
-      "tags": [
-        "engineering",
-        "orchestration",
-        "agents",
-        "github-issues",
-        "workflow",
-        "fleet"
+        "git",
+        "diff",
+        "stacked-prs",
+        "branches",
+        "metrics",
+        "worktrees",
+        "identity",
+        "ssh",
+        "gpg",
+        "commit-author"
       ]
     },
     {
       "name": "github-fleet-tools",
       "source": "./plugins/github-fleet-tools",
-      "description": "Opinionated, allowlistable command-line tools for an agent to engage with GitHub: read-only PR/issue-queue inspection plus bounded write verbs (label, comment, review reply/resolve, create issue/PR, guarded merge). Each wraps one gh op with no arbitrary-API escape hatch.",
+      "description": "Opinionated, allowlistable command-line tools for an agent to engage with GitHub: read-only PR/issue-queue inspection plus bounded write verbs (label, comment, reply/resolve review threads, create issue/PR, mark ready, guarded merge). Each wraps one gh operation with no arbitrary-API escape hatch, so it can be pre-approved while raw `gh api` stays gated.",
       "tags": [
         "github",
         "gh",
@@ -108,16 +94,15 @@
       ]
     },
     {
-      "name": "git",
-      "source": "./plugins/git",
-      "description": "Deterministic local-git utilities for agents: exact diff statistics (meaningful vs raw line counts, implementation vs test split) and a stacked-PR manager (gst) for chains of dependent branches. Run the scripts for exact results — never estimate.",
+      "name": "liaison",
+      "source": "./plugins/liaison",
+      "description": "Arrange a briefed, two-way voice conversation between a human and an AI session, then bring structured findings back into the agent's workstream — the agent syncs the docs, frames the talk for voice, and seeds a chat to continue on mobile. Powered by aichatctl.",
       "tags": [
-        "git",
-        "diff",
-        "stacked-prs",
-        "branches",
-        "metrics",
-        "worktrees"
+        "voice",
+        "conversation",
+        "aichatctl",
+        "decisions",
+        "feedback"
       ]
     },
     {
@@ -133,15 +118,37 @@
       ]
     },
     {
-      "name": "liaison",
-      "source": "./plugins/liaison",
-      "description": "Arrange a briefed, two-way voice conversation between a human and an AI session, then bring structured findings back into the agent's workstream — the agent syncs the docs, frames the talk for voice, and seeds a chat to continue on mobile. Powered by aichatctl.",
+      "name": "product-led-eng-fleet",
+      "source": "./plugins/product-led-eng-fleet",
+      "description": "Run a product-led engineering fleet: a PM/orchestrator loop that ships work via self-contained GitHub issues, with implementer sub-agents that pick them up, build against acceptance criteria, and open PRs. The work queue is detected by a deterministic git/gh engine, not by agent reasoning.",
       "tags": [
-        "voice",
-        "conversation",
-        "aichatctl",
-        "decisions",
-        "feedback"
+        "engineering",
+        "orchestration",
+        "agents",
+        "github-issues",
+        "workflow",
+        "fleet"
+      ]
+    },
+    {
+      "name": "project-room-preparation",
+      "source": "./plugins/project-room-preparation",
+      "description": "Organize messy project sources into an inspectable \"project room\" before drafting begins — source inventory, duplicate log, conflict log, missing-context list, and working brief.",
+      "tags": [
+        "skills",
+        "writing",
+        "research",
+        "knowledge-management"
+      ]
+    },
+    {
+      "name": "spec-skills",
+      "source": "./plugins/spec-skills",
+      "description": "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
+      "tags": [
+        "specs",
+        "skills",
+        "quality"
       ]
     },
     {

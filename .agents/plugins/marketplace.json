@@ -1,54 +1,32 @@
 {
   "name": "ai-plugins",
-  "owner": {
-    "name": "Mike North"
-  },
-  "metadata": {
-    "version": "0.0.1",
-    "description": "Universal AI Plugin Marketplace — author once, distribute to all platforms"
+  "interface": {
+    "displayName": "ai-plugins"
   },
   "plugins": [
+    {
+      "name": "code-review",
+      "source": {
+        "source": "local",
+        "path": "./plugins/code-review"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
     {
       "name": "customizations",
       "source": {
         "source": "local",
         "path": "./plugins/customizations"
       },
-      "description": "Route any agent-customization need to the right primitive — determinism-first — authoring the light ones and delegating the rest",
-      "tags": [
-        "customization",
-        "routing",
-        "determinism",
-        "skills",
-        "monitors",
-        "plugins",
-        "memory",
-        "meta"
-      ],
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
-      }
-    },
-    {
-      "name": "dream",
-      "source": {
-        "source": "local",
-        "path": "./plugins/dream"
       },
-      "description": "Periodic memory consolidation and self-improvement — \"dream\". Consolidates a one-fact-per-file memory store and surfaces recurring friction as proposed customizations to review.",
-      "tags": [
-        "memory",
-        "consolidation",
-        "dream",
-        "self-improvement",
-        "customizations",
-        "meta"
-      ],
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      }
+      "category": "Productivity"
     },
     {
       "name": "dotfiles",
@@ -56,112 +34,23 @@
         "source": "local",
         "path": "./plugins/dotfiles"
       },
-      "description": "Dotfiles management — chezmoi, fish shell, and environment configuration",
-      "tags": [
-        "chezmoi",
-        "dotfiles",
-        "fish",
-        "devtools"
-      ],
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
-      }
+      },
+      "category": "Productivity"
     },
     {
-      "name": "spec-skills",
+      "name": "dream",
       "source": {
         "source": "local",
-        "path": "./plugins/spec-skills"
+        "path": "./plugins/dream"
       },
-      "description": "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
-      "tags": [
-        "specs",
-        "skills",
-        "quality"
-      ],
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
-      }
-    },
-    {
-      "name": "project-room-preparation",
-      "source": {
-        "source": "local",
-        "path": "./plugins/project-room-preparation"
       },
-      "description": "Organize messy project sources into an inspectable \"project room\" before drafting begins — source inventory, duplicate log, conflict log, missing-context list, and working brief.",
-      "tags": [
-        "skills",
-        "writing",
-        "research",
-        "knowledge-management"
-      ],
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      }
-    },
-    {
-      "name": "code-review",
-      "source": {
-        "source": "local",
-        "path": "./plugins/code-review"
-      },
-      "description": "Adaptive, host-neutral code review — detects the stack, routes to specialist reviewer lenses dispatched as agents with their own context windows, and records findings as SARIF.",
-      "tags": [
-        "code-review",
-        "review",
-        "sarif",
-        "code-quality",
-        "multi-language"
-      ],
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      }
-    },
-    {
-      "name": "product-led-eng-fleet",
-      "source": {
-        "source": "local",
-        "path": "./plugins/product-led-eng-fleet"
-      },
-      "description": "Run a product-led engineering fleet over a GitHub-issue work queue: a PM/orchestrator loop that ships work via self-contained issues, with implementer sub-agents that build against acceptance criteria and open PRs. The queue is detected by a deterministic git/gh engine.",
-      "tags": [
-        "engineering",
-        "orchestration",
-        "agents",
-        "github-issues",
-        "workflow",
-        "fleet"
-      ],
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      }
-    },
-    {
-      "name": "github-fleet-tools",
-      "source": {
-        "source": "local",
-        "path": "./plugins/github-fleet-tools"
-      },
-      "description": "Opinionated, allowlistable command-line tools for an agent to engage with GitHub: read-only PR/issue-queue inspection plus bounded write verbs (label, comment, review reply/resolve, create issue/PR, guarded merge). Each wraps one gh op with no arbitrary-API escape hatch.",
-      "tags": [
-        "github",
-        "gh",
-        "pull-requests",
-        "issues",
-        "code-review",
-        "automation",
-        "agents"
-      ],
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      }
+      "category": "Productivity"
     },
     {
       "name": "git",
@@ -169,38 +58,23 @@
         "source": "local",
         "path": "./plugins/git"
       },
-      "description": "Deterministic local-git utilities for agents: exact diff statistics (meaningful vs raw line counts, implementation vs test split) and a stacked-PR manager (gst) for chains of dependent branches. Run the scripts for exact results — never estimate.",
-      "tags": [
-        "git",
-        "diff",
-        "stacked-prs",
-        "branches",
-        "metrics",
-        "worktrees"
-      ],
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
-      }
+      },
+      "category": "Productivity"
     },
     {
-      "name": "notebooklm",
+      "name": "github-fleet-tools",
       "source": {
         "source": "local",
-        "path": "./plugins/notebooklm"
+        "path": "./plugins/github-fleet-tools"
       },
-      "description": "Turn repo files and links into a focused NotebookLM audio podcast you can listen to on the go — the agent picks the format and writes the host-focus prompt; aichatctl creates the notebook and starts generation.",
-      "tags": [
-        "podcast",
-        "notebooklm",
-        "audio",
-        "aichatctl",
-        "voice"
-      ],
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
-      }
+      },
+      "category": "Productivity"
     },
     {
       "name": "liaison",
@@ -208,18 +82,59 @@
         "source": "local",
         "path": "./plugins/liaison"
       },
-      "description": "Arrange a briefed, two-way voice conversation between a human and an AI session, then bring structured findings back into the agent's workstream — the agent syncs the docs, frames the talk for voice, and seeds a chat to continue on mobile. Powered by aichatctl.",
-      "tags": [
-        "voice",
-        "conversation",
-        "aichatctl",
-        "decisions",
-        "feedback"
-      ],
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
-      }
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "notebooklm",
+      "source": {
+        "source": "local",
+        "path": "./plugins/notebooklm"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "product-led-eng-fleet",
+      "source": {
+        "source": "local",
+        "path": "./plugins/product-led-eng-fleet"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "project-room-preparation",
+      "source": {
+        "source": "local",
+        "path": "./plugins/project-room-preparation"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "spec-skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/spec-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
     },
     {
       "name": "voice",
@@ -227,18 +142,11 @@
         "source": "local",
         "path": "./plugins/voice"
       },
-      "description": "Let the agent say short lines aloud through the speakers — status, a nudge for attention, or a one-line spoken summary. Uses macOS `say` today, with a clean path to vocli for real cross-platform TTS.",
-      "tags": [
-        "voice",
-        "tts",
-        "speech",
-        "say",
-        "vocli"
-      ],
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
-      }
+      },
+      "category": "Productivity"
     }
   ]
 }

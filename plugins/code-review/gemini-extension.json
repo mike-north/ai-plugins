@@ -1,7 +1,0 @@
-{
-  "name": "code-review",
-  "version": "0.0.1",
-  "description": "Adaptive, host-neutral code review — detects the stack, routes to specialist reviewer lenses dispatched as agents with their own context windows, and records findings as SARIF.",
-  "contextFileName": "GEMINI.md",
-  "mcpServers": {}
-}
