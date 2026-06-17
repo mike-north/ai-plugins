@@ -1,7 +1,0 @@
-{
-  "name": "notebooklm",
-  "version": "0.0.1",
-  "description": "Turn repo files and links into a focused NotebookLM audio podcast you can listen to on the go — the agent picks the format and writes the host-focus prompt; aichatctl creates the notebook and starts generation.",
-  "contextFileName": "GEMINI.md",
-  "mcpServers": {}
-}

@@ -1,7 +1,0 @@
-{
-  "name": "git",
-  "version": "0.0.1",
-  "description": "Deterministic local-git utilities: exact diff statistics and a stacked-PR manager.",
-  "contextFileName": "GEMINI.md",
-  "mcpServers": {}
-}

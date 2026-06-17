@@ -1,7 +1,0 @@
-{
-  "name": "customizations",
-  "version": "0.0.1",
-  "description": "Route any agent-customization need to the right primitive — script, memory, rule, hook, skill, agent, MCP, monitor, plugin, or marketplace — determinism-first, authoring the light ones and delegating the rest.",
-  "contextFileName": "GEMINI.md",
-  "mcpServers": {}
-}
