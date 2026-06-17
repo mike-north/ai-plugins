@@ -1,0 +1,23 @@
+{
+  "name": "notebooklm",
+  "version": "0.0.1",
+  "description": "Turn repo files and links into a focused NotebookLM audio podcast you can listen to on the go — the agent picks the format and writes the host-focus prompt; aichatctl creates the notebook and starts generation.",
+  "keywords": [
+    "podcast",
+    "notebooklm",
+    "audio",
+    "aichatctl",
+    "voice"
+  ],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "NotebookLM Podcast",
+    "shortDescription": "Files and links into a focused NotebookLM podcast.",
+    "longDescription": "An agent skill for turning source material into a NotebookLM Audio Overview: it guides the agent to choose a format (deep-dive, brief, critique, debate), set length, and craft a host-focus prompt, then runs aichatctl to create the notebook and kick off generation.",
+    "category": "developer-tools",
+    "capabilities": [],
+    "defaultPrompt": ""
+  },
+  "hooks": "./hooks/codex.json"
+}

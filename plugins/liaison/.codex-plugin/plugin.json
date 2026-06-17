@@ -1,0 +1,23 @@
+{
+  "name": "liaison",
+  "version": "0.0.1",
+  "description": "Arrange a briefed, two-way voice conversation between a human and an AI session, then bring structured findings back into the agent's workstream — the agent syncs the docs, frames the talk for voice, and seeds a chat to continue on mobile. Powered by aichatctl.",
+  "keywords": [
+    "voice",
+    "conversation",
+    "aichatctl",
+    "decisions",
+    "feedback"
+  ],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Liaison",
+    "shortDescription": "Briefed voice conversation with a human, findings back.",
+    "longDescription": "An agent skill that acts as a liaison: when work is blocked on a decision or needs human feedback, it syncs the relevant docs into a project, frames a voice conversation for spoken interaction, seeds a chat the human continues by voice, and relays a structured findings markdown back so the agent can resume. Powered by aichatctl.",
+    "category": "developer-tools",
+    "capabilities": [],
+    "defaultPrompt": ""
+  },
+  "hooks": "./hooks/codex.json"
+}
