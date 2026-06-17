@@ -1,0 +1,23 @@
+{
+  "name": "voice",
+  "version": "0.0.1",
+  "description": "Let the agent say short lines aloud through the speakers — status, a nudge for attention, or a one-line spoken summary. Uses macOS `say` today, with a clean path to vocli for real cross-platform TTS.",
+  "keywords": [
+    "voice",
+    "tts",
+    "speech",
+    "say",
+    "vocli"
+  ],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Voice",
+    "shortDescription": "The agent speaks short lines aloud (macOS say, then vocli).",
+    "longDescription": "An agent skill for deliberate spoken output: short, self-contained lines the user hears through the speakers. Ships a speak.sh wrapper using macOS say, designed to swap to vocli for real cross-platform text-to-speech later.",
+    "category": "developer-tools",
+    "capabilities": [],
+    "defaultPrompt": ""
+  },
+  "hooks": "./hooks/codex.json"
+}

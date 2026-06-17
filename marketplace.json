@@ -119,6 +119,42 @@
         "metrics",
         "worktrees"
       ]
+    },
+    {
+      "name": "notebooklm",
+      "source": "./plugins/notebooklm",
+      "description": "Turn repo files and links into a focused NotebookLM audio podcast you can listen to on the go — the agent picks the format and writes the host-focus prompt; aichatctl creates the notebook and starts generation.",
+      "tags": [
+        "podcast",
+        "notebooklm",
+        "audio",
+        "aichatctl",
+        "voice"
+      ]
+    },
+    {
+      "name": "liaison",
+      "source": "./plugins/liaison",
+      "description": "Arrange a briefed, two-way voice conversation between a human and an AI session, then bring structured findings back into the agent's workstream — the agent syncs the docs, frames the talk for voice, and seeds a chat to continue on mobile. Powered by aichatctl.",
+      "tags": [
+        "voice",
+        "conversation",
+        "aichatctl",
+        "decisions",
+        "feedback"
+      ]
+    },
+    {
+      "name": "voice",
+      "source": "./plugins/voice",
+      "description": "Let the agent say short lines aloud through the speakers — status, a nudge for attention, or a one-line spoken summary. Uses macOS `say` today, with a clean path to vocli for real cross-platform TTS.",
+      "tags": [
+        "voice",
+        "tts",
+        "speech",
+        "say",
+        "vocli"
+      ]
     }
   ]
 }
