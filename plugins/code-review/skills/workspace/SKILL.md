@@ -26,7 +26,8 @@ in Claude Code).
 1. **Create the worktree.**
    - Feature work: `bash $SKILL/scripts/worktree.sh create <name> [ref]`
    - Reviewing a PR: `bash $SKILL/scripts/worktree.sh for-pr <pr-number-or-url>`
-     — writes `<worktree>/.claude/review-meta.json` (pr, host, owner, repo,
+     — writes `review-meta.json` into the worktree's git dir, readable via
+     `cat "$(git rev-parse --git-dir)/review-meta.json"` (pr, host, owner, repo,
      headSha, headRef, baseRef, baseSha).
    Both print the worktree path and are safe to re-run: a clean,
    already-correct worktree is reused; a stale one is replaced; a dirty one is

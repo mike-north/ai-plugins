@@ -386,6 +386,34 @@ describe("for-pr refresh safety (finding E regression)", () => {
     expect(git(["rev-parse", `review-pr-${num}`], fixture.work).trim()).toBe(localTip);
   });
 
+  it("leaves the fresh worktree CLEAN: review-meta.json lives in the git dir, not the working tree (review-init clean-assertion regression)", () => {
+    // Regression: for-pr used to write <worktree>/.claude/review-meta.json as
+    // an untracked file, which failed review-init's clean-worktree assertion
+    // and would have been swept into snapshot capture by `git add -A`.
+    const num = "44";
+    const headSha = git(["rev-parse", "HEAD"], fixture.work).trim();
+    git(["update-ref", `refs/pull/${num}/head`, headSha], fixture.bare);
+
+    const stubGh = writeGhStub(
+      fixture.root,
+      `${num}\treview-branch\t${headSha}\tmain\t${headSha}\thttps://github.com/acme/widgets/pull/${num}`,
+    );
+
+    const r = run(["for-pr", num], { cwd: fixture.work, env: { GH: stubGh } });
+    expect(r.status).toBe(0);
+    const wtPath = r.stdout.trim().split("\n").pop();
+
+    // Working tree must be pristine — nothing untracked, nothing modified.
+    expect(git(["status", "--porcelain"], wtPath)).toBe("");
+
+    // The metadata is present in the worktree's git dir instead.
+    const gitDir = git(["rev-parse", "--absolute-git-dir"], wtPath).trim();
+    const meta = JSON.parse(fs.readFileSync(path.join(gitDir, "review-meta.json"), "utf8"));
+    expect(meta.pr).toBe(44);
+    expect(meta.headSha).toBe(headSha);
+    expect(meta.host).toBe("github.com");
+  });
+
   it("--force refreshes anyway, moving the branch to the new head", () => {
     const num = "43";
     const wtPath = path.join(fixture.work, ".claude", "worktrees", `review-pr-${num}`);

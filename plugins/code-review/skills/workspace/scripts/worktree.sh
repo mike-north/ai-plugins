@@ -14,7 +14,9 @@
 #   for-pr <pr-number-or-url> [--force]
 #                                  Create/refresh a worktree for reviewing a GitHub PR
 #                                  at .claude/worktrees/review-pr-<N>, and write
-#                                  <worktree>/.claude/review-meta.json. Refuses (exit 3)
+#                                  review-meta.json into the worktree's git dir
+#                                  ($(git rev-parse --git-dir)/review-meta.json — never
+#                                  the working tree). Refuses (exit 3)
 #                                  to refresh onto a moved PR head if the worktree's
 #                                  current commit isn't an ancestor of the new head
 #                                  (would orphan local commits) — --force overrides.
@@ -380,8 +382,14 @@ cmd_for_pr() {
     fi
   fi
 
-  mkdir -p "$wt_path/.claude"
-  write_review_meta "$wt_path/.claude/review-meta.json" \
+  # Metadata lives in the worktree's git dir, NOT the working tree: an
+  # untracked file in the tree would fail review-init's clean-worktree
+  # assertion and pollute snapshot capture (git add -A picks up untracked
+  # files). Consumers read it at $(git rev-parse --git-dir)/review-meta.json.
+  local wt_git_dir
+  wt_git_dir=$(git -C "$wt_path" rev-parse --path-format=absolute --git-dir 2>/dev/null) ||
+    wt_git_dir=$(cd "$wt_path" && git rev-parse --absolute-git-dir)
+  write_review_meta "$wt_git_dir/review-meta.json" \
     "$num" "$url_host" "$url_owner" "$url_repo" "$head_sha" "$head_ref" "$base_ref" "$base_sha"
 
   printf '%s\n' "$wt_path"
