@@ -17,6 +17,8 @@ import {
   emptyLog,
 } from "../plugins/code-review/skills/review/scripts/sarif.mjs";
 import { recordFinding } from "../plugins/code-review/skills/review/scripts/record-finding.mjs";
+import { reviewInit } from "../plugins/code-review/skills/review/scripts/review-init.mjs";
+import { makeFixtureRepo, removeDir } from "../plugins/code-review/skills/review/scripts/test-support/git-fixture.mjs";
 import {
   renderFindings,
   loadWorkAreaLogs,
@@ -163,19 +165,33 @@ describe("buildResult — rejected findings", () => {
   });
 });
 
+// recordFinding now records against a review *session* (state.json created by
+// review-init, keyed by --reviewer, region validated against the HEAD blob)
+// rather than an arbitrary `lens`/`root` pair — see
+// plugins/code-review/skills/review/scripts/record-finding.test.mjs for full
+// coverage of that contract. This block only checks the SARIF file it
+// produces is still what renderFindings/loadWorkAreaLogs expect.
 describe("recordFinding", () => {
   it("writes valid minimal SARIF and appends across calls", () => {
-    const lens = "code-quality";
-    recordFinding({ workArea, lens, root, finding: { ruleId: "a", severity: "critical", message: "first", file: SAMPLE, startLine: 1 } });
-    recordFinding({ workArea, lens, root, finding: { ruleId: "b", severity: "suggestion", message: "second" } });
+    const reviewer = "code-quality";
+    const repo = makeFixtureRepo({ [SAMPLE]: Array.from({ length: SAMPLE_LINES }, (_, i) => `line ${i + 1}`).join("\n") + "\n" });
+    const sessionWorkArea = fs.mkdtempSync(path.join(os.tmpdir(), "cr-wa-session-"));
+    try {
+      reviewInit({ workArea: sessionWorkArea, worktree: repo });
+      recordFinding({ workArea: sessionWorkArea, reviewer, finding: { ruleId: "a", severity: "critical", confidence: "high", message: "first", file: SAMPLE, startLine: 1 } });
+      recordFinding({ workArea: sessionWorkArea, reviewer, finding: { ruleId: "b", severity: "suggestion", confidence: "low", message: "second", scope: "pr" } });
 
-    const file = path.join(workArea, "findings", `${lens}.sarif.json`);
-    const log = JSON.parse(fs.readFileSync(file, "utf8"));
-    expect(log.version).toBe("2.1.0"); // SARIF spec version
-    expect(log.runs[0].tool.driver.name).toBe("code-review:code-quality");
-    expect(log.runs[0].results).toHaveLength(2);
-    expect(log.runs[0].results[0].ruleId).toBe("a");
-    expect(log.runs[0].results[1].ruleId).toBe("b");
+      const file = path.join(sessionWorkArea, "findings", `${reviewer}.sarif.json`);
+      const log = JSON.parse(fs.readFileSync(file, "utf8"));
+      expect(log.version).toBe("2.1.0"); // SARIF spec version
+      expect(log.runs[0].tool.driver.name).toBe("code-review:code-quality");
+      expect(log.runs[0].results).toHaveLength(2);
+      expect(log.runs[0].results[0].ruleId).toBe("a");
+      expect(log.runs[0].results[1].ruleId).toBe("b");
+    } finally {
+      removeDir(repo);
+      removeDir(sessionWorkArea);
+    }
   });
 });
 
@@ -201,7 +217,14 @@ describe("renderFindings", () => {
   });
 
   it("loads logs from a work area directory", () => {
-    const logs = loadWorkAreaLogs(workArea); // recordFinding wrote code-quality.sarif.json above
+    // Seed the directory directly (independent of the recordFinding block above).
+    const lens = "loaded-from-disk";
+    const log = emptyLog(lens);
+    log.runs[0].results.push(buildResult({ ruleId: "x", severity: "important", message: "m" }, root));
+    fs.mkdirSync(path.join(workArea, "findings"), { recursive: true });
+    fs.writeFileSync(path.join(workArea, "findings", `${lens}.sarif.json`), JSON.stringify(log, null, 2) + "\n");
+
+    const logs = loadWorkAreaLogs(workArea);
     expect(logs.length).toBeGreaterThanOrEqual(1);
     const out = renderFindings(logs);
     expect(out).toContain("# Code Review — Findings");

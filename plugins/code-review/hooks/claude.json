@@ -1,7 +1,0 @@
-{
-  "_generated": {
-    "by": "@ai-plugin-marketplace/cli",
-    "source": "hooks/claude.yaml"
-  },
-  "hooks": {}
-}
