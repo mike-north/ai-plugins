@@ -152,6 +152,20 @@
       ]
     },
     {
+      "name": "toon",
+      "source": "./plugins/toon",
+      "description": "Deterministic hook pair that routes JSON-emitting Bash commands through the TOON encoder (~40-60% fewer tokens). PreToolUse appends a safe toon-pipe wrapper as the final stage of high-confidence commands (JSON output flags, terminal non-raw jq, learned registry); PostToolUse parses actual output as ground truth, replaces it with TOON, and teaches a shared registry so detection improves over time. A bash gate keeps the common no-op path at ~15ms; no model in the detection loop.",
+      "tags": [
+        "toon",
+        "json",
+        "tokens",
+        "hooks",
+        "bash",
+        "token-efficiency",
+        "jq"
+      ]
+    },
+    {
       "name": "voice",
       "source": "./plugins/voice",
       "description": "Let the agent say short lines aloud through the speakers — status, a nudge for attention, or a one-line spoken summary. Uses macOS `say` today, with a clean path to vocli for real cross-platform TTS.",
