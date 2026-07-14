@@ -158,6 +158,12 @@ assert_noop "cursor pre: already toon-piped" "$(cursor_pre 'set -o pipefail; gh 
 # Post: Cursor cannot replace Shell output → always a no-op, even for big JSON.
 assert_noop "cursor post: big JSON no-op"    "$(cursor_post 'gh api user/repos' "$BIG_JSON")"
 
+# --- Non-shell tool → gate skips before spawning node -------------------------
+out=$(jq -cn '{hook_event_name:"PreToolUse",tool_name:"Read",tool_input:{command:"gh pr list --json x"}}' | ./toon-gate.sh)
+assert_noop "gate: non-shell tool_name (Read) skipped" "$out"
+out=$(jq -cn '{tool_name:"MCP:foo",tool_input:{command:"gh pr list --json x"}}' | ./toon-gate.sh)
+assert_noop "gate: non-shell tool_name (MCP) skipped" "$out"
+
 # --- Escape hatch ---------------------------------------------------------------
 out=$(jq -cn '{hook_event_name:"PreToolUse",tool_name:"Bash",tool_input:{command:"gh pr list --json number"}}' | CLAUDE_TOON_HOOK=off ./toon-gate.sh)
 assert_noop "CLAUDE_TOON_HOOK=off disables hook (gate)" "$out"

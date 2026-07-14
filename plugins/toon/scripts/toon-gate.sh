@@ -30,13 +30,17 @@ reg="${TOON_HOOK_REGISTRY:-$HOME/.claude/toon/registry.json}"
 # in toon-hook.mjs.
 verdict=$(jq -r --slurpfile reg "$reg" '
   (.tool_input.command // .command // "") as $c
+  # Only the shell tool matters: Claude/Codex `Bash`, Cursor `Shell`. Mirror
+  # toon-hook.mjs and skip anything else before spawning node.
+  | (.tool_name // "") as $tn
   # phase: Claude/Codex via hook_event_name; Cursor via presence of tool_output.
   | (if .hook_event_name == "PreToolUse" then "pre"
      elif .hook_event_name == "PostToolUse" then "post"
      elif (.hook_event_name | type) == "string" then "other"
      elif (has("tool_output")) then "cursor-post"
      else "pre" end) as $phase
-  | if ($c == "") or ($c | test("(^|[|&;(])\\s*(\\S*/)?toon(-pipe)?(\\s|$)")) then "skip"
+  | if ($tn != "Bash" and $tn != "Shell") then "skip"
+    elif ($c == "") or ($c | test("(^|[|&;(])\\s*(\\S*/)?toon(-pipe)?(\\s|$)")) then "skip"
     elif $phase == "pre" then
       if ($c | test("--json|--format[= ].?json|--output[= ].?json|-o[= ]?.?json|\\|&?\\s*jq\\b"))
          or ([($reg[0] // [])[].sig] | any(. as $s | $c | contains($s)))
