@@ -1,0 +1,37 @@
+{
+  "_comment": "Default watchlist for the toolsmith PreToolUse redirect hook. Each 'pattern' is a JavaScript RegExp (tested against the raw Bash command string). A watched command is only ever DENIED when an approved registry tool's 'covers' pattern also matches it; a watched command with no covering tool passes through to the normal permission flow. Projects override this set via .claude/toolsmith/config.json ({\"watchlist\": {\"add\": [...], \"remove\": [...]}}); 'remove' entries must match a pattern string here verbatim.",
+  "watchlist": [
+    {
+      "pattern": "(^|[|&;( ])gh\\s+api\\b",
+      "rationale": "gh api makes arbitrary authenticated REST calls with the CLI's full credentials — the classic broad escape hatch. Narrow read operations belong in a purpose-built, allowlistable script."
+    },
+    {
+      "pattern": "(^|[|&;( ])gh\\s+graphql\\b",
+      "rationale": "gh graphql runs arbitrary authenticated GraphQL against GitHub — same broad-power concern as gh api."
+    },
+    {
+      "pattern": "(^|[|&;( ])curl\\b(?!.*(localhost|127\\.0\\.0\\.1))",
+      "rationale": "curl to a non-local host is an unbounded network fetch/post. Recurring API reads should become a scoped script rather than a hand-rolled request."
+    },
+    {
+      "pattern": "(^|[|&;( ])wget\\b(?!.*(localhost|127\\.0\\.0\\.1))",
+      "rationale": "wget to a non-local host is an unbounded network fetch — same concern as curl."
+    },
+    {
+      "pattern": "(^|[|&;( ])aws\\s+",
+      "rationale": "The raw aws CLI spans every AWS service and mutation. A specific recurring query should be a bounded script, not a broadly allowlisted aws command."
+    },
+    {
+      "pattern": "(^|[|&;( ])gcloud\\s+",
+      "rationale": "The raw gcloud CLI spans all of Google Cloud. Narrow recurring operations should be scripted and scoped."
+    },
+    {
+      "pattern": "(^|[|&;( ])kubectl\\s+",
+      "rationale": "kubectl can read and mutate any cluster resource. Recurring inspections should be captured as read-only scoped scripts."
+    },
+    {
+      "pattern": "(^|[|&;( ])op\\s+(read|item|document|get)\\b",
+      "rationale": "The 1Password CLI reads secrets. Any recurring secret access should be a single, reviewed, tightly-scoped script rather than an allowlisted op command."
+    }
+  ]
+}

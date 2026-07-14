@@ -1,0 +1,25 @@
+{
+  "name": "toolsmith",
+  "version": "0.1.0",
+  "description": "Guides an agent to forge narrow, single-purpose, user-approvable scripts instead of hand-assembling broad escape-hatch commands (gh api, raw curl, aws/gcloud/kubectl).",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["permissions", "hooks", "bash", "scripts", "allowlist", "gh", "agents", "security"],
+  "skills": "./skills",
+  "commands": ["./commands/analyze.toml", "./commands/approve.toml", "./commands/list.toml"],
+  "hooks": "./hooks/codex.json",
+  "interface": {
+    "displayName": "Toolsmith",
+    "shortDescription": "Forge narrow, allowlistable scripts instead of hand-rolling broad escape-hatch commands; hooks redirect to approved tools and hash-pin them.",
+    "longDescription": "Broad commands like gh api, raw curl, aws, or kubectl are painful to allowlist — granting them wholesale over-empowers the agent, so they stay gated and every use costs a manual approval. Toolsmith's answer is to forge a narrow tool: a single-purpose script the user proofreads once and allowlists forever. A PreToolUse hook redirects a watched command to an already-approved script when one covers it, and hard-blocks any registered script that is unapproved or whose contents changed since approval (sha256-pinned). A PostToolUse hook logs Bash usage so the analyze command can mine it for tools worth building. The approve command runs the proofread-then-allowlist handshake, coupling each allowlist grant to one reviewed script version.",
+    "category": "developer-tools",
+    "capabilities": [
+      "PreToolUse redirect from broad watched commands to an approved covering tool",
+      "sha256 hash-pinning that blocks any approved script edited after approval",
+      "PostToolUse Bash history logging (bounded, gitignored) for later analysis",
+      "Commands to analyze history, run the approval handshake, and list registry status"
+    ],
+    "defaultPrompt": "Analyze my recent broad command usage and propose narrow tools worth building."
+  }
+}

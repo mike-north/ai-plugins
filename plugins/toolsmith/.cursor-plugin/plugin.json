@@ -1,0 +1,12 @@
+{
+  "name": "toolsmith",
+  "version": "0.1.0",
+  "description": "Guides an agent to forge narrow, single-purpose, user-approvable scripts instead of hand-assembling broad escape-hatch commands (gh api, raw curl, aws/gcloud/kubectl). A preToolUse hook redirects watched commands to an already-approved script when one covers them, and hard-blocks any approved script whose contents changed since approval (sha256-pinned). A postToolUse hook logs Bash usage so /toolsmith:analyze can mine it for tools worth building; /toolsmith:approve runs the proofread-then-allowlist handshake.",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["permissions", "hooks", "bash", "scripts", "allowlist", "gh", "agents", "security"],
+  "skills": ["./skills"],
+  "commands": ["./commands/analyze.md", "./commands/approve.md", "./commands/list.md"],
+  "hooks": "./hooks/cursor.json"
+}

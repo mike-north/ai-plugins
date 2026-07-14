@@ -154,6 +154,21 @@
       ]
     },
     {
+      "name": "toolsmith",
+      "source": "./plugins/toolsmith",
+      "description": "Guides an agent to forge narrow, single-purpose, user-approvable scripts instead of hand-assembling broad escape-hatch commands (gh api, raw curl, aws/gcloud/kubectl). A PreToolUse hook redirects watched commands to an already-approved script when one covers them, and hard-blocks any approved script whose contents changed since approval (sha256-pinned). A PostToolUse hook logs Bash usage so /toolsmith:analyze can mine it for tools worth building; /toolsmith:approve runs the proofread-then-allowlist handshake.",
+      "tags": [
+        "permissions",
+        "hooks",
+        "bash",
+        "scripts",
+        "allowlist",
+        "gh",
+        "agents",
+        "security"
+      ]
+    },
+    {
       "name": "toon",
       "source": "./plugins/toon",
       "description": "Deterministic hook pair that routes JSON-emitting Bash commands through the TOON encoder (~40-60% fewer tokens). PreToolUse appends a safe toon-pipe wrapper as the final stage of high-confidence commands (JSON output flags, terminal non-raw jq, learned registry); PostToolUse parses actual output as ground truth, replaces it with TOON, and teaches a shared registry so detection improves over time. A bash gate keeps the common no-op path at ~15ms; no model in the detection loop.",
