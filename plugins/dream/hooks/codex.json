@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/skills/dream/scripts/should-dream.mjs\" tick"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "project-room-preparation",
+  "version": "0.0.1",
+  "description": "Organize messy project sources into an inspectable \"project room\" before drafting begins — source inventory, duplicate log, conflict log, missing-context list, and working brief.",
+  "keywords": [
+    "skills",
+    "writing",
+    "research",
+    "knowledge-management"
+  ],
+  "skills": [
+    "./skills"
+  ],
+  "hooks": "./hooks/claude.json",
+  "mcpServers": "./.mcp.json"
+}

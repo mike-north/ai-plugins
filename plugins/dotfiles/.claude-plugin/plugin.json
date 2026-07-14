@@ -1,0 +1,16 @@
+{
+  "name": "dotfiles",
+  "version": "0.0.1",
+  "description": "Dotfiles management — chezmoi, fish shell, and environment configuration",
+  "keywords": [
+    "chezmoi",
+    "dotfiles",
+    "fish",
+    "devtools"
+  ],
+  "skills": [
+    "./skills"
+  ],
+  "hooks": "./hooks/claude.json",
+  "mcpServers": "./.mcp.json"
+}

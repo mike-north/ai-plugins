@@ -1,0 +1,20 @@
+{
+  "name": "toon",
+  "version": "0.1.0",
+  "description": "Deterministic hook pair that routes JSON-emitting Bash commands through the TOON encoder (~40-60% fewer tokens). PreToolUse appends a safe toon-pipe wrapper as the final stage of high-confidence commands; PostToolUse parses actual output as ground truth, replaces it with TOON, and teaches a shared registry so detection improves over time.",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["toon", "json", "tokens", "hooks", "bash", "token-efficiency", "jq"],
+  "hooks": "./hooks/codex.json",
+  "interface": {
+    "displayName": "TOON JSON Pipe",
+    "shortDescription": "Auto-route JSON-emitting Bash commands through the TOON encoder (~40-60% fewer tokens).",
+    "category": "developer-tools",
+    "capabilities": [
+      "Rewrites high-confidence JSON commands to pipe through toon at the source",
+      "Converts confirmed JSON tool output to TOON after the fact",
+      "Learns JSON-emitting command signatures in a shared registry"
+    ]
+  }
+}

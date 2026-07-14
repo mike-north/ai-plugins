@@ -1,18 +1,181 @@
 {
-  "name": "ai-plugin-marketplace",
+  "name": "ai-plugins",
   "owner": {
-    "name": "AI Plugin Marketplace Template"
+    "name": "Mike North"
   },
   "metadata": {
-    "version": "0.0.1",
     "description": "Universal AI Plugin Marketplace — author once, distribute to all platforms"
   },
   "plugins": [
     {
-      "name": "skill-evaluator",
-      "source": "./plugins/skill-evaluator",
-      "description": "Evaluate AI skills across model tiers with blind testing and refinement recommendations",
-      "tags": ["evaluation", "testing", "skills", "model-tiers"]
+      "name": "code-review",
+      "source": "./plugins/code-review",
+      "description": "Adaptive, host-neutral code review — detects the stack, routes to specialist reviewer lenses dispatched as agents with their own context windows, and records findings as SARIF.",
+      "tags": [
+        "code-review",
+        "review",
+        "sarif",
+        "code-quality",
+        "multi-language"
+      ]
+    },
+    {
+      "name": "customizations",
+      "source": "./plugins/customizations",
+      "description": "Route any agent-customization need to the right primitive — script, memory, rule, hook, skill, agent, MCP, monitor, plugin, or marketplace — determinism-first, authoring the light ones and delegating the rest. Includes /customizations create|list|remove.",
+      "tags": [
+        "customization",
+        "routing",
+        "determinism",
+        "skills",
+        "hooks",
+        "monitors",
+        "plugins",
+        "memory",
+        "agents",
+        "meta"
+      ]
+    },
+    {
+      "name": "dotfiles",
+      "source": "./plugins/dotfiles",
+      "description": "Dotfiles management — chezmoi, fish shell, and environment configuration",
+      "tags": [
+        "chezmoi",
+        "dotfiles",
+        "fish",
+        "devtools"
+      ]
+    },
+    {
+      "name": "dream",
+      "source": "./plugins/dream",
+      "description": "Periodic memory consolidation and self-improvement — \"dream\". Consolidates a one-fact-per-file memory store and surfaces recurring friction as proposed customizations to review. Includes /dream.",
+      "tags": [
+        "memory",
+        "consolidation",
+        "dream",
+        "self-improvement",
+        "maintenance",
+        "customizations",
+        "sleep",
+        "meta"
+      ]
+    },
+    {
+      "name": "git",
+      "source": "./plugins/git",
+      "description": "Deterministic local-git utilities for agents: exact diff statistics (meaningful vs raw line counts, implementation vs test split), a stacked-PR manager (gst), and git-identity — per-host resolution of commit author + GPG key + arbitrary fields, keyed on the remote. Run the scripts for exact results — never estimate.",
+      "tags": [
+        "git",
+        "diff",
+        "stacked-prs",
+        "branches",
+        "metrics",
+        "worktrees",
+        "identity",
+        "ssh",
+        "gpg",
+        "commit-author"
+      ]
+    },
+    {
+      "name": "github-fleet-tools",
+      "source": "./plugins/github-fleet-tools",
+      "description": "Opinionated, allowlistable command-line tools for an agent to engage with GitHub: read-only PR/issue-queue inspection plus bounded write verbs (label, comment, reply/resolve review threads, create issue/PR, mark ready, guarded merge). Each wraps one gh operation with no arbitrary-API escape hatch, so it can be pre-approved while raw `gh api` stays gated.",
+      "tags": [
+        "github",
+        "gh",
+        "pull-requests",
+        "issues",
+        "code-review",
+        "automation",
+        "agents"
+      ]
+    },
+    {
+      "name": "liaison",
+      "source": "./plugins/liaison",
+      "description": "Arrange a briefed, two-way voice conversation between a human and an AI session, then bring structured findings back into the agent's workstream — the agent syncs the docs, frames the talk for voice, and seeds a chat to continue on mobile. Powered by aichatctl.",
+      "tags": [
+        "voice",
+        "conversation",
+        "aichatctl",
+        "decisions",
+        "feedback"
+      ]
+    },
+    {
+      "name": "notebooklm",
+      "source": "./plugins/notebooklm",
+      "description": "Turn repo files and links into a focused NotebookLM audio podcast you can listen to on the go — the agent picks the format and writes the host-focus prompt; aichatctl creates the notebook and starts generation.",
+      "tags": [
+        "podcast",
+        "notebooklm",
+        "audio",
+        "aichatctl",
+        "voice"
+      ]
+    },
+    {
+      "name": "product-led-eng-fleet",
+      "source": "./plugins/product-led-eng-fleet",
+      "description": "Run a product-led engineering fleet: a PM/orchestrator loop that ships work via self-contained GitHub issues, with implementer sub-agents that pick them up, build against acceptance criteria, and open PRs. The work queue is detected by a deterministic git/gh engine, not by agent reasoning.",
+      "tags": [
+        "engineering",
+        "orchestration",
+        "agents",
+        "github-issues",
+        "workflow",
+        "fleet"
+      ]
+    },
+    {
+      "name": "project-room-preparation",
+      "source": "./plugins/project-room-preparation",
+      "description": "Organize messy project sources into an inspectable \"project room\" before drafting begins — source inventory, duplicate log, conflict log, missing-context list, and working brief.",
+      "tags": [
+        "skills",
+        "writing",
+        "research",
+        "knowledge-management"
+      ]
+    },
+    {
+      "name": "spec-skills",
+      "source": "./plugins/spec-skills",
+      "description": "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
+      "tags": [
+        "specs",
+        "skills",
+        "quality"
+      ]
+    },
+    {
+      "name": "toon",
+      "source": "./plugins/toon",
+      "description": "Deterministic hook pair that routes JSON-emitting Bash commands through the TOON encoder (~40-60% fewer tokens). PreToolUse appends a safe toon-pipe wrapper as the final stage of high-confidence commands (JSON output flags, terminal non-raw jq, learned registry); PostToolUse parses actual output as ground truth, replaces it with TOON, and teaches a shared registry so detection improves over time. A bash gate keeps the common no-op path at ~15ms; no model in the detection loop.",
+      "tags": [
+        "toon",
+        "json",
+        "tokens",
+        "hooks",
+        "bash",
+        "token-efficiency",
+        "jq"
+      ]
+    },
+    {
+      "name": "voice",
+      "source": "./plugins/voice",
+      "description": "Let the agent say short lines aloud through the speakers — status, a nudge for attention, or a one-line spoken summary. Uses macOS `say` today, with a clean path to vocli for real cross-platform TTS.",
+      "tags": [
+        "voice",
+        "tts",
+        "speech",
+        "say",
+        "vocli"
+      ]
     }
   ]
 }

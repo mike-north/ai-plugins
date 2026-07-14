@@ -1,0 +1,18 @@
+{
+  "_generated": {
+    "by": "@ai-plugin-marketplace/cli",
+    "source": "hooks/claude.yaml"
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/dream/scripts/should-dream.mjs\" tick"
+          }
+        ]
+      }
+    ]
+  }
+}

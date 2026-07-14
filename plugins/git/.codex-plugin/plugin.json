@@ -1,0 +1,23 @@
+{
+  "name": "git",
+  "version": "0.0.1",
+  "description": "Deterministic local-git utilities: exact diff statistics and a stacked-PR manager.",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["git", "diff", "stacked-prs", "branches", "metrics", "worktrees"],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Git Utilities",
+    "shortDescription": "Exact diff statistics + a stacked-PR manager (gst) for chains of dependent branches.",
+    "longDescription": "Deterministic local-git tooling for agents. diff-stats.sh reports exact change metrics — meaningful (generated-file-excluded) vs raw line counts and an implementation-vs-test split — so PR size is never estimated. gst manages stacks of dependent branches: create/list/restack/submit (push + create/update PRs with stack tables)/navigate/adopt/orphan, with stack metadata in git config. Includes worktree discipline guidance for working a stack. Local-VCS only; no GitHub auth required (gst submit uses the gh CLI when present).",
+    "category": "developer-tools",
+    "capabilities": [
+      "Exact diff statistics: meaningful vs raw line counts, implementation vs test split",
+      "Stacked-PR management (gst): create, list, restack, submit, navigate, adopt, orphan",
+      "Worktree discipline guidance for working a branch stack"
+    ],
+    "defaultPrompt": "Report the diff statistics for the current branch against main."
+  }
+}

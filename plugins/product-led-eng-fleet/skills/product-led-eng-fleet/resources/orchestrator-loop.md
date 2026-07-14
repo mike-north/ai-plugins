@@ -1,0 +1,121 @@
+# The orchestrator loop
+
+One iteration of the fleet orchestrator. The orchestrator turns a ranked queue into
+merged work by delegating to implementer sub-agents and owning the review cycle. It does
+**not** write feature code itself — it triages, delegates, monitors, reviews, and merges.
+
+## 0. Preflight: confirm a role-scoped orchestrator worktree
+
+Run each orchestrator from a **dedicated, role-scoped worktree** — typically one per role
+(a PM-TL worktree and an eng-TL worktree), each enabling only that role's plugins. The
+worktree *is* the scoping boundary: a worktree that doesn't have the merge tooling enabled
+simply cannot merge, with no per-call permission gymnastics. The check below also never
+cascades to implementer sub-agents — they spawn their own worktrees (step 4).
+
+Before anything else, run the deterministic gate and **stop if it exits non-zero**:
+
+```
+node "${CLAUDE_PLUGIN_ROOT}/skills/product-led-eng-fleet/scripts/orchestrator-preflight.mjs"
+```
+
+It fails unless (a) you are in a **linked worktree**, not the primary checkout; (b) a role
+marker `.claude/fleet-role.json` is present and well-formed; and (c) that marker's `require`
+plugins are enabled and its `forbid` plugins are not (merged user → project → local
+settings). Each orchestrator worktree carries the marker:
+
+```json
+{ "role": "eng", "require": ["product-led-eng-fleet", "github-fleet-tools"], "forbid": [] }
+```
+
+Plugin names match **bare** (the part before `@marketplace`). As the fleet tooling splits by
+role, set `require`/`forbid` to that role's plugins — e.g. an eng worktree `forbid`s the
+PM-only plugin and a PM worktree `forbid`s the merge-capable eng plugin — so each session
+structurally carries only its role's surface.
+
+## 1. Sync ground truth first
+
+Local `HEAD` and the session's start-of-conversation snapshot are stale. Begin every
+iteration from the remote:
+
+```
+git fetch origin <default-branch>
+```
+
+Read the repo's fleet-conventions file (often `ENG_TEAM_INSTRUCTIONS.md`) from
+`origin/<default-branch>`, not the local copy — the PM maintains it and it changes.
+
+## 2. Triage the queue (deterministically)
+
+Run the engine, never an in-context diff (tools come from the `github-fleet-tools` plugin):
+
+```
+gh-queue list
+gh-queue status
+```
+
+`list` is already ranked (deadline → priority label → issue number). Your only judgment
+is choosing _among equally-ready_ items and how many to run in parallel. **Don't
+manufacture work:** if the queue is saturated by in-flight PRs, the value-add is reviewing
+ready (non-draft, CI-green) PRs or waiting — not duplicating claimed work.
+
+## 3. Verify and claim
+
+Before committing an agent to an issue, confirm it's both real and free:
+
+- Re-confirm the problem still reproduces against `origin/<default-branch>` (not the local
+  working copy or a stale read).
+- `gh-queue ground-truth <N>` — exit 2 means an open PR already covers it or it's
+  actively claimed; do not duplicate. A `STALE-CLAIM` verdict is takeable _after_ you
+  announce intent on the issue.
+- Claim = `gh-label <N> add "in progress"` then `gh issue comment <N> "<intent>"`.
+  Always ground-truth first; only act on a `SAFE`/`STALE-CLAIM` verdict.
+
+## 4. Delegate to a fleet implementer
+
+Dispatch a sub-agent (the `fleet-implementer` agent, or an inline Task) with a brief that
+makes it self-sufficient — assume it has no conversation context. The brief must tell it to:
+
+1. Branch off `origin/<default-branch>` into an isolated worktree.
+2. Treat the issue's **acceptance criteria as the contract** and map each criterion to a
+   named test, stated explicitly in the PR.
+3. Update any governing spec/docs **in the same PR** (per the repo's conventions).
+4. Run the repo's full check + affected tests green before pushing; format **before** every
+   push (a formatter slip fails fast in CI and masks whether tests passed).
+5. Commit with the correct authorship and **no AI-attribution trailers**.
+6. Open a PR referencing the issue with `Refs #N` (never `Closes #N` — see conventions),
+   request review, and comment the PR link on the issue.
+7. **STOP at PR-open.** Do not self-address review feedback — the orchestrator runs the
+   review cycle. (Implementers that keep going routinely push un-formatted "fixes" that
+   bypass review and fail CI.)
+
+**Tier (Axis 2):** premium model for spec-normative / edge-case-heavy issues; mid tier for
+contained changes. Up to ~5 implementers in parallel for independent issues.
+
+## 5. Monitor each PR by number
+
+Launch a background PR monitor **targeting the PR number** (not "the current branch" — the
+orchestrator sits on the default branch while the PR lives on a worktree branch). Implementer
+sub-agents cannot monitor PRs themselves; they report back and you monitor.
+
+When the monitor reports CI failures or review comments, dispatch a **fix** sub-agent that
+addresses every item **and replies to every review thread** (what changed, or why you
+respectfully didn't — silence is debt), then re-monitor. Reply + resolve a thread with
+`gh-reviews reply <PR> <thread-comment-id> "<reply>"`, or clear an addressed batch with
+`gh-reviews resolve <PR>`.
+
+## 6. Merge and close
+
+On green CI + all review threads resolved, squash-merge with `gh-merge <PR>`. That tool
+**prompts for approval by design** (merge is the one high-consequence write — grant it to the
+PM/orchestrator context only) and additionally _refuses_ unless the PR is open, non-draft,
+**not a release/Version PR**, has a **Copilot review present**, and has **passed required
+checks**. Then close the issue with a criteria-met summary via
+`gh issue close <N> --comment "<summary>"` — PRs reference issues with `Refs`, so the merge won't
+auto-close them.
+
+## 7. Reflect
+
+Capture recurring friction as durable memory; propose new rules/skills/hooks for repeated
+manual steps — propose, don't self-modify. When a working-convention friction recurs
+(review races, closing-keyword mistakes, queue-hygiene lapses), encode the fix in the
+repo's fleet-conventions doc rather than correcting it per-PR.

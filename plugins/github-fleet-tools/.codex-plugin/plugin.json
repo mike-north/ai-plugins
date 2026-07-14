@@ -1,0 +1,23 @@
+{
+  "name": "github-fleet-tools",
+  "version": "0.0.1",
+  "description": "Opinionated, allowlistable command-line tools for an agent to engage with GitHub.",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["github", "gh", "pull-requests", "issues", "code-review", "automation", "agents"],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "GitHub Fleet Tools",
+    "shortDescription": "Bounded, allowlistable gh tools: read PR/issue-queue state + write verbs (comment, review reply/resolve, create issue/PR, guarded merge).",
+    "longDescription": "A deterministic, opinionated tool surface for letting an agent engage with GitHub safely and autonomously. Read-only inspection (PR health, ranked issue queue, review-thread status) plus bounded write verbs — each wraps exactly one gh operation with no arbitrary-API escape hatch, so it can be allowlisted and run without a prompt while raw `gh api` stays human-gated. Includes a guarded squash-merge that refuses release PRs, drafts, un-reviewed PRs, and PRs with failing required checks. The tooling layer beneath the product-led-eng-fleet methodology plugin.",
+    "category": "developer-tools",
+    "capabilities": [
+      "Read-only PR/CI/review-thread health and a ranked GitHub-issue work queue",
+      "Bounded write verbs (label, comment, reply/resolve review threads, create issue/PR, mark ready)",
+      "Guarded squash-merge that refuses release/draft/un-reviewed/failing-check PRs"
+    ],
+    "defaultPrompt": "Show the ready issue queue and the health of the open PRs."
+  }
+}

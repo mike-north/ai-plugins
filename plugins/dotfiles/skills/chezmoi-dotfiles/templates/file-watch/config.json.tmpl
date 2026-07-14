@@ -1,0 +1,26 @@
+{{- /*
+  chezmoi-watch config: maps watched file paths to sync commands.
+  Deployed to: ~/.config/chezmoi-watch/config.json
+
+  Each entry:
+    name    — human-readable label (for logging)
+    watch   — absolute path to the file being watched
+    command — shell command to run when the file changes
+
+  Add OS guards to limit entries to the right platform.
+  The handler runs ALL commands on any trigger (they should be fast + idempotent).
+*/ -}}
+{{ if eq .chezmoi.os "darwin" -}}
+[
+  {
+    "name": "Example App preferences",
+    "watch": "{{ .chezmoi.homeDir }}/Library/Preferences/com.example.App.plist",
+    "command": "python3 {{ .chezmoi.homeDir }}/.local/bin/plist-merge --sync {{ .chezmoi.homeDir }}/Library/Preferences/com.example.App.plist {{ .chezmoi.homeDir }}/.local/share/chezmoi/private_Library/private_Preferences/private_com.example.App.managed.plist"
+  }
+]
+{{- else if eq .chezmoi.os "linux" -}}
+[
+]
+{{- else -}}
+[]
+{{- end }}

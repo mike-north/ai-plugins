@@ -1,0 +1,17 @@
+{
+  "name": "voice",
+  "version": "0.0.1",
+  "description": "Let the agent say short lines aloud through the speakers — status, a nudge for attention, or a one-line spoken summary. Uses macOS `say` today, with a clean path to vocli for real cross-platform TTS.",
+  "keywords": [
+    "voice",
+    "tts",
+    "speech",
+    "say",
+    "vocli"
+  ],
+  "skills": [
+    "./skills"
+  ],
+  "hooks": "./hooks/claude.json",
+  "mcpServers": "./.mcp.json"
+}

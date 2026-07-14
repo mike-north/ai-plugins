@@ -1,0 +1,30 @@
+{
+  "_generated": {
+    "by": "@ai-plugin-marketplace/cli",
+    "source": "hooks/claude.yaml"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/toon-gate.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/toon-gate.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

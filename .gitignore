@@ -148,7 +148,11 @@ vite.config.ts.timestamp-*
 
 # Build output (dist/ is committed for consumer install — see .gitattributes)
 dist-ts/
-plugins/*/hooks/*.json
+# The Gemini-format source hooks file is a build intermediate (Gemini installs from
+# the committed dist/ export), so it stays ignored. The Claude-format claude.json IS
+# committed: Claude installs a plugin from its plugins/<name>/ source directly, where
+# plugin.json's "hooks" path must resolve to a real file.
+plugins/*/hooks/hooks.json
 
 # Scratch & manual-test artifacts
 scratch/
