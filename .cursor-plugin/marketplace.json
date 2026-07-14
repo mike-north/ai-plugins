@@ -167,7 +167,7 @@
         "agents",
         "security"
       ]
-    }, 
+    },
     {
       "name": "toon",
       "source": "./plugins/toon",
