@@ -10,6 +10,7 @@ match:
   - { diff: "api_surface" }
 miss_cost: high
 packs:
+  - { id: "api-design-judgment" }
   - { id: "protobuf", when: { changed_file: "**/*.proto" } }
   - { id: "api-extractor", when: { manifest: "api-extractor*.json" } }
 ---

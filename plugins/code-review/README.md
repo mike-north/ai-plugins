@@ -82,6 +82,24 @@ than assumed. `scripts/catalog-lint.mjs` validates the whole catalog's structura
 (required fields, word limits, every `packs:` reference resolving, every lens fencing off its
 neighbors) — run it after editing any lens or pack.
 
+## Consultant agents
+
+`agents/*.md` are nine design-consultation agents — `typescript-expert`, `rust-expert`,
+`go-expert`, `ruby-expert`, `cli-ux-expert`, `api-design-expert`, `testing-expert`,
+`code-quality-expert`, and `architecture-expert` — one per domain the lens catalog covers.
+They're a different role from the lenses: a lens judges a finished diff; a consultant agent is
+invoked *before* code is written, to advise on a design decision (an error-handling strategy, an
+aggregate boundary, a pagination scheme) with an opinionated recommendation rather than a review
+verdict.
+
+Both roles are thin wrappers over the same knowledge. Each domain's judgment — the parts of that
+domain's expertise that aren't already covered by an existing lens body or tech-specific pack —
+lives once, in a `skills/review/packs/<domain>-judgment.md` file wired unconditionally into that
+domain's lens `packs:` list. A consultant agent reads the same file directly
+(`${CLAUDE_PLUGIN_ROOT}/skills/review/packs/<domain>-judgment.md`) before advising. Nothing about a
+domain's actual facts is duplicated between the review path and the consultation path — only the
+framing (review verdict vs. design recommendation) differs.
+
 ## Status
 
 Findings-and-fixes-capable, not yet self-posting by default: `review` produces findings and

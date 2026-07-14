@@ -12,6 +12,7 @@ match:
 requires: [built-worktree]
 miss_cost: low
 packs:
+  - { id: "cli-ux-judgment" }
   - { id: "cobra", when: { dep: "spf13/cobra" } }
   - { id: "node-cli", when: { dep: "yargs|commander" } }
 ---

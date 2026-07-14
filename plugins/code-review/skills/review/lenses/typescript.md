@@ -11,6 +11,7 @@ match:
 requires: [built-worktree]
 packs:
   - { id: "skill:typescript-coding" }
+  - { id: "typescript-judgment" }
   - { id: "api-extractor", when: { manifest: "api-extractor*.json" } }
   - { id: "changesets", when: { manifest: ".changeset" } }
   - { id: "nx-monorepo", when: { manifest: "nx.json" } }

@@ -7,6 +7,7 @@ charter: >
   that no language- or domain-specific lens claims.
 route: always
 packs:
+  - { id: "code-quality-judgment" }
   - { id: "github-actions", when: { changed_file: "**/.github/workflows/**" } }
   - { id: "bazel", when: { changed_file: "**/BUILD*" } }
 ---

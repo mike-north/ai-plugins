@@ -10,6 +10,8 @@ match:
   - { ext: "rs" }
   - { manifest: "Cargo.toml", diff: "source_touched" }
 miss_cost: high
+packs:
+  - { id: "rust-judgment" }
 ---
 
 # Rust Reviewer
