@@ -1,0 +1,10 @@
+{
+  "name": "toon",
+  "version": "0.2.0",
+  "description": "Routes JSON-emitting shell commands through the TOON encoder (~40-60% fewer tokens). preToolUse rewrites high-confidence commands to pipe through toon at the source via updated_input. Cursor cannot replace Shell-tool output, so there is no post-hoc conversion; the Pre branch reads a registry shared with Claude/Codex sessions.",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["toon", "json", "tokens", "hooks", "shell", "token-efficiency", "jq"],
+  "hooks": "./hooks/cursor.json"
+}
