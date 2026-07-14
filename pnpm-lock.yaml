@@ -9,11 +9,11 @@ importers:
   .:
     devDependencies:
       '@ai-plugin-marketplace/cli':
-        specifier: ^0.3.1
-        version: 0.3.1
+        specifier: ^0.4.0
+        version: 0.4.0
       '@ai-plugin-marketplace/core':
-        specifier: ^0.5.0
-        version: 0.5.0
+        specifier: ^0.6.0
+        version: 0.6.0
       remark-cli:
         specifier: ^12.0.1
         version: 12.0.1
@@ -32,13 +32,13 @@ importers:
 
 packages:
 
-  '@ai-plugin-marketplace/cli@0.3.1':
-    resolution: {integrity: sha512-DjANpytoVd4qcr+JlH6PtKNN9QgmEnU3JmSKD7rW/dgFHWPCJlHVHygwvn/768wT/ndgfLqjI+T0bi71Q8ujbA==}
+  '@ai-plugin-marketplace/cli@0.4.0':
+    resolution: {integrity: sha512-dA+kHA1+GyACYwa4T2CiSpE0KP5oU82f76xLPm7Lp7N9pbhWNBsox/9zJUwB19jIRwpmA1CEVd1i7Uc4KsI9Ig==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
-  '@ai-plugin-marketplace/core@0.5.0':
-    resolution: {integrity: sha512-BvjY4PddiRzwpBgYrZ4KGnQiKBVzcPsaom5a/y5D/iZFIXycGA3oet9HX0oyujDiAuxFqMheiOUfBjF6v0FkvQ==}
+  '@ai-plugin-marketplace/core@0.6.0':
+    resolution: {integrity: sha512-sXBcOAfNfA8Ga7Yxo+mItBf8wBEE0lGc5x6TJej9E5sdDPqzMHtUWLNPTAu1u46iVdfUgtv5v+7tPyYemGsgWQ==}
     engines: {node: '>=20.0.0'}
 
   '@babel/code-frame@7.29.0':
@@ -1386,11 +1386,11 @@ packages:
 
 snapshots:
 
-  '@ai-plugin-marketplace/cli@0.3.1':
+  '@ai-plugin-marketplace/cli@0.4.0':
     dependencies:
-      '@ai-plugin-marketplace/core': 0.5.0
+      '@ai-plugin-marketplace/core': 0.6.0
 
-  '@ai-plugin-marketplace/core@0.5.0':
+  '@ai-plugin-marketplace/core@0.6.0':
     dependencies:
       jiti: 2.7.0
       yaml: 2.8.2

@@ -1,6 +1,9 @@
 #!/bin/bash
 # Regression tests for the toon hook pair (toon-hook.mjs + toon-pipe).
-# Each case invokes the hook exactly as Claude Code does: JSON on stdin.
+# Each case invokes the hook exactly as a host does: JSON on stdin.
+# Covers both the Claude/Codex contract (hook_event_name, tool_response,
+# hookSpecificOutput) and the Cursor contract (no hook_event_name, tool_output,
+# updated_input; Post is a no-op since Cursor can't replace Shell output).
 set -u
 cd "$(dirname "$0")" || exit 1
 
@@ -45,6 +48,25 @@ assert_rewrite() { # $1=name $2=hook output — must rewrite, ending in toon-pip
 
 assert_noop() { # $1=name $2=hook output — must emit nothing
   if [[ -z "$2" ]]; then ok; else bad "$1" "$2"; fi
+}
+
+# --- Cursor host (no hook_event_name; tool Shell; updated_input envelope) ------
+cursor_pre() { # generic preToolUse payload — no output, no hook_event_name
+  jq -cn --arg cmd "$1" \
+    '{tool_name:"Shell",tool_input:{command:$cmd},tool_use_id:"abc",cwd:"/p"}' \
+    | ./toon-gate.sh
+}
+
+cursor_post() { # generic postToolUse payload — carries tool_output
+  jq -cn --arg cmd "$1" --arg out "$2" \
+    '{tool_name:"Shell",tool_input:{command:$cmd},tool_output:$out,tool_use_id:"abc",duration:12}' \
+    | ./toon-gate.sh
+}
+
+assert_cursor_rewrite() { # rewrite via Cursor's updated_input envelope
+  local out="$2" newcmd
+  newcmd=$(jq -r '.updated_input.command // empty' <<<"$out" 2>/dev/null)
+  if [[ "$newcmd" == "set -o pipefail; "*" | "*"/toon-pipe" ]]; then ok; else bad "$1" "$out"; fi
 }
 
 BIG_JSON=$(jq -cn '[range(30) | {id:., name:("item-"+tostring), state:"open"}]')
@@ -119,9 +141,28 @@ if [[ "$wrapped" == *'items[2]{id,name}'* ]]; then ok; else bad "toon-pipe: conv
 passthru=$(echo 'plain text, not json' | ./toon-pipe; echo "exit=$?")
 if [[ "$passthru" == $'plain text, not json\nexit=0' ]]; then ok; else bad "toon-pipe: passthrough + exit 0 on non-JSON" "$passthru"; fi
 
+# --- Cursor host --------------------------------------------------------------
+# Pre: rewrite via updated_input for the same high-confidence signals.
+assert_cursor_rewrite "cursor pre: json flag"   "$(cursor_pre 'gh pr view 42 --json state')"
+assert_cursor_rewrite "cursor pre: terminal jq" "$(cursor_pre 'gh api x | jq ".items"')"
+assert_cursor_rewrite "cursor pre: |& term jq"  "$(cursor_pre 'gh api x |& jq ".y"')"
+assert_cursor_rewrite "cursor pre: toon in arg" "$(cursor_pre 'gh api repos/toon-format/toon --json name')"
+# Registry is shared across hosts: a count>=2 signature drives Cursor's rewrite.
+printf '[{"sig":"kubectl get","count":2,"lastSeen":"2026-07-14T00:00:00.000Z"}]\n' > "$TOON_HOOK_REGISTRY"
+assert_cursor_rewrite "cursor pre: shared registry sig" "$(cursor_pre 'kubectl get pods')"
+: > "$TOON_HOOK_REGISTRY"  # reset
+# Pre negatives.
+assert_noop "cursor pre: no signal"          "$(cursor_pre 'ls -la')"
+assert_noop "cursor pre: jq -r raw"          "$(cursor_pre 'gh api x | jq -r ".name"')"
+assert_noop "cursor pre: already toon-piped" "$(cursor_pre 'set -o pipefail; gh api x | /p/toon-pipe')"
+# Post: Cursor cannot replace Shell output → always a no-op, even for big JSON.
+assert_noop "cursor post: big JSON no-op"    "$(cursor_post 'gh api user/repos' "$BIG_JSON")"
+
 # --- Escape hatch ---------------------------------------------------------------
 out=$(jq -cn '{hook_event_name:"PreToolUse",tool_name:"Bash",tool_input:{command:"gh pr list --json number"}}' | CLAUDE_TOON_HOOK=off ./toon-gate.sh)
 assert_noop "CLAUDE_TOON_HOOK=off disables hook (gate)" "$out"
+out=$(jq -cn '{tool_name:"Shell",tool_input:{command:"gh pr list --json number"}}' | CLAUDE_TOON_HOOK=off ./toon-gate.sh)
+assert_noop "CLAUDE_TOON_HOOK=off disables hook (cursor)" "$out"
 out=$(jq -cn '{hook_event_name:"PreToolUse",tool_name:"Bash",tool_input:{command:"gh pr list --json number"}}' | CLAUDE_TOON_HOOK=off node toon-hook.mjs)
 assert_noop "CLAUDE_TOON_HOOK=off disables hook (node)" "$out"
 

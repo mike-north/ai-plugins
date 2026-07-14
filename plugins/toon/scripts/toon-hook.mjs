@@ -1,21 +1,30 @@
 #!/usr/bin/env node
 /**
- * toon-hook: route JSON-emitting Bash commands through the TOON encoder.
+ * toon-hook: route JSON-emitting shell commands through the TOON encoder.
  *
- * One script, two Claude Code hook events (dispatched on hook_event_name):
+ * One script, two hook events, across multiple hosts:
  *
- * - PreToolUse  — when the final pipeline stage of the command carries a
- *   high-confidence JSON signal (a JSON output flag, a terminal non-raw `jq`,
- *   or a registry-confirmed signature), rewrite the command to append the
- *   toon-pipe wrapper as the FINAL stage. Never inserts mid-pipeline.
- * - PostToolUse — ground truth: if the actual output parses as a JSON
- *   object/array above a size threshold, replace the tool result with TOON
- *   (updatedToolOutput) and record the command signature in registry.json so
- *   PreToolUse can rewrite it at the source next time.
+ * - Pre  — when the final pipeline stage of the command carries a high-confidence
+ *   JSON signal (a JSON output flag, a terminal non-raw `jq`, or a registry-
+ *   confirmed signature), rewrite the command to append the toon-pipe wrapper as
+ *   the FINAL stage. Never inserts mid-pipeline.
+ * - Post — ground truth: if the actual output parses as a JSON object/array above
+ *   a size threshold, replace the tool result with TOON and record the command
+ *   signature in registry.json so Pre can rewrite it at the source next time.
  *
- * Escape hatch: CLAUDE_TOON_HOOK=off disables both branches (and toon-pipe).
+ * Host contracts differ and are normalized here:
+ * - Claude Code / Codex: payload carries `hook_event_name`; tool `Bash`; output
+ *   via the `hookSpecificOutput` envelope (`updatedInput` / `updatedToolOutput`).
+ *   Full behavior — Pre rewrite AND Post convert+learn.
+ * - Cursor: payload has no `hook_event_name`; tool `Shell`; Pre rewrite via
+ *   `updated_input`. Cursor can only replace output for MCP tools, not Shell, so
+ *   the Post branch is a no-op there — Cursor gets source-rewrite only. Its Pre
+ *   still consults the shared registry, which Claude/Codex sessions populate.
+ *
+ * Escape hatch: CLAUDE_TOON_HOOK=off disables everything (and toon-pipe).
  *
  * @see https://code.claude.com/docs/en/hooks.md
+ * @see https://cursor.com/docs/hooks
  * @see https://github.com/toon-format/toon
  */
 import { readFileSync, writeFileSync, renameSync, mkdirSync } from "node:fs";
@@ -60,9 +69,28 @@ function main() {
   } catch {
     return;
   }
-  if (input.tool_name !== "Bash") return;
-  if (input.hook_event_name === "PreToolUse") preToolUse(input);
-  else if (input.hook_event_name === "PostToolUse") postToolUse(input);
+  // Accept Claude/Codex `Bash` and Cursor `Shell`.
+  if (input.tool_name !== "Bash" && input.tool_name !== "Shell") return;
+  // Claude/Codex carry `hook_event_name` and use the hookSpecificOutput
+  // envelope; Cursor omits it, uses snake_case output fields, and can't replace
+  // Shell output. Detect the host once and thread it through.
+  const cursor = typeof input.hook_event_name !== "string";
+  const event = cursor
+    ? "tool_output" in input
+      ? "post"
+      : "pre"
+    : input.hook_event_name === "PreToolUse"
+      ? "pre"
+      : input.hook_event_name === "PostToolUse"
+        ? "post"
+        : null;
+  if (event === "pre") preToolUse(input, cursor);
+  else if (event === "post") postToolUse(input, cursor);
+}
+
+/** Command string, across host payload shapes. */
+function commandOf(input) {
+  return input.tool_input?.command ?? input.command ?? "";
 }
 
 /**
@@ -205,10 +233,11 @@ function emit(obj) {
   process.stdout.write(JSON.stringify(obj));
 }
 
-function preToolUse(input) {
-  const cmd = input.tool_input?.command;
+function preToolUse(input, cursor) {
+  const cmd = commandOf(input);
   if (typeof cmd !== "string" || !cmd.trim()) return;
-  // Conservative skips — PostToolUse safety-nets anything we pass on here.
+  // Conservative skips — the Post branch safety-nets anything we pass on here
+  // (on Claude/Codex; on Cursor there is no net, but the guards are the same).
   if (cmd.includes("\n") || cmd.includes("<<")) return;
   if (TOON_STAGE_RE.test(cmd)) return;
   if (/&\s*$/.test(cmd)) return;
@@ -225,19 +254,27 @@ function preToolUse(input) {
   if (!shouldRewrite) return;
   // Placement invariant: toon-pipe is only ever APPENDED as the final stage of
   // the whole command — never inserted mid-pipeline.
-  // No permissionDecision: returning only updatedInput leaves the normal
-  // permission flow intact ("defer" is rejected by some harness versions,
-  // and "allow" would silently auto-approve non-allowlisted commands).
-  emit({
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      updatedInput: { command: `set -o pipefail; ${cmd} | ${TOON_PIPE}` },
-    },
-  });
+  const command = `set -o pipefail; ${cmd} | ${TOON_PIPE}`;
+  // Cursor: `{ updated_input }`; no permission field so its normal permission
+  // flow is untouched. Claude/Codex: `hookSpecificOutput.updatedInput` — and no
+  // permissionDecision, so the normal flow stays intact there too ("allow"
+  // would silently auto-approve non-allowlisted commands; "defer" is rejected
+  // by some harness versions).
+  if (cursor) emit({ updated_input: { command } });
+  else
+    emit({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        updatedInput: { command },
+      },
+    });
 }
 
-function postToolUse(input) {
-  const cmd = input.tool_input?.command ?? "";
+function postToolUse(input, cursor) {
+  // Cursor cannot replace Shell-tool output (updated_mcp_tool_output is MCP-only;
+  // afterShellExecution is fire-and-forget). Nothing to do there.
+  if (cursor) return;
+  const cmd = commandOf(input);
   if (TOON_STAGE_RE.test(cmd)) return;
   const stages = finalPipelineStages(cmd) ?? [];
   const last = stages[stages.length - 1] ?? "";
