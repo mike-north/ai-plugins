@@ -1,17 +1,17 @@
 {
   "name": "code-review",
-  "version": "0.0.1",
-  "description": "Adaptive, host-neutral code review — detects the stack, routes to specialist reviewer lenses dispatched as agents with their own context windows, and records findings as SARIF.",
+  "version": "0.1.0",
+  "description": "Composable code review: worktree-based review workspaces, signal-routed reviewer lenses, fixes captured as real edits and converted to GitHub suggestions, SARIF interchange, and pending-review posting to github.com or GHE.",
   "keywords": [
     "code-review",
     "review",
     "sarif",
     "code-quality",
-    "multi-language"
+    "multi-language",
+    "suggestions",
+    "worktree"
   ],
   "skills": [
     "./skills"
-  ],
-  "hooks": "./hooks/claude.json",
-  "mcpServers": "./.mcp.json"
+  ]
 }
