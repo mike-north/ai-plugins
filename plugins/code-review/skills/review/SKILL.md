@@ -59,7 +59,7 @@ context to every reviewer prompt in step 5. It is context for judgment, not a so
 **4. Start the session.** `node $SKILL/scripts/review-init.mjs --work-area <dir> --worktree
 <dir> [--repo o/r --pr N --host h]` — asserts the worktree is clean, snapshots the baseline, and
 writes `state.json`. Work area default: `scratch/code-review/<id>/` (or the host's scratchpad).
-If PR metadata is available (from the worktree's `.claude/review-meta.json`), pass it through.
+If PR metadata is available (from `$(git rev-parse --git-dir)/review-meta.json` inside the worktree), pass it through.
 
 **5. Dispatch.** Spawn one subagent per rostered lens **in parallel** when your host supports it.
 Fall back to running lenses sequentially yourself only when you can't spawn subagents, or when
@@ -107,7 +107,7 @@ worktree itself (the `workspace` skill's `remove` handles that).
 1. **Own working diff.** Skip step 0's workspace setup; `--worktree` is the current repo root;
    omit `--repo`/`--pr`/`--host` from `review-init`.
 2. **PR review.** Step 0 creates and enters an isolated worktree; `review-init` and `publish-pr`
-   both read PR identity from `<worktree>/.claude/review-meta.json`.
+   both read PR identity from `$(git rev-parse --git-dir)/review-meta.json`.
 3. **Subagent-returns-markdown.** When a host invokes this skill itself as a subagent (rather
    than as the top-level orchestrator), run steps 0–8 sequentially in one context and return step
    8's markdown as your response instead of presenting it interactively.

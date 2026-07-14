@@ -36,20 +36,22 @@ export class DriftError extends CliError {
   }
 }
 
-/** Minimal `--flag value` / `--flag` (boolean) argv parser. */
+/** Minimal `--flag value` / `--flag` (boolean) / `-x value` argv parser.
+ * Short flags (`-o`) parse identically to long ones — several CLI contracts
+ * document `-o <file>` and this parser used to drop them silently. */
 export function parseArgs(argv) {
   const args = {};
+  const isFlag = (s) => typeof s === "string" && s.length > 1 && s.startsWith("-") && !/^-\d/.test(s);
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a.startsWith("--")) {
-      const key = a.slice(2);
-      const next = argv[i + 1];
-      if (next == null || next.startsWith("--")) {
-        args[key] = true;
-      } else {
-        args[key] = next;
-        i++;
-      }
+    if (!isFlag(a)) continue;
+    const key = a.startsWith("--") ? a.slice(2) : a.slice(1);
+    const next = argv[i + 1];
+    if (next == null || isFlag(next)) {
+      args[key] = true;
+    } else {
+      args[key] = next;
+      i++;
     }
   }
   return args;
