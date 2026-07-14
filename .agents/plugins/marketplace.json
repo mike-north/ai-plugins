@@ -137,6 +137,18 @@
       "category": "Productivity"
     },
     {
+      "name": "toolsmith",
+      "source": {
+        "source": "local",
+        "path": "./plugins/toolsmith"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "toon",
       "source": {
         "source": "local",
