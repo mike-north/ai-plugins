@@ -44,6 +44,13 @@ const NO_LEARN_COMMANDS = new Set(["echo", "printf", "cat", "head", "tail", "too
 // Verbatim output the agent likely needs byte-exact (file dumps, its own
 // echoed strings) — learn nothing from these and never convert them.
 const NO_CONVERT_COMMANDS = new Set(["cat", "head", "tail", "echo", "printf"]);
+// Matches `toon` / `toon-pipe` only as an invoked command STAGE — at the start
+// of the command or right after a stage operator (| |& & && || ; ( ), with an
+// optional path prefix. Deliberately does NOT match `toon` inside an argument
+// (e.g. `gh api repos/toon-format/toon`), which must still be converted/learned.
+// This is how we skip our own rewrites (`… | /abs/path/toon-pipe`) and commands
+// that genuinely invoke toon, without suppressing unrelated commands.
+const TOON_STAGE_RE = /(^|[|&;(])\s*(\S*\/)?toon(-pipe)?(\s|$)/;
 
 function main() {
   if (process.env.CLAUDE_TOON_HOOK === "off") return;
@@ -97,6 +104,13 @@ function finalPipelineStages(command) {
     if (ch === ";") {
       stages = [];
       cur = "";
+      continue;
+    }
+    // `|&` (bash: pipe stdout+stderr) is a pipe, not a new segment.
+    if (ch === "|" && command[i + 1] === "&") {
+      stages.push(cur);
+      cur = "";
+      i++;
       continue;
     }
     if (ch === "|") {
@@ -196,7 +210,7 @@ function preToolUse(input) {
   if (typeof cmd !== "string" || !cmd.trim()) return;
   // Conservative skips — PostToolUse safety-nets anything we pass on here.
   if (cmd.includes("\n") || cmd.includes("<<")) return;
-  if (/toon/.test(cmd)) return;
+  if (TOON_STAGE_RE.test(cmd)) return;
   if (/&\s*$/.test(cmd)) return;
   const stages = finalPipelineStages(cmd);
   if (!stages || stages.length === 0) return;
@@ -224,7 +238,7 @@ function preToolUse(input) {
 
 function postToolUse(input) {
   const cmd = input.tool_input?.command ?? "";
-  if (/toon/.test(cmd)) return;
+  if (TOON_STAGE_RE.test(cmd)) return;
   const stages = finalPipelineStages(cmd) ?? [];
   const last = stages[stages.length - 1] ?? "";
   const firstWord = words(last)[0] ?? "";
