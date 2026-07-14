@@ -8,23 +8,33 @@
 [ "${CLAUDE_TOON_HOOK:-}" = "off" ] && exit 0
 
 dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-input=$(cat)
+
+# Buffer stdin to a temp file once and feed both jq and node from it, rather
+# than slurping the (potentially large) PostToolUse payload into a shell
+# variable and re-piping a second copy. Fail open (no-op) if mktemp fails.
+tmp=$(mktemp) || exit 0
+trap 'rm -f "$tmp"' EXIT
+cat > "$tmp"
 
 reg="${TOON_HOOK_REGISTRY:-$HOME/.claude/toon/registry.json}"
 [ -f "$reg" ] || reg=/dev/null
 
+# The toon-skip must match `toon`/`toon-pipe` only as an invoked command STAGE
+# (start of command or after a stage operator, optional path prefix) — NOT as an
+# argument substring like `gh api repos/toon-format/toon`. Mirrors TOON_STAGE_RE
+# in toon-hook.mjs.
 verdict=$(jq -r --slurpfile reg "$reg" '
   (.tool_input.command // "") as $c
-  | if .tool_name != "Bash" or ($c | test("toon")) then "skip"
+  | if .tool_name != "Bash" or ($c | test("(^|[|&;(])\\s*(\\S*/)?toon(-pipe)?(\\s|$)")) then "skip"
     elif .hook_event_name == "PreToolUse" then
-      if ($c | test("--json|--format[= ].?json|--output[= ].?json|-o[= ]?.?json|\\|\\s*jq\\b"))
+      if ($c | test("--json|--format[= ].?json|--output[= ].?json|-o[= ]?.?json|\\|&?\\s*jq\\b"))
          or ([($reg[0] // [])[].sig] | any(. as $s | $c | contains($s)))
       then "go" else "skip" end
     elif .hook_event_name == "PostToolUse" then
       (.tool_response.stdout // .tool_response.text // "") as $t
       | if ($t | length) > 300 and ($t | test("^\\s*[\\[{]")) then "go" else "skip" end
     else "skip" end
-' <<<"$input" 2>/dev/null)
+' < "$tmp" 2>/dev/null)
 
 [ "$verdict" = "go" ] || exit 0
-printf '%s' "$input" | node "$dir/toon-hook.mjs"
+node "$dir/toon-hook.mjs" < "$tmp"
