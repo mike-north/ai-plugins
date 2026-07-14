@@ -55,6 +55,12 @@ assert_rewrite "json flag: kubectl -o json"  "$(pre 'kubectl get pods -o json')"
 assert_rewrite "json flag: --format=json"    "$(pre 'aws s3api list-buckets --format=json')"
 assert_rewrite "terminal jq"                 "$(pre 'gh api repos/x/y | jq ".items"')"
 assert_rewrite "flag only in final segment"  "$(pre 'git fetch && gh pr list --json number')"
+# `|&` (pipe stdout+stderr) is a pipe, not a segment break — terminal jq detected.
+assert_rewrite "|& pipe to terminal jq"      "$(pre 'gh api repos/x/y |& jq ".items"')"
+# `toon` only as an ARGUMENT substring (repo name), not an invoked stage — must
+# still be rewritten, not skipped by the toon guard.
+assert_rewrite "toon in arg, terminal jq"    "$(pre 'gh api repos/toon-format/toon | jq ".x"')"
+assert_rewrite "toon in arg, json flag"      "$(pre 'gh api repos/toon-format/toon --json name')"
 
 # --- PreToolUse: negative / placement invariant ------------------------------
 assert_noop "jq -r is raw output"            "$(pre 'gh api x | jq -r ".name"')"
@@ -63,6 +69,8 @@ assert_noop "multi-line command"             "$(pre $'gh pr list --json number\n
 assert_noop "heredoc"                        "$(pre 'cat <<EOF --json
 EOF')"
 assert_noop "already piped to toon"          "$(pre 'gh pr view --json state | toon')"
+assert_noop "already piped to toon-pipe path" "$(pre 'set -o pipefail; gh pr view --json state | /Users/x/.claude/plugins/cache/ai-plugins/toon/0.1.0/scripts/toon-pipe')"
+assert_noop "invokes toon directly"          "$(pre 'toon data.json')"
 assert_noop "output redirection"             "$(pre 'kubectl get pods -o json > out.json')"
 assert_noop "backgrounded command"           "$(pre 'gh pr list --json number &')"
 assert_noop "JSON stage not final (grep)"    "$(pre 'gh api x | jq ".a" | grep b')"
@@ -87,6 +95,11 @@ post 'gh api user/repos' "$BIG_JSON" >/dev/null
 count=$(jq -r '.[] | select(.sig == "gh api") | .count' "$TOON_HOOK_REGISTRY")
 if [[ "$count" == "2" ]]; then ok; else bad "post: second confirmation (count 2)" "$(cat "$TOON_HOOK_REGISTRY")"; fi
 assert_rewrite "registry count 2 → pre-rewrite" "$(pre 'gh api user/repos')"
+
+# --- PostToolUse: toon in arg (not a stage) → still converts + learns ---------
+out=$(post 'gh api repos/toon-format/toon' "$BIG_JSON")
+toon_text=$(jq -r '.hookSpecificOutput.updatedToolOutput.stdout // empty' <<<"$out" 2>/dev/null)
+if [[ "$toon_text" == *'[30]{id,name,state}'* ]]; then ok; else bad "post: toon in arg still converted (not skipped)" "$out"; fi
 
 # --- PostToolUse: negatives ---------------------------------------------------
 assert_noop "post: non-JSON output"          "$(post 'gh pr checks' 'All checks passing')"
