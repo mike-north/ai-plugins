@@ -9,6 +9,7 @@ match:
   - { ext: "go" }
 miss_cost: high
 packs:
+  - { id: "go-judgment" }
   - { id: "cobra", when: { dep: "spf13/cobra" } }
   - { id: "grpc-go", when: { dep: "google.golang.org/grpc" } }
   - { id: "go-plugin", when: { dep: "hashicorp/go-plugin" } }

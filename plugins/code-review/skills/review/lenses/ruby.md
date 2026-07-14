@@ -9,6 +9,7 @@ match:
   - { ext: "rb" }
 miss_cost: high
 packs:
+  - { id: "ruby-judgment" }
   - { id: "sorbet", when: { dep: "sorbet" } }
 ---
 

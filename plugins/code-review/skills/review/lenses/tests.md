@@ -9,6 +9,7 @@ match:
   - { diff: "source_touched" }
 miss_cost: high
 packs:
+  - { id: "testing-judgment" }
   - { id: "js-test-frameworks", when: { ext: "ts,tsx,js,jsx,mjs,cjs" } }
 ---
 

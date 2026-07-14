@@ -1,7 +1,7 @@
 {
   "name": "code-review",
-  "version": "0.1.0",
-  "description": "Composable code review: worktree-based review workspaces, signal-routed reviewer lenses, fixes captured as real edits and converted to GitHub suggestions, SARIF interchange, and pending-review posting to github.com or GHE.",
+  "version": "0.2.0",
+  "description": "Composable code review: worktree-based review workspaces, signal-routed reviewer lenses, domain-expert consultant agents for design-phase advice, fixes captured as real edits and converted to GitHub suggestions, SARIF interchange, and pending-review posting to github.com or GHE.",
   "keywords": [
     "code-review",
     "review",
@@ -15,7 +15,7 @@
   "interface": {
     "displayName": "Code Review",
     "shortDescription": "Adaptive multi-lens code review",
-    "longDescription": "Adaptive, host-neutral code review — detects the stack, routes to specialist reviewer lenses dispatched as agents with their own context windows, and records findings as SARIF.",
+    "longDescription": "Adaptive, host-neutral code review — detects the stack, routes to specialist reviewer lenses dispatched as agents with their own context windows, and records findings as SARIF. Domain knowledge (TypeScript, Rust, Go, Ruby, CLI UX, API design, testing, code quality, architecture) is single-sourced in shared judgment packs, reused by both the review lenses and standalone design-consultation agents.",
     "category": "developer-tools",
     "capabilities": [],
     "defaultPrompt": ""

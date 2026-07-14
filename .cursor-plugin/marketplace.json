@@ -10,7 +10,7 @@
     {
       "name": "code-review",
       "source": "./plugins/code-review",
-      "description": "Composable code review: worktree-based review workspaces, signal-routed reviewer lenses, fixes captured as real edits and converted to GitHub suggestions, SARIF interchange, and pending-review posting to github.com or GHE.",
+      "description": "Composable code review: worktree-based review workspaces, signal-routed reviewer lenses, domain-expert consultant agents for design-phase advice, fixes captured as real edits and converted to GitHub suggestions, SARIF interchange, and pending-review posting to github.com or GHE.",
       "tags": [
         "code-review",
         "review",

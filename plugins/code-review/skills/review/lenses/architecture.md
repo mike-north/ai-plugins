@@ -10,6 +10,8 @@ summon: >
   the change reshapes module boundaries, introduces or moves abstractions or layers, changes
   dependency direction, or redefines domain entities/aggregates — NOT merely because the diff is
   large.
+packs:
+  - { id: "architecture-judgment" }
 ---
 
 # Architecture & Domain Modeling Reviewer
