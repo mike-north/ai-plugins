@@ -1,0 +1,12 @@
+#!/bin/bash
+# Safe JSON→TOON pipe: converts stdin if it is JSON, passes it through verbatim otherwise.
+# Always exits 0 so a failed conversion never breaks the upstream pipeline; rewritten
+# commands prepend `set -o pipefail` so the upstream exit code still wins.
+if [ "${CLAUDE_TOON_HOOK:-}" = "off" ]; then
+  exec cat
+fi
+tmp=$(mktemp) || exec cat
+trap 'rm -f "$tmp"' EXIT
+cat > "$tmp"
+toon "$tmp" 2>/dev/null || cat "$tmp"
+exit 0
