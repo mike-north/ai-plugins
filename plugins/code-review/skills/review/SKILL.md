@@ -65,6 +65,14 @@ If PR metadata is available (from `$(git rev-parse --git-dir)/review-meta.json` 
 Fall back to running lenses sequentially yourself only when you can't spawn subagents, or when
 the diff is small (<200 changed lines and ≤2 rostered lenses) and parallel overhead isn't worth it.
 
+**Fixes are single-writer.** Snapshot capture attributes each fix as the delta since the previous
+snapshot, so two reviewers editing the shared worktree concurrently entangle each other's edits
+(reviewer A's snapshot sweeps in reviewer B's in-flight edits). Parallel reviewers must therefore
+review **findings-only**; tell them to hold mechanical fixes and list them in their final message.
+After the parallel wave, apply the held fixes **one reviewer at a time** (edit → record
+`--fix-from-worktree` → next), or re-dispatch each fix-holder sequentially. Only a solo/sequential
+reviewer may fix-as-it-goes.
+
 Each subagent's prompt (~10 lines):
 
 > You are reviewing this change through the **`<lens>`** lens: read `$SKILL/lenses/<lens>.md`
@@ -92,6 +100,13 @@ captured fix that doesn't build.
 merged.sarif.json`. This is also where drift is caught: an exit-4 here means the HEAD this review
 was based on moved, or the worktree has edits no finding accounted for. Surface that message
 verbatim to the user — don't silently retry or discard it.
+
+**7a. Dedupe backstop (judgment).** The mechanical dedupe only folds findings whose messages
+share vocabulary; two reviewers describing the same defect in different words survive it. Skim
+the merged results for same-region near-duplicates and, before rendering/posting, keep the
+better-written one (note the other reviewer in your summary). Do this by editing your triage
+choice, not the SARIF: re-run merge after removing the weaker finding's entry from its reviewer
+log with `record-finding`-recorded ids in mind — or simply accept both when genuinely uncertain.
 
 **8. Render.** `node $SKILL/scripts/render-review.mjs --sarif merged.sarif.json --format
 markdown` for chat/orchestrator output. Posting the review to GitHub is the `publish-pr` skill's
