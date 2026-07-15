@@ -40,8 +40,14 @@ Field reference:
 | `scope` | What the tool is bounded to (repo/org/read-only). Documentation for the reviewer. |
 | `covers` | Array of JavaScript RegExp strings tested against the raw Bash command. If a **watched** command matches any of an **approved** tool's `covers`, the hook denies it and points here. |
 | `status` | `draft` (registered, not yet approved) or `approved`. Only `approved` tools redirect; invoking a `draft`/unapproved tool is denied. |
-| `approvedSha256` | sha256 of the script contents captured at approval. The hook denies execution if the on-disk file no longer matches. |
-| `permissionRule` | The exact allowlist rule `/toolsmith:approve` adds to `.claude/settings.json`, e.g. `Bash(<path>:*)`. |
+| `approvedSha256` | sha256 of the script contents, computed and pinned by `scripts/toolsmith-approve.mjs --commit` at approval. The hook denies execution if the on-disk file no longer matches. |
+| `permissionRule` | The exact allowlist rule `scripts/toolsmith-approve.mjs --commit` adds to `.claude/settings.json` (via `/toolsmith:approve`), e.g. `Bash(<path>:*)`. |
+
+`name`, `path`, `purpose`, `args`, `scope`, and `covers` must be authored by
+hand as a `draft` entry before running `/toolsmith:approve` — the
+deterministic tool only ever pins `status`, `approvedSha256`, and
+`permissionRule`; it refuses to run against a path with no existing registry
+entry rather than inventing the rest.
 
 ## `config.json` (optional)
 

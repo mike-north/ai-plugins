@@ -11,7 +11,10 @@ Run the toolsmith approval handshake for the script at: `$ARGUMENTS`
 
 This command couples an allowlist grant to one reviewed version of a script.
 Follow these steps exactly and **never** add the permission rule without the
-user's explicit confirmation in this turn.
+user's explicit confirmation in this turn. The mechanical, security-critical
+steps — computing the sha256, pinning the registry entry, and granting the
+permission rule — are performed by the deterministic
+`toolsmith-approve.mjs` tool, never freehanded in prose.
 
 1. **Locate and normalize.** Resolve the path relative to the project root and
    normalize it to a canonical project-relative form (strip any leading `./`;
@@ -21,24 +24,39 @@ user's explicit confirmation in this turn.
    Read the script's **full contents** and print them in a fenced block so the
    user can proofread the exact bytes being approved.
 
-2. **Show the registry entry.** Read `.claude/toolsmith/registry.json`. Find the
-   entry whose `path` matches (or draft one now if missing, following
-   `skills/toolsmith/references/registry-schema.md`: `name`, `path`, `purpose`,
-   `args`, `scope`, `covers`). Show the entry and the **exact** permission rule
-   that will be added: `Bash(<path>:*)`.
+2. **Ensure a draft registry entry exists.** Read
+   `.claude/toolsmith/registry.json`. Find the entry whose `path` matches. The
+   tool refuses to run against a path with no registry entry — it will never
+   invent `name`/`purpose`/`args`/`scope`/`covers` on your behalf. If no entry
+   exists, author a draft one now, following
+   `skills/toolsmith/references/registry-schema.md`, and write it to the
+   registry before continuing.
 
-3. **Confirm.** Ask the user to confirm they have read the script and approve
+3. **Preview.** Run:
+
+   ```
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>"
+   ```
+
+   This is a read-only dry run — it writes nothing. Show its output to the
+   user verbatim: the computed sha256 and the exact `Bash(<path>:*)` rule that
+   would be granted.
+
+4. **Confirm.** Ask the user to confirm they have read the script and approve
    both pinning it and adding that rule. If they decline or want changes, stop.
 
-4. **On confirmation only:**
-   - Compute the sha256 of the file contents:
-     `shasum -a 256 "<path>" | awk '{print $1}'` (or `sha256sum`). This must be
-     the hash of the raw file bytes, matching what the PreToolUse hook computes.
-   - Update the registry entry: set `status` to `approved`, `approvedSha256` to
-     that hash, and `permissionRule` to `Bash(<path>:*)`.
-   - Add the rule to the project `.claude/settings.json` `permissions.allow`
-     array (create the file/keys if absent; do not duplicate an existing rule).
-   - Ensure the script is executable (`chmod +x <path>`).
+5. **On confirmation only, commit:**
 
-5. **Report** the pinned hash and the rule added, and remind the user that any
-   later edit to the script will require re-running `/toolsmith:approve`.
+   ```
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>" --commit
+   ```
+
+   This pins `status=approved` and `approvedSha256` on the registry entry,
+   chmods the script executable, and adds exactly one `Bash(<path>:*)` rule to
+   `.claude/settings.json` `permissions.allow` (it is a no-op if the rule is
+   already present). The tool is fail-closed: any validation failure exits
+   non-zero and writes nothing.
+
+6. **Report** the tool's output (the pinned hash and the rule added), and
+   remind the user that any later edit to the script will require re-running
+   `/toolsmith:approve`.
