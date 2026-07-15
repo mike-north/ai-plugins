@@ -15,13 +15,22 @@ Show the state of this project's purpose-built tools.
 2. For each tool, print: `name`, `path`, `status` (draft/approved), `purpose`,
    and `args`.
 
-3. For each **approved** tool, verify integrity: compute
-   `shasum -a 256 "<path>" | awk '{print $1}'` and compare to `approvedSha256`.
-   Mark each as one of:
+3. Verify integrity deterministically — do not compute hashes by hand. Run:
+
+   ```
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" --verify
+   ```
+
+   This is a read-only check; it prints one line per registry tool, prefixed
+   with its status:
    - **OK** — file present and hash matches (runs without a prompt),
    - **DRIFTED** — hash differs from the pinned value (the hook will block it;
      re-run `/toolsmith:approve <path>` after re-review),
-   - **MISSING** — the file no longer exists.
+   - **MISSING** — the file no longer exists,
+   - **draft** — not yet approved.
+
+   Use its output to populate the table below rather than re-deriving hashes
+   in prose.
 
 4. List any `draft` tools separately as awaiting approval.
 

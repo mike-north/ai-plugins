@@ -1,6 +1,6 @@
 {
   "name": "toolsmith",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Guides an agent to forge narrow, single-purpose, user-approvable scripts instead of hand-assembling broad escape-hatch commands (gh api, raw curl, aws/gcloud/kubectl).",
   "author": {
     "name": "Mike North"

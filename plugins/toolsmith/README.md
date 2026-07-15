@@ -24,7 +24,10 @@ per project, as the need arises.
   `history.jsonl` so usage can be mined for tools worth building.
 - **Commands** — `/toolsmith:analyze` (mine history → propose tool candidates),
   `/toolsmith:approve <path>` (proofread-then-allowlist handshake), and
-  `/toolsmith:list` (registry status + hash-drift check).
+  `/toolsmith:list` (registry status + hash-drift check). Both `approve` and
+  `list` delegate their privileged, mechanical steps — hashing, pinning the
+  registry entry, and granting the permission rule — to the deterministic
+  `scripts/toolsmith-approve.mjs` tool rather than doing them freehand.
 
 ## Per-project files it uses
 
@@ -36,8 +39,8 @@ Under `<project>/.claude/toolsmith/` (see
 - `history.jsonl` — the Bash log (generated, gitignored automatically).
 
 Purpose-built scripts live at `scripts/agent-tools/<name>` and are approved via
-`/toolsmith:approve`, which pins their sha256 and adds `Bash(<path>:*)` to
-`.claude/settings.json`.
+`/toolsmith:approve`, which runs `scripts/toolsmith-approve.mjs --commit` to
+pin their sha256 and add `Bash(<path>:*)` to `.claude/settings.json`.
 
 ## Escape hatch & posture
 

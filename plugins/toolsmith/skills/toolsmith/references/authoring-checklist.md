@@ -39,8 +39,10 @@ If a script satisfies none of these, don't build it — use the native command.
    to `.claude/toolsmith/registry.json` (see `registry-schema.md`).
 2. Ask the user to **proofread the exact contents**.
 3. Run `/toolsmith:approve <path>` — it shows the script + the precise
-   permission rule, and on the user's confirmation pins the sha256, flips
-   `status` to `approved`, and adds `Bash(<path>:*)` to `.claude/settings.json`.
+   permission rule (via a preview run of `scripts/toolsmith-approve.mjs`), and
+   on the user's confirmation runs `scripts/toolsmith-approve.mjs --commit`,
+   which pins the sha256, flips `status` to `approved`, and adds
+   `Bash(<path>:*)` to `.claude/settings.json`.
 4. Any later edit changes the sha256, so the hook blocks the tool until it is
    re-approved. Re-run `/toolsmith:approve <path>` after re-review.
 
