@@ -44,11 +44,11 @@ freehanded in prose.
 
 4. Preview. Run:
 
-   node "${PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>"
+   node "${PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>" --dry-run
 
    or, for a user-scope tool:
 
-   node "${PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user
+   node "${PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user --dry-run
 
    This is a read-only dry run — it writes nothing. Show its output to the user
    verbatim: the tool name, the (absolute, for user scope) script path, the
@@ -57,13 +57,13 @@ freehanded in prose.
 5. Confirm. Ask the user to confirm they have read the script and approve both
    pinning it and adding that rule. If they decline or want changes, stop.
 
-6. On confirmation only, commit:
+6. On confirmation only, approve (the bare command — no flag needed):
 
-   node "${PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>" --commit
+   node "${PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>"
 
-   or, for a user-scope tool, add --user to the commit invocation as well:
+   or, for a user-scope tool, keep --user on the approve invocation as well:
 
-   node "${PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user --commit
+   node "${PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user
 
    This pins status=approved and approvedSha256 on the registry entry, chmods
    the script executable, and adds exactly one Bash(...:*) rule to the scope's

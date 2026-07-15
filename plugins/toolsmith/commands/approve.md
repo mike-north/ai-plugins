@@ -52,13 +52,13 @@ permission rule — are performed by the deterministic
 4. **Preview.** Run:
 
    ```
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>"
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>" --dry-run
    ```
 
    or, for a user-scope tool:
 
    ```
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user --dry-run
    ```
 
    This is a read-only dry run — it writes nothing. Show its output to the
@@ -69,16 +69,16 @@ permission rule — are performed by the deterministic
 5. **Confirm.** Ask the user to confirm they have read the script and approve
    both pinning it and adding that rule. If they decline or want changes, stop.
 
-6. **On confirmation only, commit:**
+6. **On confirmation only, approve (the bare command — no flag needed):**
 
    ```
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>" --commit
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>"
    ```
 
-   or, for a user-scope tool, add `--user` to the commit invocation as well:
+   or, for a user-scope tool, keep `--user` on the approve invocation as well:
 
    ```
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user --commit
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user
    ```
 
    This pins `status=approved` and `approvedSha256` on the registry entry,

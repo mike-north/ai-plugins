@@ -56,9 +56,9 @@ Under `<project>/.claude/toolsmith/` (see
 - `history.jsonl` — the Bash log (generated, gitignored automatically).
 
 Purpose-built project scripts live at `scripts/agent-tools/<name>` and are
-approved via `/toolsmith:approve`, which runs
-`scripts/toolsmith-approve.mjs --commit` to pin their sha256 and add
-`Bash(<path>:*)` to `.claude/settings.json`.
+approved via `/toolsmith:approve`, which runs the bare
+`scripts/toolsmith-approve.mjs <path>` command (add `--dry-run` to preview
+first) to pin their sha256 and add `Bash(<path>:*)` to `.claude/settings.json`.
 
 Under `~/.claude/toolsmith/` (same registry schema):
 
@@ -67,8 +67,8 @@ Under `~/.claude/toolsmith/` (same registry schema):
 - `tools/<name>` — the global scripts themselves.
 
 Global scripts are approved via `/toolsmith:approve <name>` (which runs
-`scripts/toolsmith-approve.mjs --user --commit`) to pin their sha256 and add
-`Bash(<absolute-path>:*)` to `~/.claude/settings.json`.
+`scripts/toolsmith-approve.mjs --user`, or `--user --dry-run` to preview) to
+pin their sha256 and add `Bash(<absolute-path>:*)` to `~/.claude/settings.json`.
 
 ## Escape hatch & posture
 

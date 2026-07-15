@@ -51,10 +51,10 @@ If a script satisfies none of these, don't build it — use the native command.
 2. Ask the user to **proofread the exact contents**.
 3. Run `/toolsmith:approve <path>` (project) or `/toolsmith:approve <name>`
    (user/global — this runs `--user` under the hood) — it shows the script +
-   the precise permission rule (via a preview run of
-   `scripts/toolsmith-approve.mjs`), and on the user's confirmation runs
-   `scripts/toolsmith-approve.mjs --commit` (add `--user` for a global tool),
-   which pins the sha256, flips `status` to `approved`, and adds
+   the precise permission rule (via a `--dry-run` preview of
+   `scripts/toolsmith-approve.mjs`), and on the user's confirmation runs the
+   bare `scripts/toolsmith-approve.mjs` command (add `--user` for a global
+   tool), which pins the sha256, flips `status` to `approved`, and adds
    `Bash(<path>:*)` (project) or `Bash(<absolute-path>:*)` (user/global) to
    the corresponding `settings.json`.
 4. Any later edit changes the sha256, so the hook blocks the tool until it is

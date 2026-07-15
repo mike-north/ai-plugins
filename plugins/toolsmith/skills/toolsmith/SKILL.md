@@ -79,9 +79,10 @@ same command runs `toolsmith-approve.mjs --user`, which reads/writes
 `~/.claude/toolsmith/registry.json` and `~/.claude/settings.json` instead, and
 grants `Bash(<absolute-path>:*)`. From then on the tool runs without a prompt.
 The agent never freehands the hash computation, the registry pin, or the
-permission grant — `/toolsmith:approve` runs the deterministic tool in preview
-mode first (no writes) so the user can confirm the exact rule before anything
-is committed, then runs it with `--commit` only after explicit confirmation.
+permission grant — `/toolsmith:approve` runs the deterministic tool with
+`--dry-run` first (no writes) so the user can confirm the exact rule before
+anything is written, then runs the bare command (no flag) to approve only
+after explicit confirmation.
 Any edit to the script changes the hash, so the hook blocks the tool until you
 re-run `/toolsmith:approve`. **Never** add the permission rule yourself or ask
 the user to widen the allowlist — the approve command's deterministic tool is

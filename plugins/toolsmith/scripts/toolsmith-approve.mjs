@@ -12,9 +12,9 @@
  * fail-open hook, whose safety property is "never brick the shell".
  *
  * Usage:
- *   toolsmith-approve <path>                     preview (default) — no writes
- *   toolsmith-approve <path> --commit            pin the hash + grant the rule
- *   toolsmith-approve <name> --user [--commit]   same, for a user-scope tool
+ *   toolsmith-approve <path>                     approve (default) — pin the hash + grant the rule
+ *   toolsmith-approve <path> --dry-run           preview — no writes
+ *   toolsmith-approve <name> --user [--dry-run]  same, for a user-scope tool
  *   toolsmith-approve --verify [--user] [<path>] read-only integrity check
  *   toolsmith-approve --help                     usage
  *
@@ -28,9 +28,9 @@ import { homedir } from 'node:os';
 const HELP = `toolsmith-approve — proofread-then-allowlist handshake (write side)
 
 Usage:
-  toolsmith-approve <path>                     Preview the pin + grant (no writes)
-  toolsmith-approve <path> --commit            Pin the registry hash + grant the rule
-  toolsmith-approve <name-or-path> --user [--commit]
+  toolsmith-approve <path>                     Approve: pin the registry hash + grant the rule
+  toolsmith-approve <path> --dry-run           Preview the pin + grant — no writes
+  toolsmith-approve <name-or-path> --user [--dry-run]
                                                 Same, but for a user-scope (global) tool
   toolsmith-approve --verify [--user] [<path>] Read-only integrity check (all tools, or one)
   toolsmith-approve --help                     Show this help
@@ -60,14 +60,14 @@ function main() {
     process.exit(runVerify(rest[1], userScope));
   }
 
-  const commit = rest.includes('--commit');
-  const pathArgs = rest.filter((a) => a !== '--commit');
+  const dryRun = rest.includes('--dry-run');
+  const pathArgs = rest.filter((a) => a !== '--dry-run');
   if (pathArgs.length !== 1 || !pathArgs[0]) {
     process.stderr.write('Error: expected exactly one <path> argument.\n\n' + HELP);
     process.exit(1);
   }
 
-  process.exit(runApprove(pathArgs[0], commit, userScope));
+  process.exit(runApprove(pathArgs[0], !dryRun, userScope));
 }
 
 // --- shared helpers --------------------------------------------------------
@@ -207,7 +207,7 @@ function isPlainObject(value) {
 
 /**
  * Strictly resolve the settings.json object we're about to merge into, for
- * the --commit path only. Distinguishes "absent" (fine — start from `{}`)
+ * the write (non-dry-run) path only. Distinguishes "absent" (fine — start from `{}`)
  * from "present but unparseable / not a JSON object" (a privileged,
  * fail-closed writer must refuse to clobber a file it cannot understand).
  * Returns `{ ok: true, value }` or `{ ok: false, reason }`.
@@ -356,7 +356,7 @@ function runApprove(rawPath, commit, userScope) {
         `Permission rule: ${rule}`,
         `Already in settings.json: ${alreadyGranted ? 'yes' : 'no'}`,
         '',
-        'DRY RUN — nothing written; re-run with --commit to apply.',
+        'DRY RUN — nothing written; re-run without --dry-run to apply.',
       ].join('\n') + '\n',
     );
     return 0;

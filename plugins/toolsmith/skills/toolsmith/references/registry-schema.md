@@ -48,7 +48,7 @@ Field reference:
 | `scope` | What the tool is bounded to (repo/org/read-only). Documentation for the reviewer. |
 | `covers` | Array of JavaScript RegExp strings tested against the raw Bash command. If a **watched** command matches any of an **approved** tool's `covers`, the hook denies it and points here. |
 | `status` | `draft` (registered, not yet approved) or `approved`. Only `approved` tools redirect; invoking a `draft`/unapproved tool is denied. |
-| `approvedSha256` | sha256 of the script contents, computed and pinned by `scripts/toolsmith-approve.mjs --commit` (or `--commit --user`) at approval. The hook denies execution if the on-disk file no longer matches. |
+| `approvedSha256` | sha256 of the script contents, computed and pinned by the bare `scripts/toolsmith-approve.mjs` command (or `--user` for a global tool) at approval. The hook denies execution if the on-disk file no longer matches. |
 | `permissionRule` | The exact allowlist rule added to the scope's `settings.json` at approval (via `/toolsmith:approve`) — see the shared-contract table for the exact form per scope. |
 
 `name`, `path`, `purpose`, `args`, `scope`, and `covers` must be authored by
