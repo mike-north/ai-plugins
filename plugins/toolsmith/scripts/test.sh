@@ -12,8 +12,13 @@ command -v jq >/dev/null 2>&1 || { echo "SKIP: jq not installed"; exit 0; }
 command -v node >/dev/null 2>&1 || { echo "SKIP: node not installed"; exit 0; }
 
 PROJ=$(mktemp -d)
-trap 'rm -rf "$PROJ"' EXIT
+USERHOME=$(mktemp -d)
+trap 'rm -rf "$PROJ" "$USERHOME"' EXIT
 export CLAUDE_PROJECT_DIR="$PROJ"
+# The hook resolves user-scope tools via os.homedir(), which honors $HOME on
+# unix — point it at an isolated temp dir so these tests never touch the
+# real ~/.claude/toolsmith on the machine running them.
+export HOME="$USERHOME"
 
 pass=0
 fail=0
@@ -85,6 +90,12 @@ write_registry "$SHA" "approved"
 
 assert_deny "watched+covered redirects to tool" \
   "$(pre 'gh api repos/o/r/pulls/1/comments')" "gh-pr-reactions"
+
+# The runnable command in the redirect MUST be the tool's PATH (what the
+# `Bash(<path>:*)` allowlist rule actually matches), not the bare name —
+# otherwise following the message literally still trips a permission prompt.
+assert_deny "project-tool redirect's runnable command is the relative PATH form" \
+  "$(pre 'gh api repos/o/r/pulls/1/comments')" 'Run `scripts/agent-tools/gh-pr-reactions'
 
 assert_allow "watched but uncovered passes through" \
   "$(pre 'gh api repos/o/r/issues')"
@@ -168,6 +179,102 @@ assert_deny "multi-line watched command still redirects" \
 rm -f "$PROJ/.claude/toolsmith/registry.json"
 assert_allow "no registry => gate exits fast, no block even for gh api" \
   "$(pre 'gh api repos/o/r/pulls/1/comments')"
+
+# --- user scope: ~/.claude/toolsmith (no project registry present) ------
+mkdir -p "$USERHOME/.claude/toolsmith/tools"
+UTOOL="$USERHOME/.claude/toolsmith/tools/gh-user-tool"
+printf '#!/bin/bash\necho user-tool\n' >"$UTOOL"
+chmod +x "$UTOOL"
+USHA=$(shasum -a 256 "$UTOOL" | awk '{print $1}')
+
+write_user_registry() { # $1 = approvedSha256, $2 = status
+  cat >"$USERHOME/.claude/toolsmith/registry.json" <<EOF
+{
+  "version": 1,
+  "tools": [
+    {
+      "name": "gh-user-tool",
+      "path": "tools/gh-user-tool",
+      "purpose": "User-level test tool",
+      "args": "",
+      "scope": "repo (read-only)",
+      "covers": ["gh\\\\s+api\\\\b.*orgs"],
+      "status": "$2",
+      "approvedSha256": "$1",
+      "permissionRule": "Bash($UTOOL:*)"
+    }
+  ]
+}
+EOF
+}
+
+write_user_registry "$USHA" "approved"
+assert_deny "user-level approved tool redirects a watched command with NO project registry" \
+  "$(pre 'gh api repos/o/r/orgs')" "gh-user-tool"
+
+# The runnable command in a USER-tool redirect MUST be the fully-expanded
+# absolute path (what the `Bash(<ABS>:*)` allowlist rule matches) — a bare
+# name or a `~/`-relative form would miss the rule and still prompt.
+assert_deny "user-tool redirect's runnable command is the fully-expanded ABSOLUTE path" \
+  "$(pre 'gh api repos/o/r/orgs')" "Run \`$UTOOL"
+
+assert_allow "escape hatch disables the user-scope redirect too" \
+  "$(CLAUDE_TOOLSMITH_HOOK=off pre 'gh api repos/o/r/orgs')"
+
+assert_allow "invoking the approved user tool by absolute path is allowed" \
+  "$(pre "$UTOOL")"
+
+printf '#!/bin/bash\necho TAMPERED\n' >"$UTOOL" # edit after approval
+assert_deny "user tool with a stale hash is blocked when invoked by absolute path" \
+  "$(pre "$UTOOL")" "changed since it was approved"
+printf '#!/bin/bash\necho user-tool\n' >"$UTOOL" # restore
+
+write_user_registry "" "draft"
+assert_deny "user tool with an absent hash (draft) is blocked when invoked by absolute path" \
+  "$(pre "$UTOOL")" "not yet approved"
+write_user_registry "$USHA" "approved"
+
+# --- project shadows a same-named user tool -------------------------------
+# A project tool with the SAME `name` as a user tool must govern BOTH
+# redirect and hash-pin; the user entry by that name is ignored while the
+# project defines it.
+PSHADOW="$PROJ/scripts/agent-tools/gh-user-tool"
+mkdir -p "$(dirname "$PSHADOW")"
+printf '#!/bin/bash\necho project-shadow\n' >"$PSHADOW"
+chmod +x "$PSHADOW"
+PSHA=$(shasum -a 256 "$PSHADOW" | awk '{print $1}')
+cat >"$PROJ/.claude/toolsmith/registry.json" <<EOF
+{
+  "version": 1,
+  "tools": [
+    {
+      "name": "gh-user-tool",
+      "path": "scripts/agent-tools/gh-user-tool",
+      "purpose": "Project tool shadowing a user tool of the same name",
+      "args": "",
+      "scope": "repo (read-only)",
+      "covers": ["gh\\\\s+api\\\\b.*orgs"],
+      "status": "approved",
+      "approvedSha256": "$PSHA",
+      "permissionRule": "Bash(scripts/agent-tools/gh-user-tool:*)"
+    }
+  ]
+}
+EOF
+
+assert_deny "project tool shadows same-named user tool for redirect (names project path)" \
+  "$(pre 'gh api repos/o/r/orgs')" "scripts/agent-tools/gh-user-tool"
+
+# The user entry is a DRAFT (would deny "not yet approved" if it governed);
+# the project entry is approved with a matching hash. Invoking via the user
+# tool's absolute path must still resolve to the project's (approved) entry.
+write_user_registry "$USHA" "draft"
+assert_allow "project tool shadows same-named user tool for hash-pin (project entry governs)" \
+  "$(pre "$UTOOL")"
+
+# --- clean up user scope before the remaining (project-only) test cases --
+rm -f "$USERHOME/.claude/toolsmith/registry.json"
+rm -f "$PROJ/.claude/toolsmith/registry.json"
 
 write_registry "$SHA" "approved"
 assert_allow "escape hatch disables the hook" \

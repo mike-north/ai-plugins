@@ -1,9 +1,10 @@
 #!/bin/bash
 # Cheap PreToolUse gate in front of toolsmith-check.mjs. Runs on every Bash
-# tool call, so the common no-op path must stay fast: if the project has no
-# toolsmith registry there is nothing to redirect to and no hash to check, so
-# exit immediately without spawning node. This one check covers the vast
-# majority of projects (those not using toolsmith at all).
+# tool call, so the common no-op path must stay fast: if NEITHER the project
+# nor the user (~/.claude/toolsmith/) has a toolsmith registry there is
+# nothing to redirect to and no hash to check, so exit immediately without
+# spawning node. This one check covers the vast majority of shells (those not
+# using toolsmith at either scope).
 #
 # When a registry DOES exist, the project has opted into this discipline, so we
 # hand every Bash command to the node brain rather than trying to pre-filter
@@ -26,6 +27,8 @@ if [ -z "$root" ] && command -v jq >/dev/null 2>&1; then
 fi
 [ -n "$root" ] || root="$PWD"
 
-[ -f "$root/.claude/toolsmith/registry.json" ] || exit 0
+if [ ! -f "$root/.claude/toolsmith/registry.json" ] && [ ! -f "$HOME/.claude/toolsmith/registry.json" ]; then
+  exit 0
+fi
 
 printf '%s' "$input" | node "$dir/toolsmith-check.mjs"

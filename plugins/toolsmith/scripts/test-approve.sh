@@ -55,8 +55,50 @@ run_approve() { # $1=proj, shift args...
   CLAUDE_PROJECT_DIR="$proj" node "$APPROVE" "$@"
 }
 
+# --- user-scope fixture helpers ---------------------------------------------
+
+new_home() {
+  local home
+  home=$(mktemp -d)
+  mkdir -p "$home/.claude/toolsmith/tools"
+  printf '%s\n' "$home"
+}
+
+write_user_tool() { # $1=home $2=name $3=content
+  printf '%s' "$3" >"$1/.claude/toolsmith/tools/$2"
+}
+
+write_user_draft_registry() { # $1=home $2=name
+  cat >"$1/.claude/toolsmith/registry.json" <<EOF
+{
+  "version": 1,
+  "tools": [
+    {
+      "name": "$2",
+      "path": "tools/$2",
+      "purpose": "Do a narrow thing",
+      "args": "<foo>",
+      "scope": "repo (read-only)",
+      "covers": ["some\\\\s+pattern"],
+      "status": "draft",
+      "approvedSha256": "",
+      "permissionRule": ""
+    }
+  ]
+}
+EOF
+}
+
+run_approve_user() { # $1=home, shift args...
+  local home="$1"
+  shift
+  HOME="$home" CLAUDE_PROJECT_DIR="/nonexistent-should-not-be-used" node "$APPROVE" "$@"
+}
+
 # ============================================================================
-# 1. preview changes nothing, prints hash + rule
+# 1. --dry-run (the new preview flag) changes nothing, prints hash + rule.
+#    Flipped from the old bare-invocation preview test: bare now WRITES (see
+#    case 2), so previewing requires --dry-run explicitly.
 # ============================================================================
 PROJ=$(new_proj)
 write_tool "$PROJ" $'#!/bin/bash\necho hi\n'
@@ -64,31 +106,34 @@ write_draft_registry "$PROJ"
 REG_BEFORE=$(cat "$PROJ/.claude/toolsmith/registry.json")
 EXPECT_SHA=$(shasum -a 256 "$PROJ/scripts/agent-tools/mytool" | awk '{print $1}')
 
-OUT=$(run_approve "$PROJ" scripts/agent-tools/mytool)
+OUT=$(run_approve "$PROJ" scripts/agent-tools/mytool --dry-run)
 RC=$?
 REG_AFTER=$(cat "$PROJ/.claude/toolsmith/registry.json")
 
 if [ "$RC" -eq 0 ] && [ "$REG_BEFORE" = "$REG_AFTER" ] && [ ! -f "$PROJ/.claude/settings.json" ]; then ok; else
-  bad "preview leaves registry+settings untouched" "rc=$RC settings_exists=$([ -f "$PROJ/.claude/settings.json" ] && echo yes || echo no)"
+  bad "--dry-run leaves registry+settings untouched" "rc=$RC settings_exists=$([ -f "$PROJ/.claude/settings.json" ] && echo yes || echo no)"
 fi
 
 if printf '%s' "$OUT" | grep -qF "$EXPECT_SHA" && printf '%s' "$OUT" | grep -qF "Bash(scripts/agent-tools/mytool:*)" && printf '%s' "$OUT" | grep -qi "DRY RUN"; then
   ok
 else
-  bad "preview prints hash + rule + DRY RUN" "$OUT"
+  bad "--dry-run prints hash + rule + DRY RUN" "$OUT"
 fi
 rm -rf "$PROJ"
 
 # ============================================================================
-# 2. commit pins status/approvedSha256/permissionRule, adds rule to settings
-#    (creating file + keys when absent)
+# 2. bare <path> (no flags) is now the default and WRITES: pins
+#    status/approvedSha256/permissionRule, adds rule to settings (creating
+#    file + keys when absent). Flipped from the old `--commit` invocation,
+#    since --commit no longer exists — the bare command now does what
+#    --commit used to do.
 # ============================================================================
 PROJ=$(new_proj)
 write_tool "$PROJ" $'#!/bin/bash\necho hi\n'
 write_draft_registry "$PROJ"
 EXPECT_SHA=$(shasum -a 256 "$PROJ/scripts/agent-tools/mytool" | awk '{print $1}')
 
-OUT=$(run_approve "$PROJ" scripts/agent-tools/mytool --commit)
+OUT=$(run_approve "$PROJ" scripts/agent-tools/mytool)
 RC=$?
 
 STATUS=$(jq -r '.tools[0].status' "$PROJ/.claude/toolsmith/registry.json")
@@ -98,16 +143,16 @@ RULE=$(jq -r '.tools[0].permissionRule' "$PROJ/.claude/toolsmith/registry.json")
 if [ "$RC" -eq 0 ] && [ "$STATUS" = "approved" ] && [ "$SHA" = "$EXPECT_SHA" ] && [ "$RULE" = "Bash(scripts/agent-tools/mytool:*)" ]; then
   ok
 else
-  bad "commit pins registry fields" "status=$STATUS sha=$SHA rule=$RULE rc=$RC out=$OUT"
+  bad "bare approve pins registry fields" "status=$STATUS sha=$SHA rule=$RULE rc=$RC out=$OUT"
 fi
 
 if [ -f "$PROJ/.claude/settings.json" ] && jq -e '.permissions.allow == ["Bash(scripts/agent-tools/mytool:*)"]' "$PROJ/.claude/settings.json" >/dev/null 2>&1; then
   ok
 else
-  bad "commit creates settings.json with the rule" "$(cat "$PROJ/.claude/settings.json" 2>/dev/null)"
+  bad "bare approve creates settings.json with the rule" "$(cat "$PROJ/.claude/settings.json" 2>/dev/null)"
 fi
 
-if [ -x "$PROJ/scripts/agent-tools/mytool" ]; then ok; else bad "commit chmod +x the script" "not executable"; fi
+if [ -x "$PROJ/scripts/agent-tools/mytool" ]; then ok; else bad "bare approve chmod +x the script" "not executable"; fi
 
 # ============================================================================
 # 3. hash parity: approvedSha256 equals shasum -a 256
@@ -115,62 +160,75 @@ if [ -x "$PROJ/scripts/agent-tools/mytool" ]; then ok; else bad "commit chmod +x
 if [ "$SHA" = "$EXPECT_SHA" ]; then ok; else bad "hash parity with shasum -a 256" "$SHA != $EXPECT_SHA"; fi
 
 # ============================================================================
-# 4. idempotency: two --commit runs => exactly one rule, identical hash
+# 4. idempotency: two bare approve runs => exactly one rule, identical hash
+#    (flipped from two `--commit` runs).
 # ============================================================================
-run_approve "$PROJ" scripts/agent-tools/mytool --commit >/dev/null
+run_approve "$PROJ" scripts/agent-tools/mytool >/dev/null
 RULE_COUNT=$(jq '[.permissions.allow[] | select(. == "Bash(scripts/agent-tools/mytool:*)")] | length' "$PROJ/.claude/settings.json")
 SHA2=$(jq -r '.tools[0].approvedSha256' "$PROJ/.claude/toolsmith/registry.json")
-if [ "$RULE_COUNT" -eq 1 ] && [ "$SHA2" = "$EXPECT_SHA" ]; then ok; else bad "idempotent double-commit" "rule_count=$RULE_COUNT sha2=$SHA2"; fi
+if [ "$RULE_COUNT" -eq 1 ] && [ "$SHA2" = "$EXPECT_SHA" ]; then ok; else bad "idempotent double bare-approve" "rule_count=$RULE_COUNT sha2=$SHA2"; fi
 rm -rf "$PROJ"
 
 # ============================================================================
-# 5. path validation: absolute, .. traversal, backslash all rejected
+# 5. path validation: absolute, .. traversal, backslash all rejected, under
+#    BOTH bare (write-attempt) and --dry-run (preview) invocations. Flipped
+#    from `--commit` to bare, since --commit no longer exists.
 # ============================================================================
 PROJ=$(new_proj)
 write_tool "$PROJ" $'#!/bin/bash\necho hi\n'
 write_draft_registry "$PROJ"
 REG_BEFORE=$(cat "$PROJ/.claude/toolsmith/registry.json")
 
-run_approve "$PROJ" /etc/passwd --commit >/dev/null 2>&1
+run_approve "$PROJ" /etc/passwd >/dev/null 2>&1
 RC1=$?
-run_approve "$PROJ" "../etc/passwd" --commit >/dev/null 2>&1
+run_approve "$PROJ" "../etc/passwd" >/dev/null 2>&1
 RC2=$?
-run_approve "$PROJ" 'scripts\agent-tools\mytool' --commit >/dev/null 2>&1
+run_approve "$PROJ" 'scripts\agent-tools\mytool' >/dev/null 2>&1
 RC3=$?
+run_approve "$PROJ" /etc/passwd --dry-run >/dev/null 2>&1
+RC4=$?
+run_approve "$PROJ" "../etc/passwd" --dry-run >/dev/null 2>&1
+RC5=$?
+run_approve "$PROJ" 'scripts\agent-tools\mytool' --dry-run >/dev/null 2>&1
+RC6=$?
 
 REG_AFTER=$(cat "$PROJ/.claude/toolsmith/registry.json")
-if [ "$RC1" -ne 0 ] && [ "$RC2" -ne 0 ] && [ "$RC3" -ne 0 ] && [ "$REG_BEFORE" = "$REG_AFTER" ] && [ ! -f "$PROJ/.claude/settings.json" ]; then
+if [ "$RC1" -ne 0 ] && [ "$RC2" -ne 0 ] && [ "$RC3" -ne 0 ] && [ "$RC4" -ne 0 ] && [ "$RC5" -ne 0 ] && [ "$RC6" -ne 0 ] \
+   && [ "$REG_BEFORE" = "$REG_AFTER" ] && [ ! -f "$PROJ/.claude/settings.json" ]; then
   ok
 else
-  bad "invalid paths rejected, nothing written" "rc1=$RC1 rc2=$RC2 rc3=$RC3"
+  bad "invalid paths rejected under bare and --dry-run, nothing written" \
+    "rc1=$RC1 rc2=$RC2 rc3=$RC3 rc4=$RC4 rc5=$RC5 rc6=$RC6"
 fi
 rm -rf "$PROJ"
 
 # ============================================================================
 # 5b. path validation: characters outside the safe set (rule-injection risk)
-#     are rejected in BOTH preview and --commit — e.g. `)`, a space, `:`.
+#     are rejected under BOTH bare (write-attempt) and --dry-run — e.g. `)`,
+#     a space, `:`. Flipped from `--commit` to bare, and the old bare-preview
+#     assertion to --dry-run, since bare now writes by default.
 # ============================================================================
 PROJ=$(new_proj)
 write_tool "$PROJ" $'#!/bin/bash\necho hi\n'
 write_draft_registry "$PROJ"
 REG_BEFORE=$(cat "$PROJ/.claude/toolsmith/registry.json")
 
+run_approve "$PROJ" 'scripts/agent-tools/foo)bar' --dry-run >/dev/null 2>&1
+RC_DRYRUN1=$?
 run_approve "$PROJ" 'scripts/agent-tools/foo)bar' >/dev/null 2>&1
-RC_PREVIEW1=$?
-run_approve "$PROJ" 'scripts/agent-tools/foo)bar' --commit >/dev/null 2>&1
-RC_COMMIT1=$?
-run_approve "$PROJ" 'scripts/agent-tools/foo bar' --commit >/dev/null 2>&1
-RC_COMMIT2=$?
-run_approve "$PROJ" 'scripts/agent-tools/foo:bar' --commit >/dev/null 2>&1
-RC_COMMIT3=$?
+RC_BARE1=$?
+run_approve "$PROJ" 'scripts/agent-tools/foo bar' >/dev/null 2>&1
+RC_BARE2=$?
+run_approve "$PROJ" 'scripts/agent-tools/foo:bar' >/dev/null 2>&1
+RC_BARE3=$?
 
 REG_AFTER=$(cat "$PROJ/.claude/toolsmith/registry.json")
-if [ "$RC_PREVIEW1" -ne 0 ] && [ "$RC_COMMIT1" -ne 0 ] && [ "$RC_COMMIT2" -ne 0 ] && [ "$RC_COMMIT3" -ne 0 ] \
+if [ "$RC_DRYRUN1" -ne 0 ] && [ "$RC_BARE1" -ne 0 ] && [ "$RC_BARE2" -ne 0 ] && [ "$RC_BARE3" -ne 0 ] \
    && [ "$REG_BEFORE" = "$REG_AFTER" ] && [ ! -f "$PROJ/.claude/settings.json" ]; then
   ok
 else
   bad "paths with special chars (')' space ':') rejected, nothing written" \
-    "rc_preview1=$RC_PREVIEW1 rc_commit1=$RC_COMMIT1 rc_commit2=$RC_COMMIT2 rc_commit3=$RC_COMMIT3"
+    "rc_dryrun1=$RC_DRYRUN1 rc_bare1=$RC_BARE1 rc_bare2=$RC_BARE2 rc_bare3=$RC_BARE3"
 fi
 rm -rf "$PROJ"
 
@@ -182,7 +240,7 @@ write_tool "$PROJ" $'#!/bin/bash\necho hi\n'
 cat >"$PROJ/.claude/toolsmith/registry.json" <<'EOF'
 {"version":1,"tools":[]}
 EOF
-run_approve "$PROJ" scripts/agent-tools/mytool --commit >/dev/null 2>&1
+run_approve "$PROJ" scripts/agent-tools/mytool >/dev/null 2>&1
 RC=$?
 if [ "$RC" -ne 0 ] && [ ! -f "$PROJ/.claude/settings.json" ]; then ok; else bad "missing registry entry refused" "rc=$RC"; fi
 rm -rf "$PROJ"
@@ -192,7 +250,7 @@ rm -rf "$PROJ"
 # ============================================================================
 PROJ=$(new_proj)
 write_draft_registry "$PROJ"
-run_approve "$PROJ" scripts/agent-tools/mytool --commit >/dev/null 2>&1
+run_approve "$PROJ" scripts/agent-tools/mytool >/dev/null 2>&1
 RC=$?
 if [ "$RC" -ne 0 ] && [ ! -f "$PROJ/.claude/settings.json" ]; then ok; else bad "missing script file refused" "rc=$RC"; fi
 rm -rf "$PROJ"
@@ -211,7 +269,7 @@ cat >"$PROJ/.claude/settings.json" <<'EOF'
   }
 }
 EOF
-run_approve "$PROJ" scripts/agent-tools/mytool --commit >/dev/null
+run_approve "$PROJ" scripts/agent-tools/mytool >/dev/null
 if jq -e '.permissions.allow | index("Bash(git status:*)") != null and index("Bash(ls:*)") != null and index("Bash(scripts/agent-tools/mytool:*)") != null' "$PROJ/.claude/settings.json" >/dev/null 2>&1 \
    && [ "$(jq -r '.someOtherKey' "$PROJ/.claude/settings.json")" = "untouched" ]; then
   ok
@@ -238,7 +296,7 @@ EOF
 SETTINGS_BEFORE=$(cat "$PROJ/.claude/settings.json")
 REG_BEFORE=$(cat "$PROJ/.claude/toolsmith/registry.json")
 
-OUT=$(run_approve "$PROJ" scripts/agent-tools/mytool --commit 2>&1)
+OUT=$(run_approve "$PROJ" scripts/agent-tools/mytool 2>&1)
 RC=$?
 
 SETTINGS_AFTER=$(cat "$PROJ/.claude/settings.json")
@@ -271,7 +329,7 @@ EOF
 SETTINGS_BEFORE=$(cat "$PROJ/.claude/settings.json")
 REG_BEFORE=$(cat "$PROJ/.claude/toolsmith/registry.json")
 
-OUT=$(run_approve "$PROJ" scripts/agent-tools/mytool --commit 2>&1)
+OUT=$(run_approve "$PROJ" scripts/agent-tools/mytool 2>&1)
 RC=$?
 
 SETTINGS_AFTER=$(cat "$PROJ/.claude/settings.json")
@@ -297,7 +355,7 @@ EOF
 SETTINGS_BEFORE=$(cat "$PROJ/.claude/settings.json")
 REG_BEFORE=$(cat "$PROJ/.claude/toolsmith/registry.json")
 
-OUT=$(run_approve "$PROJ" scripts/agent-tools/mytool --commit 2>&1)
+OUT=$(run_approve "$PROJ" scripts/agent-tools/mytool 2>&1)
 RC=$?
 
 SETTINGS_AFTER=$(cat "$PROJ/.claude/settings.json")
@@ -318,7 +376,7 @@ rm -rf "$PROJ"
 PROJ=$(new_proj)
 write_tool "$PROJ" $'#!/bin/bash\necho hi\n'
 write_draft_registry "$PROJ"
-run_approve "$PROJ" scripts/agent-tools/mytool --commit >/dev/null
+run_approve "$PROJ" scripts/agent-tools/mytool >/dev/null
 
 OUT=$(run_approve "$PROJ" --verify)
 RC=$?
@@ -412,6 +470,152 @@ else
   bad "verify never reads outside project root for absolute/.. registry paths" "rc=$RC out=$OUT"
 fi
 rm -rf "$PROJ"
+
+# ============================================================================
+# 11. user scope: bare <name> --user approves — pins the user registry +
+#     writes the fully-expanded absolute rule into $HOME/.claude/settings.json
+#     (flipped from `--user --commit`); `--user --dry-run` previews instead
+#     (flipped from the old bare `--user` preview). bare <name> normalizes to
+#     tools/<name> either way.
+# ============================================================================
+HOME_DIR=$(new_home)
+write_user_tool "$HOME_DIR" mytool $'#!/bin/bash\necho hi\n'
+write_user_draft_registry "$HOME_DIR" mytool
+ABS_SCRIPT="$HOME_DIR/.claude/toolsmith/tools/mytool"
+EXPECT_SHA=$(shasum -a 256 "$ABS_SCRIPT" | awk '{print $1}')
+EXPECT_RULE="Bash($ABS_SCRIPT:*)"
+
+# --dry-run with a bare name (no "tools/" prefix) must resolve the same draft
+# entry (i.e. normalize "mytool" -> "tools/mytool") and print the absolute path.
+OUT=$(run_approve_user "$HOME_DIR" mytool --user --dry-run)
+RC=$?
+if [ "$RC" -eq 0 ] && printf '%s' "$OUT" | grep -qF "$ABS_SCRIPT" && printf '%s' "$OUT" | grep -qF "$EXPECT_RULE" && printf '%s' "$OUT" | grep -qi "DRY RUN"; then
+  ok
+else
+  bad "user --dry-run: bare name normalizes, prints absolute path + rule" "rc=$RC out=$OUT"
+fi
+
+OUT=$(run_approve_user "$HOME_DIR" mytool --user)
+RC=$?
+STATUS=$(jq -r '.tools[0].status' "$HOME_DIR/.claude/toolsmith/registry.json")
+SHA=$(jq -r '.tools[0].approvedSha256' "$HOME_DIR/.claude/toolsmith/registry.json")
+RULE=$(jq -r '.tools[0].permissionRule' "$HOME_DIR/.claude/toolsmith/registry.json")
+
+if [ "$RC" -eq 0 ] && [ "$STATUS" = "approved" ] && [ "$SHA" = "$EXPECT_SHA" ] && [ "$RULE" = "$EXPECT_RULE" ]; then
+  ok
+else
+  bad "user bare approve pins registry with fully-expanded absolute rule" "status=$STATUS sha=$SHA rule=$RULE rc=$RC out=$OUT"
+fi
+
+if [ -f "$HOME_DIR/.claude/settings.json" ] && jq -e --arg rule "$EXPECT_RULE" '.permissions.allow == [$rule]' "$HOME_DIR/.claude/settings.json" >/dev/null 2>&1; then
+  ok
+else
+  bad "user bare approve writes the absolute rule into \$HOME/.claude/settings.json" "$(cat "$HOME_DIR/.claude/settings.json" 2>/dev/null)"
+fi
+
+if [ -x "$ABS_SCRIPT" ]; then ok; else bad "user bare approve chmod +x the script" "not executable"; fi
+rm -rf "$HOME_DIR"
+
+# ============================================================================
+# 12. user scope: path validation rejects anything escaping tools/
+#     (../evil, tools/../x, an absolute path) — non-zero, nothing written.
+#     Flipped from `--user --commit` to bare `--user`.
+# ============================================================================
+HOME_DIR=$(new_home)
+write_user_tool "$HOME_DIR" mytool $'#!/bin/bash\necho hi\n'
+write_user_draft_registry "$HOME_DIR" mytool
+REG_BEFORE=$(cat "$HOME_DIR/.claude/toolsmith/registry.json")
+
+run_approve_user "$HOME_DIR" '../evil' --user >/dev/null 2>&1
+RC1=$?
+run_approve_user "$HOME_DIR" 'tools/../x' --user >/dev/null 2>&1
+RC2=$?
+run_approve_user "$HOME_DIR" '/etc/passwd' --user >/dev/null 2>&1
+RC3=$?
+
+REG_AFTER=$(cat "$HOME_DIR/.claude/toolsmith/registry.json")
+if [ "$RC1" -ne 0 ] && [ "$RC2" -ne 0 ] && [ "$RC3" -ne 0 ] && [ "$REG_BEFORE" = "$REG_AFTER" ] && [ ! -f "$HOME_DIR/.claude/settings.json" ]; then
+  ok
+else
+  bad "user-scope paths escaping tools/ rejected, nothing written" "rc1=$RC1 rc2=$RC2 rc3=$RC3"
+fi
+rm -rf "$HOME_DIR"
+
+# ============================================================================
+# 13. user scope: malformed $HOME/.claude/settings.json fails the whole
+#     approve closed (nothing written, registry stays draft). Flipped from
+#     `--user --commit` to bare `--user`.
+# ============================================================================
+HOME_DIR=$(new_home)
+write_user_tool "$HOME_DIR" mytool $'#!/bin/bash\necho hi\n'
+write_user_draft_registry "$HOME_DIR" mytool
+cat >"$HOME_DIR/.claude/settings.json" <<'EOF'
+{
+  "permissions": {
+    "allow": ["Bash(important:*)"]
+  },
+EOF
+# ^ deliberately truncated / invalid JSON.
+SETTINGS_BEFORE=$(cat "$HOME_DIR/.claude/settings.json")
+REG_BEFORE=$(cat "$HOME_DIR/.claude/toolsmith/registry.json")
+
+OUT=$(run_approve_user "$HOME_DIR" mytool --user 2>&1)
+RC=$?
+
+SETTINGS_AFTER=$(cat "$HOME_DIR/.claude/settings.json")
+REG_AFTER=$(cat "$HOME_DIR/.claude/toolsmith/registry.json")
+REG_STATUS_AFTER=$(jq -r '.tools[0].status' "$HOME_DIR/.claude/toolsmith/registry.json" 2>/dev/null)
+
+if [ "$RC" -ne 0 ] && [ "$SETTINGS_BEFORE" = "$SETTINGS_AFTER" ] && [ "$REG_BEFORE" = "$REG_AFTER" ] && [ "$REG_STATUS_AFTER" = "draft" ]; then
+  ok
+else
+  bad "user-scope malformed settings.json aborts entire commit (fail-closed)" \
+    "rc=$RC reg_status=$REG_STATUS_AFTER out=$OUT"
+fi
+rm -rf "$HOME_DIR"
+
+# ============================================================================
+# 14. user scope: --verify --user reports OK / DRIFTED / MISSING
+# ============================================================================
+HOME_DIR=$(new_home)
+write_user_tool "$HOME_DIR" mytool $'#!/bin/bash\necho hi\n'
+write_user_draft_registry "$HOME_DIR" mytool
+run_approve_user "$HOME_DIR" mytool --user >/dev/null
+
+OUT=$(run_approve_user "$HOME_DIR" --verify --user)
+RC=$?
+if [ "$RC" -eq 0 ] && printf '%s' "$OUT" | grep -qE '^OK\s'; then ok; else bad "user --verify OK when matching" "rc=$RC out=$OUT"; fi
+
+printf '#!/bin/bash\necho DRIFTED\n' >"$HOME_DIR/.claude/toolsmith/tools/mytool"
+OUT=$(run_approve_user "$HOME_DIR" --verify --user)
+RC=$?
+if [ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -qE '^DRIFTED\s'; then ok; else bad "user --verify DRIFTED after edit" "rc=$RC out=$OUT"; fi
+
+rm -f "$HOME_DIR/.claude/toolsmith/tools/mytool"
+OUT=$(run_approve_user "$HOME_DIR" --verify --user)
+RC=$?
+if [ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -qE '^MISSING\s'; then ok; else bad "user --verify MISSING after delete" "rc=$RC out=$OUT"; fi
+rm -rf "$HOME_DIR"
+
+# ============================================================================
+# 15. project scope stays the default: a project-scope registry entry named
+#     the same file must NOT be resolvable via --user, and vice versa
+#     (defends against `resolveScope` accidentally being shared/mutated).
+#     Uses --dry-run so this check stays side-effect free.
+# ============================================================================
+PROJ=$(new_proj)
+write_tool "$PROJ" $'#!/bin/bash\necho hi\n'
+write_draft_registry "$PROJ"
+HOME_DIR=$(new_home)
+
+OUT=$(HOME="$HOME_DIR" run_approve "$PROJ" scripts/agent-tools/mytool --dry-run)
+RC=$?
+if [ "$RC" -eq 0 ] && printf '%s' "$OUT" | grep -qF "Bash(scripts/agent-tools/mytool:*)"; then
+  ok
+else
+  bad "default (no --user) still previews the project-relative rule" "rc=$RC out=$OUT"
+fi
+rm -rf "$PROJ" "$HOME_DIR"
 
 # ============================================================================
 # summary

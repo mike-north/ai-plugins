@@ -12,29 +12,37 @@
  * fail-open hook, whose safety property is "never brick the shell".
  *
  * Usage:
- *   toolsmith-approve <path>              preview (default) — no writes
- *   toolsmith-approve <path> --commit     pin the hash + grant the rule
- *   toolsmith-approve --verify [<path>]   read-only integrity check
- *   toolsmith-approve --help              usage
+ *   toolsmith-approve <path>                     approve (default) — pin the hash + grant the rule
+ *   toolsmith-approve <path> --dry-run           preview — no writes
+ *   toolsmith-approve <name> --user [--dry-run]  same, for a user-scope tool
+ *   toolsmith-approve --verify [--user] [<path>] read-only integrity check
+ *   toolsmith-approve --help                     usage
  *
  * @see https://code.claude.com/docs/en/hooks.md
  */
 import { readFileSync, writeFileSync, renameSync, chmodSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { join, dirname } from 'node:path';
-import { tmpdir } from 'node:os';
+import { join, dirname, resolve } from 'node:path';
+import { homedir } from 'node:os';
 
 const HELP = `toolsmith-approve — proofread-then-allowlist handshake (write side)
 
 Usage:
-  toolsmith-approve <path>              Preview the pin + grant (no writes)
-  toolsmith-approve <path> --commit     Pin the registry hash + grant the rule
-  toolsmith-approve --verify [<path>]   Read-only integrity check (all tools, or one)
-  toolsmith-approve --help              Show this help
+  toolsmith-approve <path>                     Approve: pin the registry hash + grant the rule
+  toolsmith-approve <path> --dry-run           Preview the pin + grant — no writes
+  toolsmith-approve <name-or-path> --user [--dry-run]
+                                                Same, but for a user-scope (global) tool
+  toolsmith-approve --verify [--user] [<path>] Read-only integrity check (all tools, or one)
+  toolsmith-approve --help                     Show this help
 
 <path> must be a project-relative path to a script already registered as a
 draft entry in .claude/toolsmith/registry.json (name/purpose/args/scope/covers
 authored by hand — this tool only pins the hash and grants the permission).
+
+With --user, <path> is instead a bare tool name or a "tools/<name>" path,
+resolved against the user-scope registry at ~/.claude/toolsmith/registry.json
+and its scripts under ~/.claude/toolsmith/tools/. The granted rule uses the
+fully-expanded absolute script path.
 `;
 
 function main() {
@@ -45,18 +53,21 @@ function main() {
     process.exit(0);
   }
 
-  if (args[0] === '--verify') {
-    process.exit(runVerify(args[1]));
+  const userScope = args.includes('--user');
+  const rest = args.filter((a) => a !== '--user');
+
+  if (rest[0] === '--verify') {
+    process.exit(runVerify(rest[1], userScope));
   }
 
-  const commit = args.includes('--commit');
-  const pathArgs = args.filter((a) => a !== '--commit');
+  const dryRun = rest.includes('--dry-run');
+  const pathArgs = rest.filter((a) => a !== '--dry-run');
   if (pathArgs.length !== 1 || !pathArgs[0]) {
     process.stderr.write('Error: expected exactly one <path> argument.\n\n' + HELP);
     process.exit(1);
   }
 
-  process.exit(runApprove(pathArgs[0], commit));
+  process.exit(runApprove(pathArgs[0], !dryRun, userScope));
 }
 
 // --- shared helpers --------------------------------------------------------
@@ -71,6 +82,86 @@ function registryPath(root) {
 
 function settingsPath(root) {
   return join(root, '.claude', 'settings.json');
+}
+
+/**
+ * Resolve the user's home directory defensively: `os.homedir()` can throw or
+ * return an empty string in odd environments. This tool is fail-CLOSED, so an
+ * unresolvable home directory is treated as a hard error for `--user`
+ * invocations rather than silently falling back to something else.
+ */
+function resolveHome() {
+  try {
+    const home = homedir();
+    return typeof home === 'string' && home ? home : null;
+  } catch {
+    return null;
+  }
+}
+
+function userRegistryPath(home) {
+  return join(home, '.claude', 'toolsmith', 'registry.json');
+}
+
+function userSettingsPath(home) {
+  return join(home, '.claude', 'settings.json');
+}
+
+/**
+ * Accept either "tools/<name>" or a bare "<name>" for a user-scope tool,
+ * normalize the bare form to "tools/<name>", validate with the same strict
+ * normalizePath() used for project paths, and additionally require the first
+ * path segment to be exactly "tools" — so the result can only ever resolve
+ * under `<home>/.claude/toolsmith/tools/`. Anything that would escape that
+ * directory (absolute, "..", wrong first segment) is rejected.
+ */
+function normalizeUserPath(rawPath) {
+  if (typeof rawPath !== 'string') return null;
+  const trimmed = rawPath.trim();
+  if (!trimmed) return null;
+  const candidate = trimmed.startsWith('tools/') ? trimmed : `tools/${trimmed}`;
+  const normalized = normalizePath(candidate);
+  if (!normalized) return null;
+  const segments = normalized.split('/');
+  if (segments[0] !== 'tools' || segments.length < 2 || !segments[1]) return null;
+  return normalized;
+}
+
+/**
+ * Build a small scope descriptor so runApprove/runVerify can share one
+ * implementation across project and user scope. Returns null if `--user` was
+ * requested but the home directory could not be resolved (resolveHome()).
+ */
+function resolveScope(userScope) {
+  if (!userScope) {
+    const root = projectRoot();
+    return {
+      kind: 'project',
+      normalize: normalizePath,
+      regPath: registryPath(root),
+      settingsFile: settingsPath(root),
+      scriptAbs: (path) => join(root, path),
+      ruleFor: (path) => `Bash(${path}:*)`,
+      displayPath: (path) => path,
+      invalidPathMessage: (rawPath) =>
+        `Error: invalid path "${rawPath}". Paths must be project-relative, contain no ".." ` +
+        `segments, and use forward slashes only. Nothing written.\n`,
+    };
+  }
+  const home = resolveHome();
+  if (!home) return null;
+  return {
+    kind: 'user',
+    normalize: normalizeUserPath,
+    regPath: userRegistryPath(home),
+    settingsFile: userSettingsPath(home),
+    scriptAbs: (path) => resolve(home, '.claude', 'toolsmith', path),
+    ruleFor: (_path, scriptAbs) => `Bash(${scriptAbs}:*)`,
+    displayPath: (_path, scriptAbs) => scriptAbs,
+    invalidPathMessage: (rawPath) =>
+      `Error: invalid tool "${rawPath}". Expected a bare tool name or "tools/<name>", with no ` +
+      `".." segments, resolving under ~/.claude/toolsmith/tools/. Nothing written.\n`,
+  };
 }
 
 // Conservative safe character set for a project-relative path. Anything
@@ -116,7 +207,7 @@ function isPlainObject(value) {
 
 /**
  * Strictly resolve the settings.json object we're about to merge into, for
- * the --commit path only. Distinguishes "absent" (fine — start from `{}`)
+ * the write (non-dry-run) path only. Distinguishes "absent" (fine — start from `{}`)
  * from "present but unparseable / not a JSON object" (a privileged,
  * fail-closed writer must refuse to clobber a file it cannot understand).
  * Returns `{ ok: true, value }` or `{ ok: false, reason }`.
@@ -168,10 +259,6 @@ function sha256OfFile(absPath) {
   return createHash('sha256').update(readFileSync(absPath)).digest('hex');
 }
 
-function ruleFor(path) {
-  return `Bash(${path}:*)`;
-}
-
 /**
  * Atomically write `content` to `path`: write to a temp file in the same
  * directory, then rename over the target. Ensures readers never observe a
@@ -199,19 +286,20 @@ function toJsonFile(obj) {
 
 // --- approve flow ------------------------------------------------------
 
-function runApprove(rawPath, commit) {
-  const root = projectRoot();
-
-  const path = normalizePath(rawPath);
-  if (!path) {
-    process.stderr.write(
-      `Error: invalid path "${rawPath}". Paths must be project-relative, contain no ".." ` +
-        `segments, and use forward slashes only. Nothing written.\n`,
-    );
+function runApprove(rawPath, commit, userScope) {
+  const scope = resolveScope(userScope);
+  if (!scope) {
+    process.stderr.write(`Error: could not resolve the home directory for --user. Nothing written.\n`);
     return 1;
   }
 
-  const regPath = registryPath(root);
+  const path = scope.normalize(rawPath);
+  if (!path) {
+    process.stderr.write(scope.invalidPathMessage(rawPath));
+    return 1;
+  }
+
+  const regPath = scope.regPath;
   if (!existsSync(regPath)) {
     process.stderr.write(
       `Error: no registry found at ${regPath}. Create a draft entry first — see ` +
@@ -237,7 +325,7 @@ function runApprove(rawPath, commit) {
   }
   const entry = registry.tools[idx];
 
-  const absScript = join(root, path);
+  const absScript = scope.scriptAbs(path);
   if (!existsSync(absScript)) {
     process.stderr.write(`Error: script file not found at ${absScript}. Nothing written.\n`);
     return 1;
@@ -251,8 +339,8 @@ function runApprove(rawPath, commit) {
     return 1;
   }
 
-  const rule = ruleFor(path);
-  const settingsFile = settingsPath(root);
+  const rule = scope.ruleFor(path, absScript);
+  const settingsFile = scope.settingsFile;
   const existingSettings = existsSync(settingsFile) ? readJsonOrNull(settingsFile) : {};
   const alreadyGranted =
     existingSettings &&
@@ -263,12 +351,12 @@ function runApprove(rawPath, commit) {
     process.stdout.write(
       [
         `Tool: ${entry.name ?? '(unnamed)'}`,
-        `Path: ${path}`,
+        `Path: ${scope.displayPath(path, absScript)}`,
         `Computed sha256: ${sha}`,
         `Permission rule: ${rule}`,
         `Already in settings.json: ${alreadyGranted ? 'yes' : 'no'}`,
         '',
-        'DRY RUN — nothing written; re-run with --commit to apply.',
+        'DRY RUN — nothing written; re-run without --dry-run to apply.',
       ].join('\n') + '\n',
     );
     return 0;
@@ -333,9 +421,14 @@ function runApprove(rawPath, commit) {
 
 // --- verify flow ------------------------------------------------------
 
-function runVerify(rawPath) {
-  const root = projectRoot();
-  const regPath = registryPath(root);
+function runVerify(rawPath, userScope) {
+  const scope = resolveScope(userScope);
+  if (!scope) {
+    process.stderr.write(`Error: could not resolve the home directory for --user.\n`);
+    return 1;
+  }
+
+  const regPath = scope.regPath;
   if (!existsSync(regPath)) {
     process.stderr.write(`Error: no registry found at ${regPath}.\n`);
     return 1;
@@ -348,7 +441,7 @@ function runVerify(rawPath) {
 
   let filterPath = null;
   if (rawPath) {
-    filterPath = normalizePath(rawPath);
+    filterPath = scope.normalize(rawPath);
     if (!filterPath) {
       process.stderr.write(`Error: invalid path "${rawPath}".\n`);
       return 1;
@@ -371,18 +464,18 @@ function runVerify(rawPath) {
     }
     // A registry entry's `path` is untrusted input (the registry could be
     // tampered, or hand-edited incorrectly): re-validate it with the same
-    // strict normalizePath() used on the write side before ever joining it
-    // onto `root`. `join(root, <absolute path>)` drops `root` entirely, so
-    // skipping this check would let a tampered entry make --verify read/hash
-    // a file outside the project. An invalid path is never touched on disk —
-    // it is reported as MISSING and fails the run.
-    const path = normalizePath(rawToolPath);
+    // strict path validation used on the write side before ever resolving it
+    // to a script file. Skipping this check would let a tampered entry make
+    // --verify read/hash a file outside the intended scope root. An invalid
+    // path is never touched on disk — it is reported as MISSING and fails
+    // the run.
+    const path = scope.normalize(rawToolPath);
     if (!path) {
       process.stdout.write(`MISSING  ${name}\t${rawToolPath}\n`);
       anyBad = true;
       continue;
     }
-    const abs = join(root, path);
+    const abs = scope.scriptAbs(path);
     if (!existsSync(abs)) {
       process.stdout.write(`MISSING  ${name}\t${path}\n`);
       anyBad = true;
