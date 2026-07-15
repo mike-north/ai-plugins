@@ -23,22 +23,50 @@ the user can read once, approve, and never be asked about again. The script
 
 ## Before running a watched command
 
-1. **Check what already exists.** Read `.claude/toolsmith/registry.json`. If an
-   approved tool covers what you need, use it — that is why it exists. (The
-   PreToolUse hook will block a watched command and name the tool if one covers
-   it, but reach for the tool first rather than getting redirected.)
+1. **Check what already exists.** Read `.claude/toolsmith/registry.json`
+   (project) and `~/.claude/toolsmith/registry.json` (user/global). If an
+   approved tool in either covers what you need, use it — that is why it
+   exists. (The PreToolUse hook will block a watched command and name the
+   tool if one covers it, but reach for the tool first rather than getting
+   redirected.) A project tool shadows a same-named user tool.
 2. **If nothing covers it, decide whether to build one.** Apply the rubric in
    `references/authoring-checklist.md`: build only if the operation is
    Compound, Missing, Guarded, or Permission-scopable. A genuinely one-off
    read you will never repeat can just be run (ask the user); recurring or
    pipeline-heavy broad usage is the signal to forge a tool.
 
+## Choosing project vs. user (global) scope
+
+Two scopes coexist:
+
+| | Project scope | User/global scope |
+|---|---|---|
+| Script location | `<project>/scripts/agent-tools/<name>` | `~/.claude/toolsmith/tools/<name>` |
+| Registry | `<project>/.claude/toolsmith/registry.json` | `~/.claude/toolsmith/registry.json` |
+| Settings grant | `<project>/.claude/settings.json` | `~/.claude/settings.json` |
+| Permission rule | `Bash(<relative-path>:*)` | `Bash(<absolute-path>:*)` |
+| Committed to git? | Yes — reviewed in PRs | No — personal, not committed |
+| Approve with | `/toolsmith:approve <path>` | `/toolsmith:approve <name>` (uses `--user` under the hood) |
+
+Default to **project scope** when the tool is specific to this repo (bakes in
+this repo/org, only useful here) — it's reviewable in PRs and travels with the
+codebase. Use **user/global scope** when the tool is personal and reused
+across many projects (e.g. a `gh`/`aws` helper you'd otherwise recreate in
+every repo) — it lives once under `~/.claude/toolsmith/tools/` and is
+approved once, for every project you work in.
+
+A user-scope tool is invoked by its **fully-expanded absolute path**
+(`~/.claude/toolsmith/tools/<name>`, expanded — no `~` or `$HOME` in the
+command), because the granted `Bash(<absolute-path>:*)` rule only matches that
+exact string. `/toolsmith:approve` prints the absolute path to use.
+
 ## Forging a tool
 
 Follow `references/authoring-checklist.md`. In short: one operation, no
 arbitrary-API escape hatch, scope baked in (hardcode the repo/org/method),
 validate narrow arguments, stable bare name, `--help`, fail closed. Put it at
-`scripts/agent-tools/<name>` and add a `draft` entry to the registry
+`scripts/agent-tools/<name>` (project) or `~/.claude/toolsmith/tools/<name>`
+(user/global) and add a `draft` entry to the corresponding registry
 (`references/registry-schema.md`).
 
 ## Approval lifecycle
@@ -46,16 +74,19 @@ validate narrow arguments, stable bare name, `--help`, fail closed. Put it at
 `draft` → user proofreads the exact contents → `/toolsmith:approve <path>` →
 the deterministic `scripts/toolsmith-approve.mjs` tool computes the sha256,
 flips `status` to `approved`, pins `approvedSha256`, and adds exactly one
-`Bash(<path>:*)` rule to `.claude/settings.json`. From then on the tool runs
-without a prompt. The agent never freehands the hash computation, the
-registry pin, or the permission grant — `/toolsmith:approve` runs the
-deterministic tool in preview mode first (no writes) so the user can confirm
-the exact rule before anything is committed, then runs it with `--commit`
-only after explicit confirmation. Any edit to the script changes the hash, so
-the hook blocks the tool until you re-run `/toolsmith:approve`. **Never** add
-the permission rule yourself or ask the user to widen the allowlist — the
-approve command's deterministic tool is the only sanctioned path, because it
-couples the allowlist grant to a specific reviewed script version.
+`Bash(<path>:*)` rule to `.claude/settings.json`. For a user/global tool, the
+same command runs `toolsmith-approve.mjs --user`, which reads/writes
+`~/.claude/toolsmith/registry.json` and `~/.claude/settings.json` instead, and
+grants `Bash(<absolute-path>:*)`. From then on the tool runs without a prompt.
+The agent never freehands the hash computation, the registry pin, or the
+permission grant — `/toolsmith:approve` runs the deterministic tool in preview
+mode first (no writes) so the user can confirm the exact rule before anything
+is committed, then runs it with `--commit` only after explicit confirmation.
+Any edit to the script changes the hash, so the hook blocks the tool until you
+re-run `/toolsmith:approve`. **Never** add the permission rule yourself or ask
+the user to widen the allowlist — the approve command's deterministic tool is
+the only sanctioned path, because it couples the allowlist grant to a specific
+reviewed script version, in either scope.
 
 ## Discovering what to build
 
@@ -63,15 +94,18 @@ The PostToolUse hook logs Bash usage to `.claude/toolsmith/history.jsonl`. Run
 `/toolsmith:analyze` to mine it: it clusters repeated or pipeline-heavy watched
 commands and proposes concrete tool candidates (name, purpose, `covers`
 patterns, a script sketch) against the rubric. It *proposes* — it never creates
-or approves anything silently. `/toolsmith:list` shows the current registry and
-flags any approved tool whose file drifted from its pinned hash.
+or approves anything silently. `/toolsmith:list` shows both the project and
+user registries and flags any approved tool whose file drifted from its
+pinned hash.
 
 ## How the hooks behave (so redirects aren't surprising)
 
 - **PreToolUse** denies a watched command only when an **approved** tool's
-  `covers` pattern matches it; watched-but-uncovered commands pass through to
-  the normal permission flow. It also denies running any registered tool that
-  is unapproved or whose contents changed since approval.
+  `covers` pattern matches it, whether that tool is project- or user-scoped;
+  watched-but-uncovered commands pass through to the normal permission flow.
+  It also denies running any registered tool that is unapproved or whose
+  contents changed since approval. If a project and a user tool share a
+  `name`, the project tool governs.
 - **PostToolUse** appends a compact log line per Bash call (gitignored, bounded).
 - Both honor `CLAUDE_TOOLSMITH_HOOK=off` as a full escape hatch, and fail open
   on any internal error — the permission system, not this plugin, is the

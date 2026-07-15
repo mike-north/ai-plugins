@@ -33,18 +33,33 @@ If a script satisfies none of these, don't build it — use the native command.
 - **`--help` and meaningful exit codes.** Make it self-describing and scriptable.
 - **Fail closed.** On any validation failure, exit non-zero and print why.
 
+## Where it lives: project vs. user (global)
+
+- **Project scope** (repo-specific, committed, reviewed in PRs): the script
+  lives at `scripts/agent-tools/<name>`, the draft entry goes in
+  `.claude/toolsmith/registry.json`.
+- **User/global scope** (personal, reused across every project, not
+  committed): the script lives at `~/.claude/toolsmith/tools/<name>`, the
+  draft entry goes in `~/.claude/toolsmith/registry.json`. Build here when
+  you'd otherwise be re-authoring the same tool in every repo.
+
 ## Lifecycle
 
-1. Write the script under `scripts/agent-tools/<name>` and add a `draft` entry
-   to `.claude/toolsmith/registry.json` (see `registry-schema.md`).
+1. Write the script under `scripts/agent-tools/<name>` (project) or
+   `~/.claude/toolsmith/tools/<name>` (user/global) and add a `draft` entry
+   to the matching registry (see `registry-schema.md`).
 2. Ask the user to **proofread the exact contents**.
-3. Run `/toolsmith:approve <path>` — it shows the script + the precise
-   permission rule (via a preview run of `scripts/toolsmith-approve.mjs`), and
-   on the user's confirmation runs `scripts/toolsmith-approve.mjs --commit`,
+3. Run `/toolsmith:approve <path>` (project) or `/toolsmith:approve <name>`
+   (user/global — this runs `--user` under the hood) — it shows the script +
+   the precise permission rule (via a preview run of
+   `scripts/toolsmith-approve.mjs`), and on the user's confirmation runs
+   `scripts/toolsmith-approve.mjs --commit` (add `--user` for a global tool),
    which pins the sha256, flips `status` to `approved`, and adds
-   `Bash(<path>:*)` to `.claude/settings.json`.
+   `Bash(<path>:*)` (project) or `Bash(<absolute-path>:*)` (user/global) to
+   the corresponding `settings.json`.
 4. Any later edit changes the sha256, so the hook blocks the tool until it is
-   re-approved. Re-run `/toolsmith:approve <path>` after re-review.
+   re-approved. Re-run `/toolsmith:approve` (with `--user` again, for a
+   global tool) after re-review.
 
 ## Worked example
 

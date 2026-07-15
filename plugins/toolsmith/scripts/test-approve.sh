@@ -55,6 +55,46 @@ run_approve() { # $1=proj, shift args...
   CLAUDE_PROJECT_DIR="$proj" node "$APPROVE" "$@"
 }
 
+# --- user-scope fixture helpers ---------------------------------------------
+
+new_home() {
+  local home
+  home=$(mktemp -d)
+  mkdir -p "$home/.claude/toolsmith/tools"
+  printf '%s\n' "$home"
+}
+
+write_user_tool() { # $1=home $2=name $3=content
+  printf '%s' "$3" >"$1/.claude/toolsmith/tools/$2"
+}
+
+write_user_draft_registry() { # $1=home $2=name
+  cat >"$1/.claude/toolsmith/registry.json" <<EOF
+{
+  "version": 1,
+  "tools": [
+    {
+      "name": "$2",
+      "path": "tools/$2",
+      "purpose": "Do a narrow thing",
+      "args": "<foo>",
+      "scope": "repo (read-only)",
+      "covers": ["some\\\\s+pattern"],
+      "status": "draft",
+      "approvedSha256": "",
+      "permissionRule": ""
+    }
+  ]
+}
+EOF
+}
+
+run_approve_user() { # $1=home, shift args...
+  local home="$1"
+  shift
+  HOME="$home" CLAUDE_PROJECT_DIR="/nonexistent-should-not-be-used" node "$APPROVE" "$@"
+}
+
 # ============================================================================
 # 1. preview changes nothing, prints hash + rule
 # ============================================================================
@@ -412,6 +452,147 @@ else
   bad "verify never reads outside project root for absolute/.. registry paths" "rc=$RC out=$OUT"
 fi
 rm -rf "$PROJ"
+
+# ============================================================================
+# 11. user scope: --commit pins the user registry + writes the fully-expanded
+#     absolute rule into $HOME/.claude/settings.json; bare <name> normalizes
+#     to tools/<name>.
+# ============================================================================
+HOME_DIR=$(new_home)
+write_user_tool "$HOME_DIR" mytool $'#!/bin/bash\necho hi\n'
+write_user_draft_registry "$HOME_DIR" mytool
+ABS_SCRIPT="$HOME_DIR/.claude/toolsmith/tools/mytool"
+EXPECT_SHA=$(shasum -a 256 "$ABS_SCRIPT" | awk '{print $1}')
+EXPECT_RULE="Bash($ABS_SCRIPT:*)"
+
+# preview with a bare name (no "tools/" prefix) must resolve the same draft
+# entry (i.e. normalize "mytool" -> "tools/mytool") and print the absolute path.
+OUT=$(run_approve_user "$HOME_DIR" mytool --user)
+RC=$?
+if [ "$RC" -eq 0 ] && printf '%s' "$OUT" | grep -qF "$ABS_SCRIPT" && printf '%s' "$OUT" | grep -qF "$EXPECT_RULE" && printf '%s' "$OUT" | grep -qi "DRY RUN"; then
+  ok
+else
+  bad "user preview: bare name normalizes, prints absolute path + rule" "rc=$RC out=$OUT"
+fi
+
+OUT=$(run_approve_user "$HOME_DIR" mytool --user --commit)
+RC=$?
+STATUS=$(jq -r '.tools[0].status' "$HOME_DIR/.claude/toolsmith/registry.json")
+SHA=$(jq -r '.tools[0].approvedSha256' "$HOME_DIR/.claude/toolsmith/registry.json")
+RULE=$(jq -r '.tools[0].permissionRule' "$HOME_DIR/.claude/toolsmith/registry.json")
+
+if [ "$RC" -eq 0 ] && [ "$STATUS" = "approved" ] && [ "$SHA" = "$EXPECT_SHA" ] && [ "$RULE" = "$EXPECT_RULE" ]; then
+  ok
+else
+  bad "user --commit pins registry with fully-expanded absolute rule" "status=$STATUS sha=$SHA rule=$RULE rc=$RC out=$OUT"
+fi
+
+if [ -f "$HOME_DIR/.claude/settings.json" ] && jq -e --arg rule "$EXPECT_RULE" '.permissions.allow == [$rule]' "$HOME_DIR/.claude/settings.json" >/dev/null 2>&1; then
+  ok
+else
+  bad "user --commit writes the absolute rule into \$HOME/.claude/settings.json" "$(cat "$HOME_DIR/.claude/settings.json" 2>/dev/null)"
+fi
+
+if [ -x "$ABS_SCRIPT" ]; then ok; else bad "user --commit chmod +x the script" "not executable"; fi
+rm -rf "$HOME_DIR"
+
+# ============================================================================
+# 12. user scope: path validation rejects anything escaping tools/
+#     (../evil, tools/../x, an absolute path) — non-zero, nothing written.
+# ============================================================================
+HOME_DIR=$(new_home)
+write_user_tool "$HOME_DIR" mytool $'#!/bin/bash\necho hi\n'
+write_user_draft_registry "$HOME_DIR" mytool
+REG_BEFORE=$(cat "$HOME_DIR/.claude/toolsmith/registry.json")
+
+run_approve_user "$HOME_DIR" '../evil' --user --commit >/dev/null 2>&1
+RC1=$?
+run_approve_user "$HOME_DIR" 'tools/../x' --user --commit >/dev/null 2>&1
+RC2=$?
+run_approve_user "$HOME_DIR" '/etc/passwd' --user --commit >/dev/null 2>&1
+RC3=$?
+
+REG_AFTER=$(cat "$HOME_DIR/.claude/toolsmith/registry.json")
+if [ "$RC1" -ne 0 ] && [ "$RC2" -ne 0 ] && [ "$RC3" -ne 0 ] && [ "$REG_BEFORE" = "$REG_AFTER" ] && [ ! -f "$HOME_DIR/.claude/settings.json" ]; then
+  ok
+else
+  bad "user-scope paths escaping tools/ rejected, nothing written" "rc1=$RC1 rc2=$RC2 rc3=$RC3"
+fi
+rm -rf "$HOME_DIR"
+
+# ============================================================================
+# 13. user scope: malformed $HOME/.claude/settings.json fails the whole
+#     commit closed (nothing written, registry stays draft).
+# ============================================================================
+HOME_DIR=$(new_home)
+write_user_tool "$HOME_DIR" mytool $'#!/bin/bash\necho hi\n'
+write_user_draft_registry "$HOME_DIR" mytool
+cat >"$HOME_DIR/.claude/settings.json" <<'EOF'
+{
+  "permissions": {
+    "allow": ["Bash(important:*)"]
+  },
+EOF
+# ^ deliberately truncated / invalid JSON.
+SETTINGS_BEFORE=$(cat "$HOME_DIR/.claude/settings.json")
+REG_BEFORE=$(cat "$HOME_DIR/.claude/toolsmith/registry.json")
+
+OUT=$(run_approve_user "$HOME_DIR" mytool --user --commit 2>&1)
+RC=$?
+
+SETTINGS_AFTER=$(cat "$HOME_DIR/.claude/settings.json")
+REG_AFTER=$(cat "$HOME_DIR/.claude/toolsmith/registry.json")
+REG_STATUS_AFTER=$(jq -r '.tools[0].status' "$HOME_DIR/.claude/toolsmith/registry.json" 2>/dev/null)
+
+if [ "$RC" -ne 0 ] && [ "$SETTINGS_BEFORE" = "$SETTINGS_AFTER" ] && [ "$REG_BEFORE" = "$REG_AFTER" ] && [ "$REG_STATUS_AFTER" = "draft" ]; then
+  ok
+else
+  bad "user-scope malformed settings.json aborts entire commit (fail-closed)" \
+    "rc=$RC reg_status=$REG_STATUS_AFTER out=$OUT"
+fi
+rm -rf "$HOME_DIR"
+
+# ============================================================================
+# 14. user scope: --verify --user reports OK / DRIFTED / MISSING
+# ============================================================================
+HOME_DIR=$(new_home)
+write_user_tool "$HOME_DIR" mytool $'#!/bin/bash\necho hi\n'
+write_user_draft_registry "$HOME_DIR" mytool
+run_approve_user "$HOME_DIR" mytool --user --commit >/dev/null
+
+OUT=$(run_approve_user "$HOME_DIR" --verify --user)
+RC=$?
+if [ "$RC" -eq 0 ] && printf '%s' "$OUT" | grep -qE '^OK\s'; then ok; else bad "user --verify OK when matching" "rc=$RC out=$OUT"; fi
+
+printf '#!/bin/bash\necho DRIFTED\n' >"$HOME_DIR/.claude/toolsmith/tools/mytool"
+OUT=$(run_approve_user "$HOME_DIR" --verify --user)
+RC=$?
+if [ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -qE '^DRIFTED\s'; then ok; else bad "user --verify DRIFTED after edit" "rc=$RC out=$OUT"; fi
+
+rm -f "$HOME_DIR/.claude/toolsmith/tools/mytool"
+OUT=$(run_approve_user "$HOME_DIR" --verify --user)
+RC=$?
+if [ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -qE '^MISSING\s'; then ok; else bad "user --verify MISSING after delete" "rc=$RC out=$OUT"; fi
+rm -rf "$HOME_DIR"
+
+# ============================================================================
+# 15. project scope stays the default: a project-scope registry entry named
+#     the same file must NOT be resolvable via --user, and vice versa
+#     (defends against `resolveScope` accidentally being shared/mutated).
+# ============================================================================
+PROJ=$(new_proj)
+write_tool "$PROJ" $'#!/bin/bash\necho hi\n'
+write_draft_registry "$PROJ"
+HOME_DIR=$(new_home)
+
+OUT=$(HOME="$HOME_DIR" run_approve "$PROJ" scripts/agent-tools/mytool)
+RC=$?
+if [ "$RC" -eq 0 ] && printf '%s' "$OUT" | grep -qF "Bash(scripts/agent-tools/mytool:*)"; then
+  ok
+else
+  bad "default (no --user) still previews the project-relative rule" "rc=$RC out=$OUT"
+fi
+rm -rf "$PROJ" "$HOME_DIR"
 
 # ============================================================================
 # summary

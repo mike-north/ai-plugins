@@ -29,6 +29,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join, isAbsolute, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { homedir } from 'node:os';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_WATCHLIST_PATH = join(
@@ -65,13 +66,33 @@ function main() {
 
   const root = projectRoot(input);
   const registry = readJson(join(root, '.claude', 'toolsmith', 'registry.json'));
-  const tools = Array.isArray(registry?.tools) ? registry.tools : [];
+  const projectTools = Array.isArray(registry?.tools) ? registry.tools : [];
+  const projectNames = new Set(projectTools.filter((t) => t && typeof t.path === 'string').map((t) => t.name));
+
+  // User scope: tools defined once in ~/.claude/toolsmith/registry.json and
+  // reused across every project. Resolved defensively — if the home
+  // directory can't be determined, the user scope is simply empty (never
+  // crash the fail-open hook over it).
+  const home = resolveHome();
+  const userToolsDir = home ? join(home, '.claude', 'toolsmith') : null;
+  const userRegistry = userToolsDir ? readJson(join(userToolsDir, 'registry.json')) : null;
+  const rawUserTools = Array.isArray(userRegistry?.tools) ? userRegistry.tools : [];
+  // Project shadows user on name collision: a user tool whose `name` matches
+  // a project tool is ignored entirely while the project defines it.
+  const userTools = rawUserTools
+    .filter((t) => t && typeof t.path === 'string' && isUserToolPath(t.path))
+    .filter((t) => !projectNames.has(t.name))
+    .map((t) => ({ ...t, _scope: 'user', _root: userToolsDir }));
+
+  const tools = [...projectTools.map((t) => ({ ...t, _scope: 'project', _root: root })), ...userTools];
 
   // Step 1 — hash-pin. If the command invokes a registered tool, that fully
   // governs the decision (allow or deny); never fall through to redirect.
+  // Project tools are listed first, so a basename collision resolves in the
+  // project's favor (project precedence).
   const invoked = tools.find((t) => t && typeof t.path === 'string' && invokesTool(command, t));
   if (invoked) {
-    const denial = hashDenial(invoked, root);
+    const denial = hashDenial(invoked);
     if (denial) deny(denial, isCursor);
     return; // approved + matching hash → allow through untouched
   }
@@ -86,18 +107,62 @@ function main() {
     const covers = Array.isArray(tool.covers) ? tool.covers : [];
     const hit = covers.some((pat) => safeTest(toRegExp(pat), command));
     if (!hit) continue;
-    const call = `${tool.name}${tool.args ? ' ' + tool.args : ''}`;
+    // The runnable command MUST be the path form (relative for a project
+    // tool, fully-expanded absolute for a user tool) because that is what
+    // the allowlist's `Bash(<path>:*)` rule actually matches. Telling the
+    // agent to "use `<name>`" would run the bare name, miss the rule, and
+    // still trigger a permission prompt — defeating the whole redirect.
+    const call = `${displayPath(tool)}${tool.args ? ' ' + tool.args : ''}`;
     deny(
-      `A purpose-built, pre-approved tool already covers this. Use \`${call}\` instead ` +
-        `of a one-off command — ${tool.purpose || 'see the registry'}. ` +
+      `A purpose-built, pre-approved tool already covers this. Run \`${call}\` (the approved ` +
+        `\`${tool.name}\` tool) instead of a one-off command — ${tool.purpose || 'see the registry'}. ` +
         `It exists precisely so this narrow operation is allowlisted while the broad ` +
-        `command stays gated. Path: ${tool.path}. ` +
+        `command stays gated. ` +
         `If it genuinely does not fit, tell the user why and ask them to run the raw command.`,
       isCursor,
     );
     return;
   }
   // Watched but uncovered → allow through to the normal permission flow.
+}
+
+/** Resolve os.homedir() defensively: never let a homedir failure crash the fail-open hook. */
+function resolveHome() {
+  try {
+    const h = homedir();
+    return typeof h === 'string' && h ? h : null;
+  } catch {
+    return null;
+  }
+}
+
+// Conservative safe character set — mirrors toolsmith-approve.mjs's
+// normalizePath so a registry's `path` field can't smuggle traversal or
+// shell-metacharacter noise into a resolved filesystem path.
+const SAFE_PATH_CHARS = /^[A-Za-z0-9._/-]+$/;
+
+/**
+ * A user-tool registry entry's `path` MUST be `tools/<name>` (relative to
+ * `<home>/.claude/toolsmith/`), with no traversal/absolute/unsafe segments —
+ * anything else is rejected outright and the entry is treated as absent
+ * rather than resolved onto an unintended filesystem location.
+ */
+function isUserToolPath(rawPath) {
+  if (typeof rawPath !== 'string') return false;
+  const trimmed = rawPath.trim();
+  if (!trimmed || trimmed.includes('\\') || trimmed.startsWith('/')) return false;
+  if (/^[A-Za-z]:/.test(trimmed)) return false;
+  const stripped = trimmed.startsWith('./') ? trimmed.slice(2) : trimmed;
+  if (!stripped || stripped.startsWith('/') || !SAFE_PATH_CHARS.test(stripped)) return false;
+  const segments = stripped.split('/');
+  if (segments.some((seg) => seg === '..' || seg === '.' || seg === '')) return false;
+  return segments[0] === 'tools';
+}
+
+/** The path to surface in a deny message: absolute for a user tool, project-relative otherwise. */
+function displayPath(tool) {
+  if (tool._scope === 'user' && tool._root) return join(tool._root, tool.path);
+  return tool.path;
 }
 
 /**
@@ -112,6 +177,14 @@ function invokesTool(command, tool) {
   const base = basename(tool.path);
   const names = new Set([tool.path, base]);
   if (typeof tool.name === 'string') names.add(tool.name);
+  // A user tool is invoked by its fully-expanded absolute path (the form the
+  // approve tool prints and the allowlist rule matches), or the equivalent
+  // `~/`/`$HOME/`-prefixed shorthand a human/agent might type instead.
+  if (tool._scope === 'user' && tool._root) {
+    names.add(join(tool._root, tool.path));
+    names.add(`~/.claude/toolsmith/${tool.path}`);
+    names.add(`$HOME/.claude/toolsmith/${tool.path}`);
+  }
   return commandSegments(command).some((seg) => {
     const exec = firstExecutable(seg);
     if (!exec) return false;
@@ -168,29 +241,31 @@ function firstExecutable(segment) {
 }
 
 /** Returns a denial reason if the tool is unapproved or its hash drifted; else null. */
-function hashDenial(tool, root) {
+function hashDenial(tool) {
+  const shown = displayPath(tool);
+  const approveCmd = tool._scope === 'user' ? `/toolsmith:approve ${tool.path} --user` : `/toolsmith:approve ${tool.path}`;
   if (tool.status !== 'approved') {
     return (
       `\`${tool.name}\` is registered but not yet approved. Have the user proofread it, ` +
-      `then run \`/toolsmith:approve ${tool.path}\` before using it.`
+      `then run \`${approveCmd}\` before using it.`
     );
   }
-  const abs = isAbsolute(tool.path) ? tool.path : join(root, tool.path);
+  const abs = isAbsolute(tool.path) ? tool.path : join(tool._root, tool.path);
   let contents;
   try {
     contents = readFileSync(abs);
   } catch {
     return (
-      `\`${tool.name}\` is approved in the registry but its file (${tool.path}) could not be ` +
-      `read. Restore it or re-run \`/toolsmith:approve ${tool.path}\`.`
+      `\`${tool.name}\` is approved in the registry but its file (${shown}) could not be ` +
+      `read. Restore it or re-run \`${approveCmd}\`.`
     );
   }
   const sha = createHash('sha256').update(contents).digest('hex');
   if (sha !== tool.approvedSha256) {
     return (
-      `\`${tool.name}\` (${tool.path}) has changed since it was approved (sha256 mismatch), so ` +
+      `\`${tool.name}\` (${shown}) has changed since it was approved (sha256 mismatch), so ` +
       `its prior approval no longer applies. Have the user re-review the new contents and run ` +
-      `\`/toolsmith:approve ${tool.path}\` to re-pin it.`
+      `\`${approveCmd}\` to re-pin it.`
     );
   }
   return null;
