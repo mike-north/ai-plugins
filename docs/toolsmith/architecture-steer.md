@@ -46,7 +46,7 @@ The PreToolUse hook does not hard-block dangerous commands. It does two things:
 
 Mechanically, the hook returns `permissionDecision: allow` for a valid grant and `ask` otherwise — unauthorized sessions aren't walled off, they just fall back to the normal human-approval flow. Graceful degradation, not a hard edge.
 
-The PostToolUse hook logs invocations *and outputs*, and the pre-hook logs its own redirects and blocks. That's the full telemetry triangle: what ran, what got redirected, what got asked. Rising redirect counts mean detection works but semantic activation doesn't — agents reach for the raw command before finding the tool — which is a curation signal to fix naming or the catalog skill, not to tighten blocking.
+The PostToolUse hook logs invocations *and outputs*, and the pre-hook logs its own redirects and asks. That's the full telemetry triangle: what ran, what got redirected, what got asked. Rising redirect counts mean detection works but semantic activation doesn't — agents reach for the raw command before finding the tool — which is a curation signal to fix naming or the catalog skill, not to tighten blocking.
 
 ## The toolsmith sub-agent
 
