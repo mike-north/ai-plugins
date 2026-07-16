@@ -64,8 +64,10 @@ command (e.g. `gh_dotcom`, a common wrapper that pins `gh` to github.com). If
 the watchlist matches a wrapper form but a tool's `covers` pattern only
 matches the bare command name, a watched-and-otherwise-covered command
 silently falls through as "uncovered" when invoked via the wrapper. Follow the
-shipped defaults' convention — `gh(_\w+)?\s+api\b` rather than `gh\s+api\b` —
-for any command family with known wrapper binaries.
+shipped defaults' convention — the regex `gh(_\w+)?\s+api\b` rather than
+`gh\s+api\b` — for any command family with known wrapper binaries. Note that
+`covers` values live in JSON, where every regex backslash must be doubled:
+the entry is written `"gh(_\\w+)?\\s+api\\b"`.
 
 ## Project vs. user scope — the shared contract
 
