@@ -618,6 +618,51 @@ fi
 rm -rf "$PROJ" "$HOME_DIR"
 
 # ============================================================================
+# 16. project root IS the home directory (issue #36): the "project" registry
+#     path is then literally the same file as the user registry. Approving or
+#     verifying WITHOUT --user must refuse with a clear pointer to --user
+#     (fail-closed) rather than resolve script/settings paths against the
+#     wrong root — which would either error confusingly ("script file not
+#     found", since a user entry's `tools/<name>` path doesn't exist relative
+#     to $HOME) or, worse, write a relative `Bash(tools/<name>:*)` rule that
+#     can't match a $HOME-rooted session's allowlist. The identical scenario
+#     WITH --user must still work normally (the guard only fires for the
+#     project-scope branch).
+# ============================================================================
+HOME_DIR=$(new_home)
+write_user_tool "$HOME_DIR" mytool $'#!/bin/bash\necho hi\n'
+write_user_draft_registry "$HOME_DIR" mytool
+REG_BEFORE=$(cat "$HOME_DIR/.claude/toolsmith/registry.json")
+
+OUT=$(CLAUDE_PROJECT_DIR="$HOME_DIR" HOME="$HOME_DIR" node "$APPROVE" tools/mytool 2>&1)
+RC=$?
+REG_AFTER=$(cat "$HOME_DIR/.claude/toolsmith/registry.json")
+if [ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -qi -- '--user' \
+   && [ "$REG_BEFORE" = "$REG_AFTER" ] && [ ! -f "$HOME_DIR/.claude/settings.json" ]; then
+  ok
+else
+  bad "\$HOME-rooted approve without --user refuses (fail-closed), nothing written" "rc=$RC out=$OUT"
+fi
+
+OUT=$(CLAUDE_PROJECT_DIR="$HOME_DIR" HOME="$HOME_DIR" node "$APPROVE" --verify 2>&1)
+RC=$?
+if [ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -qi -- '--user'; then
+  ok
+else
+  bad "\$HOME-rooted verify without --user refuses" "rc=$RC out=$OUT"
+fi
+
+OUT=$(CLAUDE_PROJECT_DIR="$HOME_DIR" HOME="$HOME_DIR" node "$APPROVE" mytool --user 2>&1)
+RC=$?
+STATUS=$(jq -r '.tools[0].status' "$HOME_DIR/.claude/toolsmith/registry.json")
+if [ "$RC" -eq 0 ] && [ "$STATUS" = "approved" ]; then
+  ok
+else
+  bad "\$HOME-rooted approve WITH --user still works normally" "rc=$RC status=$STATUS out=$OUT"
+fi
+rm -rf "$HOME_DIR"
+
+# ============================================================================
 # summary
 # ============================================================================
 echo

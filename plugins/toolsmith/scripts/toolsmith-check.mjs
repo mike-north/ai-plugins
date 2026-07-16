@@ -76,8 +76,8 @@ function main() {
   const projectRegistryPath = join(root, '.claude', 'toolsmith', 'registry.json');
 
   // The project registry path and the user registry path resolve to the same
-  // file when the session's project root IS the home directory (e.g. a
-  // session rooted at `~` or somewhere under `~/.claude`). Ingesting that
+  // file when the session's project root IS the home directory (a session
+  // rooted at `~`, or at a path that resolves to it via symlink). Ingesting that
   // file a second time as "project scope" mis-tags every entry: a user
   // tool's `path` is relative to `<home>/.claude/toolsmith/`, not to `root`,
   // so hashDenial() resolves the wrong on-disk file (false "could not be

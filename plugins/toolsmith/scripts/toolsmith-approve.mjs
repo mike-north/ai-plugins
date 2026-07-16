@@ -153,7 +153,7 @@ function resolveScope(userScope) {
     const regPath = registryPath(root);
     // The project registry and the user registry are the exact same file
     // when this session's project root IS the home directory (root ===
-    // home) — e.g. a session rooted at `~` or somewhere under `~/.claude`.
+    // home) — a session rooted at `~`, or at a path resolving to it via symlink.
     // Unlike toolsmith-check.mjs (fail-open, silently treats it as user
     // scope), this write path is fail-closed: refuse with a clear pointer to
     // --user rather than resolve script/settings paths against the wrong
