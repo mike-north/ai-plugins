@@ -5,6 +5,18 @@
   },
   "plugins": [
     {
+      "name": "blind-dx-study",
+      "source": {
+        "source": "local",
+        "path": "./plugins/blind-dx-study"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "code-review",
       "source": {
         "source": "local",

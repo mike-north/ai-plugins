@@ -1,0 +1,17 @@
+description = "Render a completed blind DX study wave into the standard findings report"
+prompt = """
+Render a completed blind DX study wave into the standard report: {{args}}
+
+Use skills/blind-dx-study/resources/report-template.md as the structure.
+1. Load the synthesis + subject data — from the Workflow run's return value, or by reading the run's
+   journal.jsonl (each entry's result is an agent's return value; subject reports carry easeRating,
+   verifier verdicts carry confirmed, synthesis carries findings/verdict/baselineComparison).
+2. Fill the template: ease trend + per-cohort means; the yes/partly/no verdict verbatim; the
+   RESOLVED-vs-PERSISTS baseline pass; the findings table (severity, surface, confirmed?, new?);
+   quick wins vs deeper work.
+3. Normalize honestly — if a low score came from a not-reproduced claim, show raw AND normalized ease
+   and say why. Never average a phantom in.
+4. Write the report to the project's scratch/reports location.
+5. List each confirmed finding as a pickup-ready issue candidate for the fix loop (/file-issue); keep
+   subjective/not-reproduced items out of the fix queue or send them to a docs pass.
+"""
