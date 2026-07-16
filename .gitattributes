@@ -1,1 +1,5 @@
 dist/** linguist-generated=true
+plugins/*/hooks/payload-adapter linguist-generated=true
+plugins/*/hooks/payload-adapter.generated linguist-generated=true
+plugins/*/hooks/cursor-shim.mjs linguist-generated=true
+plugins/*/hooks/cursor-shim.mjs.generated linguist-generated=true
