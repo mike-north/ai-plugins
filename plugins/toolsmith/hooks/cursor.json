@@ -7,9 +7,9 @@
   "hooks": {
     "preToolUse": [
       {
-        "command": "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-gate.sh",
-        "type": "command",
-        "matcher": "Shell"
+        "command": "node ./hooks/cursor-shim.mjs preToolUse -- '${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-gate.sh'",
+        "matcher": "Shell",
+        "failClosed": true
       }
     ],
     "postToolUse": [
