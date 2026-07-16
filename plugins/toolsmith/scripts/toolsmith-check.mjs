@@ -25,9 +25,9 @@
  *
  * @see https://code.claude.com/docs/en/hooks.md
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { dirname, join, isAbsolute, basename } from 'node:path';
+import { dirname, join, isAbsolute, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 
@@ -65,9 +65,6 @@ function main() {
   if (typeof command !== 'string' || !command.trim()) return;
 
   const root = projectRoot(input);
-  const registry = readJson(join(root, '.claude', 'toolsmith', 'registry.json'));
-  const projectTools = Array.isArray(registry?.tools) ? registry.tools : [];
-  const projectNames = new Set(projectTools.filter((t) => t && typeof t.path === 'string').map((t) => t.name));
 
   // User scope: tools defined once in ~/.claude/toolsmith/registry.json and
   // reused across every project. Resolved defensively — if the home
@@ -75,7 +72,27 @@ function main() {
   // crash the fail-open hook over it).
   const home = resolveHome();
   const userToolsDir = home ? join(home, '.claude', 'toolsmith') : null;
-  const userRegistry = userToolsDir ? readJson(join(userToolsDir, 'registry.json')) : null;
+  const userRegistryPath = userToolsDir ? join(userToolsDir, 'registry.json') : null;
+  const projectRegistryPath = join(root, '.claude', 'toolsmith', 'registry.json');
+
+  // The project registry path and the user registry path resolve to the same
+  // file when the session's project root IS the home directory (e.g. a
+  // session rooted at `~` or somewhere under `~/.claude`). Ingesting that
+  // file a second time as "project scope" mis-tags every entry: a user
+  // tool's `path` is relative to `<home>/.claude/toolsmith/`, not to `root`,
+  // so hashDenial() resolves the wrong on-disk file (false "could not be
+  // read" denials) and displayPath() emits the relative `tools/<name>` form,
+  // which can't match the user's absolute `Bash(<abs>:*)` allowlist rule.
+  // The fix is to treat the project registry as empty in that case and let
+  // the genuine user-scope ingestion below (which resolves paths correctly)
+  // handle everything — issue #36.
+  const projectIsUserRegistry = Boolean(userRegistryPath) && sameFile(projectRegistryPath, userRegistryPath);
+
+  const registry = projectIsUserRegistry ? null : readJson(projectRegistryPath);
+  const projectTools = Array.isArray(registry?.tools) ? registry.tools : [];
+  const projectNames = new Set(projectTools.filter((t) => t && typeof t.path === 'string').map((t) => t.name));
+
+  const userRegistry = userToolsDir ? readJson(userRegistryPath) : null;
   const rawUserTools = Array.isArray(userRegistry?.tools) ? userRegistry.tools : [];
   // Project shadows user on name collision: a user tool whose `name` matches
   // a project tool is ignored entirely while the project defines it.
@@ -133,6 +150,22 @@ function resolveHome() {
     return typeof h === 'string' && h ? h : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * True if two paths name the same file on disk. Used to detect the $HOME-
+ * rooted-session conflation (issue #36) — see the call site's comment.
+ * Prefers realpath so a symlinked $HOME is still caught; if either path
+ * doesn't exist yet (realpath throws — e.g. neither registry has been
+ * created), falls back to a plain resolved-path string comparison. Never
+ * throws: this hook is fail-open.
+ */
+function sameFile(a, b) {
+  try {
+    return realpathSync(a) === realpathSync(b);
+  } catch {
+    return resolve(a) === resolve(b);
   }
 }
 
