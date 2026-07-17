@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-label:*)",
+      "Bash(plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-reviews:*)",
+      "Bash(plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-queue:*)",
+      "Bash(plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-repo:*)"
+    ]
+  }
+}

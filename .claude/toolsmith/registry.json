@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "tools": [
+    {
+      "name": "gh-label",
+      "path": "plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-label",
+      "purpose": "Add or remove a single label on an issue or PR — the bounded claim/release primitive",
+      "args": "<issue-number> <add|remove> <label>",
+      "scope": "repo resolved from cwd; exactly one label mutation via gh issue edit, no other issue-editing surface",
+      "covers": [
+        "(^|[|&;( ])gh(_\\w+)?\\s+api\\b.*/issues/\\d+/labels"
+      ],
+      "status": "approved",
+      "approvedSha256": "dbeaca06757bb757c23f83c230ce4f7923da91478a4a098632bcafc7b197a4f2",
+      "permissionRule": "Bash(plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-label:*)"
+    },
+    {
+      "name": "gh-reviews",
+      "path": "plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-reviews",
+      "purpose": "PR review-thread inspection plus reply/resolve: status, threads, count, reply subcommands",
+      "args": "<status|threads|count|reply> [PR] [args...]",
+      "scope": "repo resolved from cwd; fixed GraphQL/REST review-thread queries and single-thread reply/resolve only",
+      "covers": [
+        "(^|[|&;( ])gh(_\\w+)?\\s+api\\b.*/pulls/\\d+/comments",
+        "(^|[|&;( ])gh(_\\w+)?\\s+api\\s+graphql\\b.*(reviewThread|resolveReviewThread)"
+      ],
+      "status": "approved",
+      "approvedSha256": "668f71df3e14b97eb5fa6d4513cae32f8a92efc4321bb3ba62eb421a6fb936ba",
+      "permissionRule": "Bash(plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-reviews:*)"
+    },
+    {
+      "name": "gh-queue",
+      "path": "plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-queue",
+      "purpose": "Read-only issue work-queue engine: ranked ready queue, per-issue ground-truth, fleet status rollup",
+      "args": "<list|ground-truth|status> [issue-number]",
+      "scope": "repo resolved from cwd; read-only issue/PR/branch queries, no writes",
+      "covers": [
+        "(^|[|&;( ])gh(_\\w+)?\\s+api\\b.*repos/[^ ]+/issues/\\d+([?\\s]|$)",
+        "(^|[|&;( ])gh(_\\w+)?\\s+api\\b.*repos/[^ ]+/issues(\\?|\\s|$)",
+        "(^|[|&;( ])gh(_\\w+)?\\s+api\\b.*search/issues"
+      ],
+      "status": "approved",
+      "approvedSha256": "8a24e644c48d2bdc42375a46a980209d34de2f5a3550c7c63891f36c21587662",
+      "permissionRule": "Bash(plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-queue:*)"
+    },
+    {
+      "name": "gh-repo",
+      "path": "plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-repo",
+      "purpose": "Read a file at a ref or list a compare range over the API, without a local checkout (GET-only)",
+      "args": "<file|compare> <ref-or-range> [path] [--repo owner/name]",
+      "scope": "GET-only contents/compare reads; no writes, no arbitrary-endpoint escape",
+      "covers": [
+        "(^|[|&;( ])gh(_\\w+)?\\s+api\\b.*/(contents|compare)/"
+      ],
+      "status": "approved",
+      "approvedSha256": "540f638ba71846f07ca35e1dadc8dfa2fab1c0966860c886e765117cfa71dd9d",
+      "permissionRule": "Bash(plugins/github-fleet-tools/skills/github-fleet-tools/scripts/gh-repo:*)"
+    }
+  ]
+}
