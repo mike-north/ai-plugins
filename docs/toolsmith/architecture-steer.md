@@ -2,7 +2,7 @@
 
 Mike North · 2026-07-15
 
-Companion docs: [Product framing and principles](./product-framing-and-principles.md), [Design patterns](./design-patterns.md), [Forge runtime spec](./runtime-spec.md). This doc is the place to start.
+Companion docs: [Product framing and principles](./product-framing-and-principles.md), [Design patterns](./design-patterns.md), [Forge runtime spec](./runtime-spec.md), [Steering & gap-adjudication](./steering-adjudication.md), [The toolsmith CLI surface](./cli-surface.md). This doc is the place to start.
 
 ## The problem
 
