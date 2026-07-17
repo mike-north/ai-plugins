@@ -35,7 +35,7 @@ Invariants:
 
 - **Rung 2 is Claude-only.** When the driving signal is portability (other harnesses, other
   machines), the router must say so and recommend rung 3, not 2. Rung 2's honest pitch is "the
-  enableable/disableable unit, without ceremony."
+  toggleable unit, without ceremony."
 - **Rung 4 is defined by editability, not team-ness.** A contributable marketplace is any
   marketplace the user can edit or contribute to. Read-only marketplaces (e.g. the official
   Anthropic marketplace) are never graduation targets. The existing provenance model governs:

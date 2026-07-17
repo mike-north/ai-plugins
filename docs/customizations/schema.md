@@ -1,7 +1,7 @@
 # Schema deltas
 
 Concrete changes to the plugin's deterministic surfaces. Everything here is testable in
-`tests/manifest.test.mjs` and the eval harness; nothing here is prose-only.
+`plugins/customizations/tests/manifest.test.mjs` and the eval harness; nothing here is prose-only.
 
 ## Manifest entries (`manifest.mjs`)
 
