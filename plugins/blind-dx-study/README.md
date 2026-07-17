@@ -30,6 +30,7 @@ and an independent `dx-claim-verifier` reproduces each functional claim before s
 | `agents/dx-evaluator` | The blind subject — fresh-eyes, workspace-confined, docs-only. |
 | `agents/dx-claim-verifier` | The skeptical reproducer that confirms/refutes each functional claim. |
 | `rules/blinding-and-isolation` | The non-negotiable invariants every subject/verifier prompt must carry. |
+| `skills/.../scripts/dx-study-sandbox` | Deterministic, guarded provisioner for one isolated per-subject sandbox (isolated HOME, optional fixture, cohort-A `--guide`). |
 | `skills/.../resources/schemas.mjs` | The subject / verdict / synthesis structured-output schemas. |
 | `skills/.../resources/workflow-template.mjs` | A self-contained, fill-in-the-blanks Workflow script for one wave. |
 | `skills/.../resources/prompt-builder.mjs` | Annotated builders for the shared subject/verifier preamble. |

@@ -8,8 +8,11 @@ Follow the blind-dx-study skill. Setup (inline, before dispatching subjects):
 2. Extract the target's sandbox mechanism from its docs (config-dir override, isolated HOME,
    in-memory backend); bake the concrete command form into every prompt. No documented sandbox path
    is itself a finding.
-3. Create a study root with one workspace per subject. Copy findable docs into cohort-A workspaces;
-   cohort B gets none.
+3. Provision one isolated sandbox per subject with the bundled
+   skills/blind-dx-study/scripts/dx-study-sandbox <study-root> <subject-id> (deterministic, guarded,
+   network-free — prefer it over hand-rolled mkdir/git init/cp). Pass --guide <file> for cohort A
+   (findable docs at GUIDE.md); omit for docs-free cohort B. Pass --fixture <dir> only for a
+   work-in-a-codebase study; omit for the common install-the-target study.
 4. Author scenarios — one dx-evaluator subject each, split across cohorts (quick start, usage/access
    patterns, CLI onboarding, error-recovery, secondary surfaces, two cohort-B blind paths). Say
    exactly what each subject must judge.

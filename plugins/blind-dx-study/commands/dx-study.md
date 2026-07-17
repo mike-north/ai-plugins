@@ -19,9 +19,12 @@ Set up and run one **wave** of a blind DX usability study for `$ARGUMENTS.target
    pattern, in-memory backend, …). You will bake the concrete command form into every prompt. If the
    target documents no way to stay sandboxed, that is itself a finding — record it and have subjects
    stop before any unsafe operation.
-3. **Create a study root** with one workspace per subject. For **cohort A**, copy the docs a user
-   could plausibly find (README + API reference) into each cohort-A workspace. **Cohort B** gets no
-   docs.
+3. **Provision one isolated sandbox per subject** with the bundled
+   `skills/blind-dx-study/scripts/dx-study-sandbox <study-root> <subject-id>` (deterministic,
+   guarded, network-free — prefer it over hand-rolled `mkdir`/`git init`/`cp`). Pass `--guide <file>`
+   for **cohort A** (drops the findable docs at `GUIDE.md`); omit it for docs-free **cohort B**. Pass
+   `--fixture <dir>` only for a work-in-a-codebase study; omit it for the common install-the-target
+   study where the subject builds its own workspace.
 4. **Author the scenarios** — one `dx-evaluator` subject each, split across cohorts: primary quick
    start, core usage/access patterns, CLI onboarding, deliberate error-recovery, each secondary
    surface, and the two cohort-B blind paths. Tell each subject exactly what to judge, not just the

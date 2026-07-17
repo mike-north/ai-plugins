@@ -44,7 +44,8 @@ Run it with the **Workflow tool** as a `pipeline()` so each subject's claims ver
 subject finishes — no barrier between "all subjects done" and "start verifying." The synthesis is
 the only barrier. `resources/workflow-template.mjs` is a fill-in-the-blanks, self-contained script
 for exactly this shape; `resources/schemas.mjs` and `resources/prompt-builder.mjs` are the annotated
-sources for the schemas and the shared subject preamble it inlines.
+sources for the schemas and the shared subject preamble it inlines. `scripts/dx-study-sandbox`
+provisions each subject's isolated sandbox (see "Running a wave" below).
 
 ## Two cohorts (always run both)
 
@@ -64,10 +65,16 @@ the concrete command form into every prompt — don't leave "stay sandboxed" vag
 
 ## Running a wave
 
-1. **Scaffold** per-subject workspaces under a study root; for cohort A, copy the findable docs into
-   each workspace. Make the installable artifact available the way a user gets it — a published
-   release, or **pre-release tarballs / a local registry built from the exact commit under test** so
-   the versions match HEAD.
+1. **Scaffold** one isolated sandbox per subject with the bundled provisioner
+   `scripts/dx-study-sandbox <study-root> <subject-id>` — it makes an isolated `home/` and a
+   per-subject `project/` workspace, deterministically, so every subject starts byte-identical. Add
+   `--guide <docs-file>` for cohort A (drops the findable docs at `GUIDE.md`); omit it for docs-free
+   cohort B. Add `--fixture <dir>` only for a work-in-a-codebase study (commits a clean checkout);
+   omit it for the common install-the-target study where the subject sets up its own workspace. Then
+   make the installable artifact available the way a user gets it — a published release, or
+   **pre-release tarballs / a local registry built from the exact commit under test** so the versions
+   match HEAD. (Prefer the script over hand-rolled `mkdir`/`git init`/`cp`: it is deterministic,
+   guarded, network-free, and allowlistable — no per-subject approval prompts.)
 2. **Extract the sandbox mechanism** from the docs (the config-dir override, isolated-home pattern,
    in-memory backend, …) and write the exact command form into the prompts.
 3. **Author the scenarios** — one per subject, split across cohorts. Good coverage: primary quick

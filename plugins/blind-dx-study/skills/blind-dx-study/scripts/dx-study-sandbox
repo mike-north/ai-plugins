@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# dx-study-sandbox — provision one isolated blind-subject sandbox for a DX
+# usability study.
+#
+# A "blind subject" runs a scenario inside a clean, throwaway environment: an
+# isolated HOME (so the subject's daemon/config/keychain state never touches the
+# real machine) plus a per-subject workspace. This tool creates exactly that,
+# deterministically, so every subject starts from byte-identical conditions and
+# results are comparable across subjects and across waves.
+#
+# It writes ONLY under <study-root>/<subject-id>/ and never touches anything
+# else — no network, no package installs, no global state.
+#
+# Two study flavours, one tool:
+#   * install-the-target study (default): the workspace is a bare, empty
+#     project dir; the subject installs the target-under-study into it itself
+#     (npm init, pip install, etc). No fixture, no git required.
+#   * work-in-a-codebase study: pass --fixture <dir> and the tool copies that
+#     directory into the workspace and git-inits + commits it, so the subject
+#     operates on a clean, identical checkout.
+#
+# Cohort control:
+#   * Cohort A ("found the docs"): pass --guide <file> to drop the docs the
+#     subject is allowed to read at <subject>/GUIDE.md.
+#   * Cohort B ("registry / types only"): omit --guide for a docs-free subject.
+#
+# Usage: dx-study-sandbox <study-root> <subject-id> [--fixture <dir>] [--guide <file>] [--force]
+#   <study-root>    directory the study lives in (created if missing)
+#   <subject-id>    subject label, e.g. A1 (chars: A-Z a-z 0-9 . _ -)
+#   --fixture <dir> copy this dir into project/ and git-init+commit it (codebase study)
+#   --guide <file>  copy this file to <subject>/GUIDE.md as the subject's only docs (cohort A)
+#   --force         overwrite an existing subject dir (default: refuse)
+#
+# Layout created:
+#   <study-root>/<subject-id>/
+#     home/        -> isolated HOME for the subject
+#     project/     -> bare workspace, or a git-committed copy of --fixture
+#     GUIDE.md     -> present only if --guide was given
+#
+# Output: the sandbox paths and the isolated-HOME env line to run the subject with.
+# Exit codes: 0 ok, 2 usage error, 3 refused (exists, no --force), other = failure.
+set -euo pipefail
+
+usage() { sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//'; }
+
+studyRoot=""; subjectId=""; fixture=""; guide=""; force=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --help|-h) usage; exit 0 ;;
+    --fixture) shift; [ $# -gt 0 ] || { echo "dx-study-sandbox: --fixture needs a directory" >&2; exit 2; }; fixture="$1" ;;
+    --guide) shift; [ $# -gt 0 ] || { echo "dx-study-sandbox: --guide needs a file" >&2; exit 2; }; guide="$1" ;;
+    --force) force=1 ;;
+    -*) echo "dx-study-sandbox: unknown flag: $1" >&2; exit 2 ;;
+    *)
+      if [ -z "$studyRoot" ]; then studyRoot="$1"
+      elif [ -z "$subjectId" ]; then subjectId="$1"
+      else echo "dx-study-sandbox: unexpected extra argument: $1" >&2; exit 2; fi ;;
+  esac
+  shift
+done
+
+[ -n "$studyRoot" ] && [ -n "$subjectId" ] || { usage >&2; exit 2; }
+case "$subjectId" in
+  (*[!A-Za-z0-9._-]*|''|.|..) echo "dx-study-sandbox: invalid subject id: '$subjectId'" >&2; exit 2 ;;
+esac
+if [ -n "$guide" ] && [ ! -f "$guide" ]; then
+  echo "dx-study-sandbox: --guide file not found: $guide" >&2; exit 2
+fi
+if [ -n "$fixture" ] && [ ! -d "$fixture" ]; then
+  echo "dx-study-sandbox: --fixture directory not found: $fixture" >&2; exit 2
+fi
+if [ -n "$fixture" ]; then
+  command -v git >/dev/null 2>&1 || { echo "dx-study-sandbox: git is required for --fixture" >&2; exit 1; }
+fi
+
+sandbox="$studyRoot/$subjectId"
+if [ -e "$sandbox" ]; then
+  if [ "$force" -eq 1 ]; then rm -rf "$sandbox"
+  else echo "dx-study-sandbox: $sandbox already exists (use --force to overwrite)" >&2; exit 3; fi
+fi
+
+home="$sandbox/home"; project="$sandbox/project"
+mkdir -p "$home" "$project"
+
+if [ -n "$fixture" ]; then
+  # Copy fixture contents (including dotfiles) into project/, then commit a clean checkout.
+  cp -R "$fixture"/. "$project"/
+  git -C "$project" init -q
+  git -C "$project" -c user.email=dev@study.test -c user.name=dev -c commit.gpgsign=false add -A
+  git -C "$project" -c user.email=dev@study.test -c user.name=dev -c commit.gpgsign=false \
+    commit -q -m "fixture: initial checkout" >/dev/null
+fi
+
+if [ -n "$guide" ]; then cp "$guide" "$sandbox/GUIDE.md"; fi
+
+echo "sandbox:  $sandbox"
+echo "home:     $home"
+echo "project:  $project"
+if [ -n "$fixture" ]; then echo "fixture:  $fixture (committed clean checkout)"; else echo "fixture:  (none — bare workspace; subject installs the target itself)"; fi
+if [ -n "$guide" ]; then echo "guide:    $sandbox/GUIDE.md (cohort A)"; else echo "guide:    (none — docs-free, cohort B)"; fi
+echo "run the subject with an isolated HOME, e.g.:  env HOME=\"$home\" ..."
