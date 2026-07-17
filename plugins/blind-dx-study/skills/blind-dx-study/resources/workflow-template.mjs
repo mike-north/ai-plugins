@@ -90,9 +90,11 @@ REPORTING: return your report via the structured output tool. Include exact self
 
 // <<FILL 1: install + safety strings for THIS target (reference ARTIFACTS/ROOT as needed) ───────
 const DOC_A = (ws) => `Documentation available: the folder ${ws}/docs contains the docs a user could plausibly find (README + an API reference). You may read anything under ${ws}/docs.`;
-const DOC_B = `You have NO external docs folder. Use ONLY the installed package's own shipped README/metadata/type declarations plus --help / error output. Reading the installed package's own README IS allowed.`;
+const DOC_B = `You have NO external docs folder. Use ONLY the installed package's own shipped README/metadata/type declarations plus --help / error output. Do NOT web-search for the target's docs, and do NOT read its source repository. Reading the installed package's own shipped README IS allowed — it is what a registry user sees.`;
 const INSTALL = `Install the target from ${ARTIFACTS} exactly as a user would. <<FILL: the concrete install command(s)>>`;
-const SAFETY = `<<FILL: the exact sandbox mechanism, e.g. "use an isolated home: mkdir -p ${'${ws}'}/home && HOME=${'${ws}'}/home <cmd> ...">>`;
+// SAFETY is a function of the workspace so each subject/verifier gets its OWN sandbox path
+// substituted — never a shared literal. `${ws}` below interpolates the real workspace dir.
+const SAFETY = (ws) => `<<FILL: the exact sandbox mechanism for workspace ${ws}, e.g. "use an isolated home: mkdir -p ${ws}/home && HOME=${ws}/home <cmd> ...">>`;
 
 // <<FILL 2: the scenarios. One entry per subject. Split across cohort A (has docs) and B (blind).
 const TASKS = [
@@ -112,7 +114,7 @@ log(`Dispatching ${TASKS.length} blind subjects`);
 const results = await pipeline(
   TASKS,
   (t) => agent(
-    `${subjectPreamble(t.ws, t.cohort, t.cohort === 'A' ? DOC_A(t.ws) : DOC_B, INSTALL, SAFETY)}\n\n${t.task}`,
+    `${subjectPreamble(t.ws, t.cohort, t.cohort === 'A' ? DOC_A(t.ws) : DOC_B, INSTALL, SAFETY(t.ws))}\n\n${t.task}`,
     { label: `subject:${t.id}`, phase: 'Subjects', schema: SUBJECT_SCHEMA, model: 'sonnet', agentType: 'dx-evaluator' },
   ),
   async (report, t) => {
@@ -124,7 +126,7 @@ const results = await pipeline(
     if (claims.length > capped.length) log(`subject ${t.id}: verifying ${capped.length} of ${claims.length} claims (capped)`);
     const verdicts = await parallel(capped.map((c, i) => () =>
       agent(
-        `You are verifying one functional claim from a blind DX study. Work ONLY in fresh workspace ${t.ws}-verify-${i} (mkdir -p). Never read the target's source. Stay sandboxed: ${SAFETY} Never touch real credential stores; use only fake values. INSTALL: ${INSTALL}\n\nCLAIM (${c.kind}): ${c.title}\nREPRO:\n${c.repro}\nOBSERVED: ${c.observed}\n${c.expected ? `EXPECTED: ${c.expected}` : ''}\n\nFollow the repro in a fresh setup. Be skeptical — subjects sometimes misuse the tool or quote a stale/truncated snippet. confirmed=true ONLY if you reproduce the problematic behavior (or a materially equivalent failure). Report exact actual behavior; if not confirmed, say how the repro was wrong.`,
+        `You are verifying one functional claim from a blind DX study. Work ONLY in fresh workspace ${t.ws}-verify-${i} (mkdir -p). Never read the target's source. Stay sandboxed: ${SAFETY(`${t.ws}-verify-${i}`)} Never touch real credential stores; use only fake values. INSTALL: ${INSTALL}\n\nCLAIM (${c.kind}): ${c.title}\nREPRO:\n${c.repro}\nOBSERVED: ${c.observed}\n${c.expected ? `EXPECTED: ${c.expected}` : ''}\n\nFollow the repro in a fresh setup. Be skeptical — subjects sometimes misuse the tool or quote a stale/truncated snippet. confirmed=true ONLY if you reproduce the problematic behavior (or a materially equivalent failure). Report exact actual behavior; if not confirmed, say how the repro was wrong.`,
         { label: `verify:${t.id}#${i}`, phase: 'Verify', schema: VERDICT_SCHEMA, agentType: 'dx-claim-verifier' },
       ).then((v) => ({ claim: c, verdict: v })),
     ));
