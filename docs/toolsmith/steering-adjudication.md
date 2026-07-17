@@ -6,13 +6,16 @@ Companion docs: [Architecture steer](./architecture-steer.md), [Product framing 
 
 ## What this fixes
 
-Today's redirect names a tool but leaves the agent to re-derive the arguments from the command it
-just had denied. [Architecture steer](./architecture-steer.md)'s "Hooks: steer, don't block" section
-describes the mechanism as-is: "**Redirect** when high-confidence detection says a forged tool already exists
-for this pattern." That's a pointer, not an invocation — the agent still pays a semantic-activation
-tax re-deriving the call, the exact tax `product-framing-and-principles.md:56` names when it calls
-redirect volume "a *semantic activation* defect signal." This doc turns the pointer into a **drop-in
-invocation**, adds a real answer for the *partial-fit* case — the agent wants slightly more than the
+Today's redirect already names the covering tool and a runnable form — `plugins/toolsmith/scripts/toolsmith-check.mjs`
+suggests the tool's path plus any fixed `args` the registry entry carries. What it cannot do is fill in
+the *dynamic* arguments that live in the command the agent just had denied: a PR number, a repo, a URL
+segment. So for anything parameterized, the agent still pays a semantic-activation tax re-deriving those
+arguments — the exact tax `product-framing-and-principles.md:56` names when it calls redirect volume
+"a *semantic activation* defect signal." [Architecture steer](./architecture-steer.md)'s "Hooks: steer,
+don't block" section describes the redirect as-is: "**Redirect** when high-confidence detection says a
+forged tool already exists for this pattern." This doc turns that partial suggestion into a fully
+**parameterized, drop-in invocation** — extracting the dynamic arguments from the denied command
+itself — and adds a real answer for the *partial-fit* case — the agent wants slightly more than the
 covering tool gives, the case `architecture-steer.md:55` names as "the real case that forced this
 framing: a repo where emoji reactions on review comments carry meaning" — and does both without ever
 letting an LLM auto-approve a raw command.
@@ -72,16 +75,18 @@ Two rules keep this safe:
 
 - **Captures must be narrow classes, never `.+`.** A capture is attacker-adjacent input — it comes
   from a command an agent constructed, possibly itself downstream of injected content — that gets
-  echoed straight into a suggested invocation. This is a safety rule today and a candidate future
-  entry in the forge rule pack `lint-rule-concepts.md` describes (alongside rules like
-  `composition-declares-inputs`, which already constrains what a tool may echo into another
-  invocation). **Render-time validation** re-checks each captured value against its declared class
-  before templating, independent of whether the pattern matched at detection time.
+  echoed straight into a suggested invocation. This design *requires* it as a safety invariant, and it
+  is a natural future addition to the forge rule pack (`lint-rule-concepts.md`), alongside rules like
+  `composition-declares-inputs` that already constrain what a tool may echo into another invocation.
+  **Render-time validation** re-checks each captured value against its declared class before templating,
+  independent of whether the pattern matched at detection time.
 - **Fallback is mandatory.** If the pattern matches but a capture fails to fill or fails
   render-time validation, the hook emits the **generic redirect** — name the tool, no filled args —
-  never a malformed or under-validated suggestion, and never a block. This reuses the existing
-  never-throw regex machinery (`toRegExp`/`safeTest` in `toolsmith-check.mjs`) rather than adding a
-  parallel, riskier extraction path.
+  never a malformed or under-validated filled invocation. The subset verdict is unchanged (it is still
+  the `deny`-plus-redirect of the three-legs table); only the *hint quality* degrades, from a filled
+  invocation to a bare pointer. This reuses the existing never-throw regex machinery
+  (`toRegExp`/`safeTest` in `toolsmith-check.mjs`) rather than adding a parallel, riskier extraction
+  path.
 
 Tier 1's scope is honest: templates fit path-shaped commands (REST-style URLs with positional
 segments). Query-body commands — GraphQL, and anything whose parameters live in a body rather than a
