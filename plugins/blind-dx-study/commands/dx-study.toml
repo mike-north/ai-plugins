@@ -1,0 +1,27 @@
+description = "Scaffold and run one wave of a blind DX usability study against a target"
+prompt = """
+Set up and run one wave of a blind DX usability study for: {{args}}
+
+Follow the blind-dx-study skill. Setup (inline, before dispatching subjects):
+1. Identify the artifact a real user installs — prefer tarballs/local registry built from the exact
+   commit under test, or confirm the published version matches. Record the artifact path.
+2. Extract the target's sandbox mechanism from its docs (config-dir override, isolated HOME,
+   in-memory backend); bake the concrete command form into every prompt. No documented sandbox path
+   is itself a finding.
+3. Provision one isolated sandbox per subject with the bundled
+   skills/blind-dx-study/scripts/dx-study-sandbox <study-root> <subject-id> (deterministic, guarded,
+   network-free — prefer it over hand-rolled mkdir/git init/cp). Pass --guide <file> for cohort A
+   (findable docs at GUIDE.md); omit for docs-free cohort B. Pass --fixture <dir> only for a
+   work-in-a-codebase study; omit for the common install-the-target study.
+4. Author scenarios — one dx-evaluator subject each, split across cohorts (quick start, usage/access
+   patterns, CLI onboarding, error-recovery, secondary surfaces, two cohort-B blind paths). Say
+   exactly what each subject must judge.
+
+Run: fill skills/blind-dx-study/resources/workflow-template.mjs (install+safety strings, TASKS,
+baseline context) and run it via the Workflow tool with args {"root":"<study-root>",
+"artifacts":"<artifact-path>"}. Enforce rules/blinding-and-isolation.md in every prompt; the
+template already pipelines a dx-claim-verifier per subject so functional claims are confirmed before
+weighting.
+
+When done, summarize the verdict + ease trend and offer to render the report with /dx-study-report.
+"""
