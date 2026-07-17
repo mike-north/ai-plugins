@@ -39,3 +39,43 @@ jobs:
 
       - name: Validate plugins
         run: pnpm exec aipm validate
+
+      - name: Run unit tests (pnpm test)
+        run: pnpm test
+
+      - name: Run markdown lint (pnpm lint)
+        run: pnpm lint
+
+      - name: Assert hook regression suite dependencies are present
+        # The suites below skip cleanly (exit 0, no assertions run) when jq is
+        # missing, so a jq-less runner image would otherwise report green
+        # while testing nothing. Fail loudly here instead of silently.
+        run: |
+          command -v jq >/dev/null 2>&1 || {
+            echo "::error::jq is required by the hook regression suites but is not installed on this runner image."
+            exit 1
+          }
+          command -v node >/dev/null 2>&1 || {
+            echo "::error::node is required by the hook regression suites but is not installed on this runner image."
+            exit 1
+          }
+
+      - name: Run hook regression suites
+        # Enumerate suite paths here — adding a new test file to an existing
+        # suite requires no change to this workflow, only new suites do.
+        run: |
+          suites=(
+            "plugins/toolsmith/scripts/test.sh"
+            "plugins/toolsmith/scripts/test-approve.sh"
+            "plugins/toon/scripts/test.sh"
+          )
+          status=0
+          for suite in "${suites[@]}"; do
+            echo "::group::${suite}"
+            if ! bash "${suite}"; then
+              echo "::error::${suite} failed"
+              status=1
+            fi
+            echo "::endgroup::"
+          done
+          exit "${status}"
