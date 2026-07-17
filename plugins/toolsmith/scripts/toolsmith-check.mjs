@@ -57,8 +57,16 @@ function main() {
   // hosts omit it. Only reject a clearly-different event.
   const evt = input.hook_event_name;
   if (evt && evt !== 'PreToolUse' && evt !== 'preToolUse') return;
-  // Cursor speaks a different deny contract than Claude/Codex; detect by the
-  // tool name so we emit the shape the calling host understands.
+  // Legacy direct-wiring compatibility: since PR #32, the shipped cursor.json
+  // routes Cursor's preToolUse through the emitted cursor-shim.mjs, which
+  // rewrites `Shell` -> `Bash` and translates the deny shape itself before
+  // this script ever sees the event — so on the current shipped wiring,
+  // `tool_name` is always `Bash` here and this branch is unreachable. But
+  // installs still running a pre-0.7.0-toolkit version of the plugin ship
+  // the pre-shim cursor.json, which feeds `Shell` directly into this script,
+  // so we still need to detect it and emit Cursor's own deny contract for
+  // those installs. Keep this branch until pre-shim installs are plausibly
+  // gone.
   const isCursor = input.tool_name === 'Shell';
 
   const command = input.tool_input?.command;

@@ -73,8 +73,12 @@ assert_allow() { # $1=name $2=output — allow == no output at all
   if [ -z "$2" ]; then ok; else bad "$1 (expected allow/no output)" "$2"; fi
 }
 
-# Cursor drives the same gate/brain but sends tool_name "Shell" and expects a
-# flat {permission:"deny", ...} rather than Claude's hookSpecificOutput.
+# Legacy path: pre-0.7.0-toolkit installs ship a pre-shim cursor.json that
+# feeds tool_name "Shell" straight into the gate and expects a flat
+# {permission:"deny", ...} rather than Claude's hookSpecificOutput. Current
+# shipped installs route through cursor-shim.mjs, which rewrites Shell -> Bash
+# before the gate ever sees it, so this exercises legacy direct-wiring
+# compatibility only (see the isCursor comment in toolsmith-check.mjs).
 pre_cursor() { # $1 = command
   jq -cn --arg cmd "$1" --arg cwd "$PROJ" \
     '{hook_event_name:"preToolUse",tool_name:"Shell",cwd:$cwd,tool_input:{command:$cmd}}' \
@@ -116,14 +120,14 @@ assert_deny "gh_dotcom graphql wrapper form redirects when covered" \
 assert_deny "bare gh graphql still redirects when covered (no regression)" \
   "$(pre 'gh graphql -f query=orgs')" "gh-pr-reactions"
 
-# --- Cursor host: same logic, different tool name + deny shape -----------
-assert_deny_cursor "cursor watched+covered redirects with {permission:deny}" \
+# --- Cursor legacy direct-wiring: same logic, different tool name + deny shape
+assert_deny_cursor "legacy pre-shim cursor watched+covered redirects with {permission:deny}" \
   "$(pre_cursor 'gh api repos/o/r/pulls/1/comments')" "gh-pr-reactions"
-assert_allow "cursor watched but uncovered passes through" \
+assert_allow "legacy pre-shim cursor watched but uncovered passes through" \
   "$(pre_cursor 'gh api repos/o/r/issues')"
-# A Cursor deny must NOT carry Claude's hookSpecificOutput shape.
+# A legacy pre-shim Cursor deny must NOT carry Claude's hookSpecificOutput shape.
 if printf '%s' "$(pre_cursor 'gh api repos/o/r/pulls/1/comments')" | jq -e 'has("hookSpecificOutput")' >/dev/null 2>&1; then
-  bad "cursor deny must not use hookSpecificOutput" "leaked claude shape"; else ok; fi
+  bad "legacy pre-shim cursor deny must not use hookSpecificOutput" "leaked claude shape"; else ok; fi
 
 # --- PreToolUse: hash-pin ------------------------------------------------
 assert_allow "invoking approved tool with matching hash is allowed" \
