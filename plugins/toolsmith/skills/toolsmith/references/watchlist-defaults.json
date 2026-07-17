@@ -2,12 +2,12 @@
   "_comment": "Default watchlist for the toolsmith PreToolUse redirect hook. Each 'pattern' is a JavaScript RegExp (tested against the raw Bash command string). A watched command is only ever DENIED when an approved registry tool's 'covers' pattern also matches it; a watched command with no covering tool passes through to the normal permission flow. Projects override this set via .claude/toolsmith/config.json ({\"watchlist\": {\"add\": [...], \"remove\": [...]}}); 'remove' entries must match a pattern string here verbatim.",
   "watchlist": [
     {
-      "pattern": "(^|[|&;( ])gh\\s+api\\b",
-      "rationale": "gh api makes arbitrary authenticated REST calls with the CLI's full credentials — the classic broad escape hatch. Narrow read operations belong in a purpose-built, allowlistable script."
+      "pattern": "(^|[|&;( ])gh(_\\w+)?\\s+api\\b",
+      "rationale": "gh api makes arbitrary authenticated REST calls with the CLI's full credentials — the classic broad escape hatch. Narrow read operations belong in a purpose-built, allowlistable script. Also matches wrapper binaries such as gh_dotcom (a common wrapper pinning gh to github.com) so the redirect can't be bypassed by using the wrapper's name instead of gh."
     },
     {
-      "pattern": "(^|[|&;( ])gh\\s+graphql\\b",
-      "rationale": "gh graphql runs arbitrary authenticated GraphQL against GitHub — same broad-power concern as gh api."
+      "pattern": "(^|[|&;( ])gh(_\\w+)?\\s+graphql\\b",
+      "rationale": "gh graphql runs arbitrary authenticated GraphQL against GitHub — same broad-power concern as gh api, including wrapper binaries such as gh_dotcom."
     },
     {
       "pattern": "(^|[|&;( ])curl\\b(?!.*(localhost|127\\.0\\.0\\.1))",

@@ -20,7 +20,7 @@
  *
  * @see https://code.claude.com/docs/en/hooks.md
  */
-import { readFileSync, writeFileSync, renameSync, chmodSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync, chmodSync, existsSync, mkdtempSync, rmSync, realpathSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, dirname, resolve } from 'node:path';
 import { homedir } from 'node:os';
@@ -103,6 +103,21 @@ function userRegistryPath(home) {
   return join(home, '.claude', 'toolsmith', 'registry.json');
 }
 
+/**
+ * True if two paths name the same file on disk. Used to detect the
+ * project-root-IS-home-directory conflation (issue #36, see resolveScope()).
+ * Prefers realpath so a symlinked $HOME is still caught; if either path
+ * doesn't exist yet (realpath throws — e.g. neither registry has been
+ * created), falls back to a plain resolved-path string comparison.
+ */
+function sameFile(a, b) {
+  try {
+    return realpathSync(a) === realpathSync(b);
+  } catch {
+    return resolve(a) === resolve(b);
+  }
+}
+
 function userSettingsPath(home) {
   return join(home, '.claude', 'settings.json');
 }
@@ -135,10 +150,29 @@ function normalizeUserPath(rawPath) {
 function resolveScope(userScope) {
   if (!userScope) {
     const root = projectRoot();
+    const regPath = registryPath(root);
+    // The project registry and the user registry are the exact same file
+    // when this session's project root IS the home directory (root ===
+    // home) — a session rooted at `~`, or at a path resolving to it via symlink.
+    // Unlike toolsmith-check.mjs (fail-open, silently treats it as user
+    // scope), this write path is fail-closed: refuse with a clear pointer to
+    // --user rather than resolve script/settings paths against the wrong
+    // root, which would either error confusingly ("script file not found")
+    // or, worse, write a relative `Bash(tools/<name>:*)` rule that can't
+    // match a $HOME-rooted session's allowlist — issue #36.
+    const home = resolveHome();
+    if (home && sameFile(regPath, userRegistryPath(home))) {
+      return {
+        error:
+          `Error: this session's project root is the home directory, so the "project" registry ` +
+          `(${regPath}) is actually the user-scope registry. Re-run with --user so paths resolve ` +
+          `against ~/.claude/toolsmith/ correctly.\n`,
+      };
+    }
     return {
       kind: 'project',
       normalize: normalizePath,
-      regPath: registryPath(root),
+      regPath,
       settingsFile: settingsPath(root),
       scriptAbs: (path) => join(root, path),
       ruleFor: (path) => `Bash(${path}:*)`,
@@ -292,6 +326,10 @@ function runApprove(rawPath, commit, userScope) {
     process.stderr.write(`Error: could not resolve the home directory for --user. Nothing written.\n`);
     return 1;
   }
+  if (scope.error) {
+    process.stderr.write(scope.error);
+    return 1;
+  }
 
   const path = scope.normalize(rawPath);
   if (!path) {
@@ -425,6 +463,10 @@ function runVerify(rawPath, userScope) {
   const scope = resolveScope(userScope);
   if (!scope) {
     process.stderr.write(`Error: could not resolve the home directory for --user.\n`);
+    return 1;
+  }
+  if (scope.error) {
+    process.stderr.write(scope.error);
     return 1;
   }
 

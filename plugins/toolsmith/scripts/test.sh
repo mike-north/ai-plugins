@@ -43,7 +43,7 @@ write_registry() { # $1 = approvedSha256, $2 = status
       "purpose": "Read emoji reactions on a PR's review comments",
       "args": "<pr-number>",
       "scope": "repo (read-only)",
-      "covers": ["gh\\\\s+api\\\\b.*comments", "gh\\\\s+api\\\\b.*reactions"],
+      "covers": ["gh(_\\\\w+)?\\\\s+api\\\\b.*comments", "gh(_\\\\w+)?\\\\s+api\\\\b.*reactions", "gh(_\\\\w+)?\\\\s+graphql\\\\b.*orgs"],
       "status": "$2",
       "approvedSha256": "$1",
       "permissionRule": "Bash(scripts/agent-tools/gh-pr-reactions:*)"
@@ -102,6 +102,19 @@ assert_allow "watched but uncovered passes through" \
 
 assert_allow "non-watched command passes through" \
   "$(pre 'ls -la')"
+
+# --- wrapper binaries (e.g. gh_dotcom) must be caught by the watchlist too --
+# gh_dotcom (a common wrapper that pins gh to github.com) sails straight
+# through the un-fixed `gh\s+api\b` / `gh\s+graphql\b` watchlist patterns,
+# silently defeating the redirect — issue #36 bug 2.
+assert_deny "gh_dotcom api wrapper form redirects same as bare gh api" \
+  "$(pre 'gh_dotcom api repos/o/r/pulls/1/comments')" "gh-pr-reactions"
+assert_allow "gh_dotcom api wrapper form, watched but uncovered, passes through" \
+  "$(pre 'gh_dotcom api repos/o/r/issues')"
+assert_deny "gh_dotcom graphql wrapper form redirects when covered" \
+  "$(pre 'gh_dotcom graphql -f query=orgs')" "gh-pr-reactions"
+assert_deny "bare gh graphql still redirects when covered (no regression)" \
+  "$(pre 'gh graphql -f query=orgs')" "gh-pr-reactions"
 
 # --- Cursor host: same logic, different tool name + deny shape -----------
 assert_deny_cursor "cursor watched+covered redirects with {permission:deny}" \
@@ -234,6 +247,37 @@ assert_deny "user tool with an absent hash (draft) is blocked when invoked by ab
   "$(pre "$UTOOL")" "not yet approved"
 write_user_registry "$USHA" "approved"
 
+# --- $HOME-rooted session: CLAUDE_PROJECT_DIR IS the home directory --------
+# When a session's project root is $HOME, the "project" registry path
+# (<root>/.claude/toolsmith/registry.json) IS the user registry file. Before
+# the issue #36 fix, toolsmith-check.mjs ingested that file a second time as
+# project scope, mis-tagging every user-tool entry (their `path` is relative
+# to `<home>/.claude/toolsmith/`, not to `root`) — breaking both hash-pin
+# ("could not be read" on a perfectly valid approved tool) and redirect
+# (suggesting a bare `tools/<name>` path that can't match the user's absolute
+# `Bash(<abs>:*)` allowlist rule). No project registry.json exists at this
+# point in the run, matching the real-world repro (a session rooted at ~).
+pre_homeroot() { # $1 = command
+  jq -cn --arg cmd "$1" --arg cwd "$USERHOME" \
+    '{hook_event_name:"PreToolUse",tool_name:"Bash",cwd:$cwd,tool_input:{command:$cmd}}' \
+    | CLAUDE_PROJECT_DIR="$USERHOME" "$GATE"
+}
+
+assert_allow "\$HOME-rooted session: approved user tool invoked by absolute path is allowed" \
+  "$(pre_homeroot "$UTOOL")"
+
+HOMEROOT_DENY="$(pre_homeroot 'gh api repos/o/r/orgs')"
+assert_deny "\$HOME-rooted session: covered watched command is denied" \
+  "$HOMEROOT_DENY" "gh-user-tool"
+if printf '%s' "$HOMEROOT_DENY" | grep -qF "Run \`$UTOOL"; then ok; else
+  bad "\$HOME-rooted session redirect names the ABSOLUTE tool path" "$HOMEROOT_DENY"
+fi
+if printf '%s' "$HOMEROOT_DENY" | grep -qF 'Run `tools/gh-user-tool'; then
+  bad "\$HOME-rooted session redirect must not suggest the bare relative path" "$HOMEROOT_DENY"
+else
+  ok
+fi
+
 # --- project shadows a same-named user tool -------------------------------
 # A project tool with the SAME `name` as a user tool must govern BOTH
 # redirect and hash-pin; the user entry by that name is ignored while the
@@ -282,11 +326,14 @@ assert_allow "escape hatch disables the hook" \
 
 # --- config overrides ----------------------------------------------------
 cat >"$PROJ/.claude/toolsmith/config.json" <<'EOF'
-{ "watchlist": { "add": ["terraform\\s+(apply|destroy)"], "remove": ["(^|[|&;( ])gh\\s+api\\b"] } }
+{ "watchlist": { "add": ["terraform\\s+(apply|destroy)"], "remove": ["(^|[|&;( ])gh(_\\w+)?\\s+api\\b"] } }
 EOF
-# Give the tool a cover matching the custom pattern.
+# Give the tool a cover matching the custom pattern. The sed fallback
+# generically appends after the covers array's closing `],` (via a capture
+# group) rather than hardcoding the array's contents, so it stays correct
+# regardless of the exact `covers` patterns write_registry() writes.
 python3 - "$PROJ/.claude/toolsmith/registry.json" <<'PY' 2>/dev/null || \
-  sed -i.bak 's/"gh\\\\s+api\\\\b.*reactions"/"gh\\\\s+api\\\\b.*reactions", "terraform\\\\s+apply"/' "$PROJ/.claude/toolsmith/registry.json"
+  sed -i.bak -E 's/^(      "covers": \[.*)\],$/\1, "terraform\\\\s+apply"],/' "$PROJ/.claude/toolsmith/registry.json"
 import json,sys
 p=sys.argv[1]
 d=json.load(open(p))

@@ -57,6 +57,18 @@ deterministic tool only ever pins `status`, `approvedSha256`, and
 `permissionRule`; it refuses to run against a path with no existing registry
 entry rather than inventing the rest.
 
+**Author `covers` for wrapper binaries too.** A `covers` pattern is tested
+against the raw command string, same as a `watchlist` pattern — it does not
+automatically account for wrapper/alias binaries that shell out to the real
+command (e.g. `gh_dotcom`, a common wrapper that pins `gh` to github.com). If
+the watchlist matches a wrapper form but a tool's `covers` pattern only
+matches the bare command name, a watched-and-otherwise-covered command
+silently falls through as "uncovered" when invoked via the wrapper. Follow the
+shipped defaults' convention — the regex `gh(_\w+)?\s+api\b` rather than
+`gh\s+api\b` — for any command family with known wrapper binaries. Note that
+`covers` values live in JSON, where every regex backslash must be doubled:
+the entry is written `"gh(_\\w+)?\\s+api\\b"`.
+
 ## Project vs. user scope — the shared contract
 
 Both the PreToolUse hook and `toolsmith-approve.mjs` agree on this table:
