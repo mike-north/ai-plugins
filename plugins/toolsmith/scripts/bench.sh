@@ -26,12 +26,23 @@
 # schedulers. Run it locally when evaluating a change to the PreToolUse
 # hot path or re-litigating the #34 adapter decision for it.
 set -u
+# pipefail so a failure in ANY stage of a timed pipeline (payload printf,
+# adapter, gate) surfaces as a nonzero status run_case can catch — without it
+# a crashed earlier stage is masked by the last stage's exit 0 and the crash
+# gets benchmarked as a (meaninglessly fast) sample.
+set -o pipefail
 cd "$(dirname "$0")" || exit 1
 GATE="$PWD/toolsmith-gate.sh"
 ADAPTER="$PWD/../hooks/payload-adapter"
 
 command -v jq >/dev/null 2>&1 || { echo "SKIP: jq not installed"; exit 0; }
 command -v node >/dev/null 2>&1 || { echo "SKIP: node not installed"; exit 0; }
+# now_ns() needs python3 only on systems whose date lacks %N (historical BSD
+# date) — probe once up front so that combination SKIPs cleanly like the
+# guards above, instead of failing mid-run inside awk.
+case "$(date +%s%N)" in
+  *N) command -v python3 >/dev/null 2>&1 || { echo "SKIP: date has no %N and python3 is not installed"; exit 0; } ;;
+esac
 
 ITERATIONS="${1:-50}"
 WARMUP=10
@@ -99,7 +110,10 @@ payload() { # $1 = command
 
 # --- pipelines under test ---------------------------------------------------
 noop_fork()      { cat >/dev/null; }                # bare fork/exec + pipe, no bash script
-noop_bash()      { /bin/bash -c ': '; }              # + bash interpreter startup, no script parse
+# Drains stdin with the `read` builtin (no extra fork) so this floor case
+# consumes its pipe like every other pipeline under test — leaving stdin
+# unread would SIGPIPE the payload printf under pipefail.
+noop_bash()      { /bin/bash -c 'read -r -d "" _ || :'; } # + bash interpreter startup, no script parse
 run_gate()       { "$GATE"; }
 run_with_adapter() { "$ADAPTER" | "$GATE"; }
 
@@ -114,15 +128,23 @@ run_with_adapter() { "$ADAPTER" | "$GATE"; }
 run_case() { # $1 = command to feed as the PreToolUse payload  $2.. = pipeline
   local cmd="$1"; shift
   local p; p=$(payload "$cmd")
-  local i start end
+  local i start end status
   for ((i = 0; i < WARMUP; i++)); do
-    printf '%s' "$p" | "$@" >/dev/null 2>&1
+    printf '%s' "$p" | "$@" >/dev/null 2>&1 || {
+      echo "ERROR: pipeline '$*' exited $? during warmup — a crashing pipeline must fail the benchmark, not get timed" >&2
+      exit 1
+    }
   done
   : >"$SAMPLES_FILE"
   for ((i = 0; i < ITERATIONS; i++)); do
     start=$(now_ns)
     printf '%s' "$p" | "$@" >/dev/null 2>&1
+    status=$?
     end=$(now_ns)
+    if [ "$status" -ne 0 ]; then
+      echo "ERROR: pipeline '$*' exited $status on timed run $((i + 1)) — refusing to record samples from a failing pipeline" >&2
+      exit 1
+    fi
     awk -v s="$start" -v e="$end" 'BEGIN { printf "%.3f\n", (e - s) / 1000000 }' >>"$SAMPLES_FILE"
   done
 }
