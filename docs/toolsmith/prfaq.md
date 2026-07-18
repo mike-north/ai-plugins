@@ -27,7 +27,7 @@ Toolsmith is designed for a single power user and their fleet of agents. It inte
 ## FAQ
 
 **Q: Why not just block dangerous commands outright?**
-Because occasional exotic use is legitimate — flipping a branch-protection rule once is not worth a dedicated tool. Blocking punishes the long tail; surfacing cost lets the agent route the recurring head into forged tools while the tail stays on the (appropriate) human-approval path. Blocking is reserved for redirects, where a forged tool demonstrably covers the pattern.
+Because occasional exotic use is legitimate — flipping a branch-protection rule once is not worth a dedicated tool. Blocking punishes the long tail; surfacing cost lets the agent route the recurring head into forged tools while the tail stays on the (appropriate) human-approval path. *Hard* blocking is reserved for redirects, where a forged tool demonstrably covers the pattern. A command you've marked `ask` that no tool covers gets a *soft* block instead — a `deny` the agent can override with a deliberate `# toolsmith:proceed` marker that falls back to your normal approval — so the nudge toward forging lands without stranding a genuine one-off, and a truly novel command is never blocked at all.
 
 **Q: What stops an agent from approving its own tools, or editing a tool after approval?**
 Two mechanisms. Signing requires a human physical action (YubiKey tap / 1Password unlock) via vaultkeeper — the private key is never available to the agent. And approval binds to the content hash: any modification invalidates the signature, and the PreToolUse hook verifies the resolved script's hash on every invocation, so PATH shadowing and post-hoc edits both fail closed to the normal ask flow.

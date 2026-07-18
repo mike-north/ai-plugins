@@ -54,11 +54,21 @@ invocation; its *gap* leg is what #42 doesn't yet answer: partial coverage.
   otherwise this is a legitimate one-off, and a request to teach `<tool>` about `<the extra>` has been
   queued."* The human approves the raw one-off on its own merits; the agent may take the substitute
   immediately if the extra capability wasn't actually essential to the task at hand.
-- **No cover / novel**: passthrough (today's behavior), or the steering layer's cost-surfacing
-  advisory (#40) when the command matches the harness's `ask` set but no tool's `covers`. Never
-  blocked — `prfaq.md:30` is explicit that "blocking is reserved for redirects, where a forged tool
-  demonstrably covers the pattern," and `product-framing-and-principles.md:54` frames the alternative
-  as surfacing cost, not gating it.
+- **No cover**: two sub-cases. A **genuinely novel** command — not in the harness `ask` set, nothing
+  the user's own config flagged as approval-worthy — passes straight through, untouched (today's
+  behavior). A command that **matches the `ask` set but no tool's `covers`** gets a **soft block**:
+  the hook returns `deny` with a reason that surfaces the cost ("this needs human approval every time;
+  no forged tool covers it"), points at `/toolsmith` to forge one, and warns against circumventing the
+  permission config by other means. The agent is not stranded — a deliberate one-off re-run carrying a
+  trailing `# toolsmith:proceed` marker makes the hook **defer** (emit no decision), so the command
+  falls through to the harness's own `ask` and the human approves it as normal. The marker lifts only
+  *toolsmith's* block; the hook still never emits `allow`, and the human's approval is untouched
+  (§ safety invariant 7). This is a deliberate **refinement** of the earlier "surface cost, don't
+  block" framing (`product-framing-and-principles.md:54`, `prfaq.md:30`): the soft block fires **only**
+  on commands the user's own config already marks approval-worthy, never on novel uses — so the
+  long-tail-friendly spirit of "blocking punishes the long tail" is preserved while the recurring head
+  is pushed toward a forged tool. This is the #40 cost-surfacing layer; #37 owns its fuller ask-set
+  resolution precedence, fatigue policy, and log schema.
 
 ## Tier 1 — deterministic template (in-hook, fast)
 
@@ -181,3 +191,9 @@ Each is written to be independently testable:
    coder-grade model is confined to the async evolution dispatch, off the permission path entirely.**
    This keeps the synchronous piece — the only piece #38's latency budget governs — cheap and fast,
    while the expensive reasoning happens where latency doesn't matter.
+7. **The no-cover soft block never becomes a circumvention.** The `# toolsmith:proceed` escape hatch
+   only makes the hook *defer*; the hook never emits `allow` on that path, and because the marker is a
+   trailing comment it leaves the command's leading tokens unchanged, so the harness's own permission
+   matcher still classifies the command as `ask` and still prompts the human. A test asserts that a
+   marked command yields no `allow` from the hook and that the human-approval prompt is preserved — the
+   marker can lift toolsmith's block but can never approve a command on the human's behalf.

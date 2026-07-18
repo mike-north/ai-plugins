@@ -51,7 +51,7 @@ One shows autonomy earned through verification; the other shows authority delega
 
 ## Steering principles for the hooks
 
-- **Surface cost; don't block** raw dangerous commands. Cost = "requires per-invocation human approval" (derived from the harness permission config: anything set to `ask`) + pattern density from the log.
+- **Surface cost; soft-block, never hard-block** raw dangerous commands. A genuinely novel command passes through untouched; a command in the `ask` set that no forged tool covers gets a *soft* block — a `deny` that surfaces the cost and points at `/toolsmith`, which the agent can override for a deliberate one-off with a trailing `# toolsmith:proceed` marker (falling back to the harness's own `ask`). The soft block fires only on commands the config already marks approval-worthy, so it never punishes the long tail. Cost = "requires per-invocation human approval" (derived from the harness permission config: anything set to `ask`) + pattern density from the log. See [steering & gap-adjudication](./steering-adjudication.md) for the exact mechanism.
 - **Redirect only on high confidence**, using detection patterns authored by the curator and approved alongside the tool they point to.
 - **Log everything into the telemetry triangle**: invocations + outputs (post-hook), redirects and asks (pre-hook). Redirect volume is a *semantic activation* defect signal, not a success metric — the goal is agents finding the tool first.
 - **The moment stays unblocked.** A human may approve one raw invocation while the forge proceeds in the background; incident response never waits on tool-building.
