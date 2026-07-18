@@ -74,12 +74,16 @@ const TOON_STAGE_RE = /(^|[|&;(])\s*(\S*\/)?toon(-pipe)?(\s|$)/;
 
 /**
  * Detect Codex among non-Cursor hosts. Codex PreToolUse/PostToolUse payloads
- * carry `turn_id` and `model` (Claude Code payloads carry neither); mirrors
- * hooks/payload-adapter's detection convention, with `CODEX_HOME` in this
- * process's own env as a weaker secondary signal when both fields are absent.
+ * carry the keys `turn_id` and `model` (Claude Code payloads carry neither).
+ * Checked by **key presence**, mirroring hooks/payload-adapter's convention:
+ * a present-but-null or non-string value must still count as Codex, because
+ * the failure asymmetry is one-sided — a false positive merely skips the TOON
+ * optimization on that call, while a false negative reintroduces the Codex
+ * contract breakage this guards against. `CODEX_HOME` in this process's own
+ * env is a weaker secondary signal when neither key is present.
  */
 function isCodex(input) {
-  if (typeof input.turn_id === "string" || typeof input.model === "string") {
+  if ("turn_id" in input || "model" in input) {
     return true;
   }
   return Boolean(process.env.CODEX_HOME);

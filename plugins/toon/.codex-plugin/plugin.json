@@ -1,7 +1,7 @@
 {
   "name": "toon",
   "version": "0.2.1",
-  "description": "Deterministic hook pair that routes JSON-emitting Bash commands through the TOON encoder (~40-60% fewer tokens). PreToolUse appends a safe toon-pipe wrapper as the final stage of high-confidence commands; PostToolUse parses actual output as ground truth, replaces it with TOON, and teaches a shared registry so detection improves over time.",
+  "description": "On Codex, learns the signatures of JSON-emitting Bash commands into a shared registry that sharpens TOON detection on other hosts. Codex's hook contract supports neither the pre-tool command rewrite nor the post-tool output replacement the plugin uses elsewhere, so no TOON conversion happens on Codex itself (the ~40-60% token savings apply on Claude Code).",
   "author": {
     "name": "Mike North"
   },
@@ -9,12 +9,10 @@
   "hooks": "./hooks/codex.json",
   "interface": {
     "displayName": "TOON JSON Pipe",
-    "shortDescription": "Auto-route JSON-emitting Bash commands through the TOON encoder (~40-60% fewer tokens).",
+    "shortDescription": "On Codex, learns JSON-emitting Bash command signatures into a shared registry (TOON conversion itself runs on Claude Code, not Codex).",
     "category": "developer-tools",
     "capabilities": [
-      "Rewrites high-confidence JSON commands to pipe through toon at the source",
-      "Converts confirmed JSON tool output to TOON after the fact",
-      "Learns JSON-emitting command signatures in a shared registry"
+      "Learns JSON-emitting command signatures into a shared registry, sharpening TOON detection on other hosts"
     ]
   }
 }
