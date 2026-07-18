@@ -13,6 +13,13 @@
 # commands it wrongly skips. Correctness wins over the ~90ms node startup for a
 # project that asked for this. toolsmith-check.mjs makes the precise decision
 # (executable-position invocation, sha256, effective watchlist, covers).
+#
+# Measured in scripts/bench.sh (#38): the not-opted-in exit above stays a few
+# ms above bare fork/exec overhead, while piping hooks/payload-adapter (#34)
+# in front of this script roughly doubles that cost for every Bash call in
+# every project, including ones that never opted into toolsmith. Adapter
+# adoption was declined for this hot path on that basis; see #38 for the
+# numbers and #34 for the scoped exception this carves out.
 [ "${CLAUDE_TOOLSMITH_HOOK:-}" = "off" ] && exit 0
 
 dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

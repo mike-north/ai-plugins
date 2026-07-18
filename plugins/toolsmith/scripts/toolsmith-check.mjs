@@ -67,6 +67,18 @@ function main() {
   // so we still need to detect it and emit Cursor's own deny contract for
   // those installs. Keep this branch until pre-shim installs are plausibly
   // gone.
+  //
+  // This IS the kind of hand-rolled Shell/Bash harness-detection branching
+  // #34 wants handlers to stop doing in favor of payload-adapter's normalized
+  // `harness.name`/`is_subagent` fields. It is a deliberate, benchmarked
+  // exception for the PreToolUse Bash hot path specifically: #38 measured
+  // that piping the adapter (sh + jq) ahead of toolsmith-gate.sh roughly
+  // doubles the cost of the not-opted-in no-op path (the one path whose
+  // entire reason for existing is that it's ~free for shells that never
+  // opted into toolsmith), so adoption was declined here and #34 was updated
+  // to scope its criterion around this exception rather than re-litigate it
+  // per PR. The PostToolUse logger and dream's Stop hook are not on a hot
+  // path and are unaffected — see #38.
   const isCursor = input.tool_name === 'Shell';
 
   const command = input.tool_input?.command;
