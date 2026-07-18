@@ -69,6 +69,27 @@ assert_cursor_rewrite() { # rewrite via Cursor's updated_input envelope
   if [[ "$newcmd" == "set -o pipefail; "*" | "*"/toon-pipe" ]]; then ok; else bad "$1" "$out"; fi
 }
 
+# --- Codex host (hook_event_name present; identified by turn_id/model fields,
+# or CODEX_HOME env as a secondary signal — regression guard for the bug where
+# Codex was lumped in with Claude and got a bare `updatedInput` it rejects) ----
+codex_pre() { # Codex-shaped PreToolUse payload — turn_id/model fields present
+  jq -cn --arg cmd "$1" \
+    '{hook_event_name:"PreToolUse",tool_name:"Bash",turn_id:"t1",model:"gpt-5-codex",tool_input:{command:$cmd}}' \
+    | ./toon-gate.sh
+}
+
+codex_pre_env() { # Codex-shaped PreToolUse payload — no turn_id/model, CODEX_HOME env only
+  jq -cn --arg cmd "$1" \
+    '{hook_event_name:"PreToolUse",tool_name:"Bash",tool_input:{command:$cmd}}' \
+    | CODEX_HOME=/fake/codex-home ./toon-gate.sh
+}
+
+codex_post() { # Codex-shaped PostToolUse payload — turn_id/model fields present
+  jq -cn --arg cmd "$1" --arg out "$2" \
+    '{hook_event_name:"PostToolUse",tool_name:"Bash",turn_id:"t1",model:"gpt-5-codex",tool_input:{command:$cmd},tool_response:{stdout:$out,stderr:"",interrupted:false,isImage:false}}' \
+    | ./toon-gate.sh
+}
+
 BIG_JSON=$(jq -cn '[range(30) | {id:., name:("item-"+tostring), state:"open"}]')
 
 # --- PreToolUse: positive signals -------------------------------------------
@@ -157,6 +178,25 @@ assert_noop "cursor pre: jq -r raw"          "$(cursor_pre 'gh api x | jq -r ".n
 assert_noop "cursor pre: already toon-piped" "$(cursor_pre 'set -o pipefail; gh api x | /p/toon-pipe')"
 # Post: Cursor cannot replace Shell output → always a no-op, even for big JSON.
 assert_noop "cursor post: big JSON no-op"    "$(cursor_post 'gh api user/repos' "$BIG_JSON")"
+
+# --- Codex host -----------------------------------------------------------------
+# Pre: Codex rejects a bare `updatedInput` (requires permissionDecision:"allow",
+# which we won't emit — it would auto-approve non-allowlisted commands). Both
+# detection signals must suppress the rewrite; the same command with neither
+# signal present must still rewrite (control, proves this is host-gated, not a
+# broken JSON-signal check).
+assert_noop "codex pre (turn_id/model): no rewrite" "$(codex_pre 'gh api codex/test1 --json x')"
+assert_noop "codex pre (CODEX_HOME env): no rewrite" "$(codex_pre_env 'gh api codex/test2 --json x')"
+assert_rewrite "codex signal absent: control still rewrites" "$(pre 'gh api codex/test3 --json x')"
+
+# Post: Codex has no supported field for replacing Bash output (`updatedToolOutput`
+# is parsed but not implemented) — must emit nothing, but registry learning (a
+# local file write, independent of the wire contract) must still happen.
+count_before=$(jq -r '[.[] | select(.sig == "gh api") | .count] | first // 0' "$TOON_HOOK_REGISTRY" 2>/dev/null)
+out=$(codex_post 'gh api codex/postcmd' "$BIG_JSON")
+assert_noop "codex post: no emit (unsupported updatedToolOutput field)" "$out"
+count_after=$(jq -r '[.[] | select(.sig == "gh api") | .count] | first // 0' "$TOON_HOOK_REGISTRY" 2>/dev/null)
+if [[ "$count_after" == "$((count_before + 1))" ]]; then ok; else bad "codex post: still learns despite no emit" "before=$count_before after=$count_after ($(cat "$TOON_HOOK_REGISTRY" 2>/dev/null))"; fi
 
 # --- Non-shell tool → gate skips before spawning node -------------------------
 out=$(jq -cn '{hook_event_name:"PreToolUse",tool_name:"Read",tool_input:{command:"gh pr list --json x"}}' | ./toon-gate.sh)
