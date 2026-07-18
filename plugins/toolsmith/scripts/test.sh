@@ -59,18 +59,13 @@ pre() { # $1 = command
     '{hook_event_name:"PreToolUse",tool_name:"Bash",cwd:$cwd,tool_input:{command:$cmd}}' \
     | "$GATE"
 }
-# Append a `covers` pattern (plain string, no regex metacharacters needed) to
-# a registry's first tool entry. Used by the config-layering tests below,
-# which use simple literal watch tokens (no backslash escaping headaches).
+# Append a `covers` pattern to a registry's first tool entry. Used by the
+# config-layering tests below, which use simple literal watch tokens. jq is
+# already a hard requirement of this suite, and --arg passes the pattern as
+# data (no string interpolation into the edit).
 add_cover() { # $1 = registry path, $2 = pattern to append
-  python3 - "$1" "$2" <<'PY' 2>/dev/null || \
-    sed -i.bak -E "s/^(      \"covers\": \[.*)\],\$/\1, \"$2\"],/" "$1"
-import json,sys
-p=sys.argv[1]; c=sys.argv[2]
-d=json.load(open(p))
-d["tools"][0]["covers"].append(c)
-json.dump(d,open(p,"w"))
-PY
+  local tmp="$1.tmp.$$"
+  jq --arg c "$2" '.tools[0].covers += [$c]' "$1" >"$tmp" && mv "$tmp" "$1"
 }
 post() { # $1 = command, $2 = exitCode
   jq -cn --arg cmd "$1" --arg cwd "$PROJ" --argjson ec "${2:-0}" \

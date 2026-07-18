@@ -355,11 +355,17 @@ function effectiveWatchlist(userConfig, projectConfig) {
   return patterns.map((p) => toRegExp(p, 'm')).filter(Boolean);
 }
 
-/** Apply one config layer's `remove` (verbatim match against patterns so far) then `add`. */
+/**
+ * Apply one config layer's `remove` (verbatim match against patterns so far)
+ * then union in its `add`: non-string entries are dropped and duplicates of a
+ * pattern already present are not re-added, preserving insertion order.
+ */
 function applyWatchlistLayer(patterns, config) {
   const remove = new Set(Array.isArray(config?.watchlist?.remove) ? config.watchlist.remove : []);
-  const add = Array.isArray(config?.watchlist?.add) ? config.watchlist.add : [];
-  return [...patterns.filter((p) => !remove.has(p)), ...add];
+  const add = Array.isArray(config?.watchlist?.add)
+    ? config.watchlist.add.filter((p) => typeof p === 'string')
+    : [];
+  return [...new Set([...patterns.filter((p) => !remove.has(p)), ...add])];
 }
 
 function projectRoot(input) {
