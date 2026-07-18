@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "homelab",
+  "version": "0.0.1",
+  "description": "Homelab ops for Unraid, UniFi Network, and Home Assistant: MCP servers for all three plus skills for Unraid control (including web-UI-hang diagnosis), macOS-on-KVM VM gotchas, and homelab networking (Tailscale split DNS/subnet routing, step-ca cert renewal).",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["homelab", "unraid", "unifi", "home-assistant", "mcp", "self-hosted", "vm", "tailscale"],
+  "skills": ["./skills/unraid-control", "./skills/homelab-macos-vms", "./skills/homelab-networking"],
+  "mcpServers": "./.mcp.json"
+}

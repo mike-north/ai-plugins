@@ -111,6 +111,21 @@
       ]
     },
     {
+      "name": "homelab",
+      "source": "./plugins/homelab",
+      "description": "Homelab ops for Unraid, UniFi Network, and Home Assistant: MCP servers for all three plus skills for Unraid control (including web-UI-hang diagnosis), macOS-on-KVM VM gotchas, and homelab networking (Tailscale split DNS/subnet routing, step-ca cert renewal).",
+      "tags": [
+        "homelab",
+        "unraid",
+        "unifi",
+        "home-assistant",
+        "mcp",
+        "self-hosted",
+        "vm",
+        "tailscale"
+      ]
+    },
+    {
       "name": "liaison",
       "source": "./plugins/liaison",
       "description": "Arrange a briefed, two-way voice conversation between a human and an AI session, then bring structured findings back into the agent's workstream — the agent syncs the docs, frames the talk for voice, and seeds a chat to continue on mobile. Powered by aichatctl.",

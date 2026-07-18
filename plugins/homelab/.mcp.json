@@ -1,0 +1,45 @@
+{
+  "mcpServers": {
+    "unifi-network": {
+      "command": "uvx",
+      "args": ["unifi-network-mcp@latest"],
+      "env": {
+        "UNIFI_NETWORK_HOST": "${UNIFI_NETWORK_HOST}",
+        "UNIFI_NETWORK_USERNAME": "${UNIFI_NETWORK_USERNAME}",
+        "UNIFI_NETWORK_PASSWORD": "${UNIFI_NETWORK_PASSWORD}"
+      }
+    },
+    "home-assistant": {
+      "command": "mcp-proxy",
+      "args": ["--transport=streamablehttp", "--stateless", "${HOMEASSISTANT_URL}"],
+      "env": {
+        "API_ACCESS_TOKEN": "${HOMEASSISTANT_API_TOKEN}"
+      }
+    },
+    "unraid": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "MCP_TRANSPORT=stdio",
+        "-e",
+        "MCP_READ_ONLY",
+        "-e",
+        "UNRAID_API_URL",
+        "-e",
+        "UNRAID_API_KEY",
+        "-e",
+        "UNRAID_TLS_SKIP_VERIFY",
+        "docker.io/mikenorth/unraid-mcp:latest"
+      ],
+      "env": {
+        "MCP_READ_ONLY": "${MCP_READ_ONLY:-true}",
+        "UNRAID_API_URL": "${UNRAID_API_URL}",
+        "UNRAID_API_KEY": "${UNRAID_API_KEY}",
+        "UNRAID_TLS_SKIP_VERIFY": "${UNRAID_TLS_SKIP_VERIFY:-false}"
+      }
+    }
+  }
+}
