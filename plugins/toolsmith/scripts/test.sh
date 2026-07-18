@@ -59,6 +59,19 @@ pre() { # $1 = command
     '{hook_event_name:"PreToolUse",tool_name:"Bash",cwd:$cwd,tool_input:{command:$cmd}}' \
     | "$GATE"
 }
+# Append a `covers` pattern (plain string, no regex metacharacters needed) to
+# a registry's first tool entry. Used by the config-layering tests below,
+# which use simple literal watch tokens (no backslash escaping headaches).
+add_cover() { # $1 = registry path, $2 = pattern to append
+  python3 - "$1" "$2" <<'PY' 2>/dev/null || \
+    sed -i.bak -E "s/^(      \"covers\": \[.*)\],\$/\1, \"$2\"],/" "$1"
+import json,sys
+p=sys.argv[1]; c=sys.argv[2]
+d=json.load(open(p))
+d["tools"][0]["covers"].append(c)
+json.dump(d,open(p,"w"))
+PY
+}
 post() { # $1 = command, $2 = exitCode
   jq -cn --arg cmd "$1" --arg cwd "$PROJ" --argjson ec "${2:-0}" \
     '{hook_event_name:"PostToolUse",tool_name:"Bash",cwd:$cwd,tool_input:{command:$cmd},tool_response:{stdout:"",stderr:"",exitCode:$ec}}' \
@@ -350,6 +363,87 @@ assert_allow "config-removed default pattern no longer redirects" \
   "$(pre 'gh api repos/o/r/pulls/1/comments')"
 rm -f "$PROJ/.claude/toolsmith/config.json" "$PROJ/.claude/toolsmith/registry.json.bak"
 write_registry "$SHA" "approved"
+
+# --- user-global watchlist layer (issue #68) ------------------------------
+# ~/.claude/toolsmith/config.json now participates in effectiveWatchlist(),
+# layered broad->specific: shipped defaults -> user config -> project config.
+rm -f "$PROJ/.claude/toolsmith/config.json" "$USERHOME/.claude/toolsmith/config.json"
+
+# 1. user-add-in-bare-project: a project with NO config.json still honors a
+#    user-scope watchlist.add — this is the case that regresses without the
+#    fix (the pre-fix hook never reads ~/.claude/toolsmith/config.json at
+#    all, so the command would pass straight through).
+cat >"$USERHOME/.claude/toolsmith/config.json" <<'EOF'
+{ "watchlist": { "add": ["zzuseraddwatch"] } }
+EOF
+add_cover "$PROJ/.claude/toolsmith/registry.json" "zzuseraddwatch"
+assert_deny "user-add-in-bare-project: user-scope watchlist.add redirects with no project config" \
+  "$(pre 'echo zzuseraddwatch')" "gh-pr-reactions"
+rm -f "$USERHOME/.claude/toolsmith/config.json"
+
+# 2. merge-precedence: user adds A, project adds B and removes A. Effective
+#    watchlist must contain B, not A, and still carry an untouched default.
+cat >"$USERHOME/.claude/toolsmith/config.json" <<'EOF'
+{ "watchlist": { "add": ["zzmergeA"] } }
+EOF
+cat >"$PROJ/.claude/toolsmith/config.json" <<'EOF'
+{ "watchlist": { "add": ["zzmergeB"], "remove": ["zzmergeA"] } }
+EOF
+add_cover "$PROJ/.claude/toolsmith/registry.json" "zzmergeA"
+add_cover "$PROJ/.claude/toolsmith/registry.json" "zzmergeB"
+assert_deny "merge-precedence: project's add (B) redirects" \
+  "$(pre 'echo zzmergeB')" "gh-pr-reactions"
+assert_allow "merge-precedence: project's remove drops the user's add (A)" \
+  "$(pre 'echo zzmergeA')"
+assert_deny "merge-precedence: an untouched shipped default is still watched" \
+  "$(pre 'gh api repos/o/r/pulls/1/comments')" "gh-pr-reactions"
+rm -f "$USERHOME/.claude/toolsmith/config.json" "$PROJ/.claude/toolsmith/config.json"
+write_registry "$SHA" "approved"
+
+# 3. user-remove-drops-default: a user-scope remove drops a shipped default
+#    globally (no project config re-adding it).
+cat >"$USERHOME/.claude/toolsmith/config.json" <<'EOF'
+{ "watchlist": { "remove": ["(^|[|&;( ])gh(_\\w+)?\\s+api\\b"] } }
+EOF
+assert_allow "user-remove-drops-default: user-scope remove drops a shipped default" \
+  "$(pre 'gh api repos/o/r/pulls/1/comments')"
+assert_deny "user-remove-drops-default: an untouched shipped default is unaffected" \
+  "$(pre 'gh graphql -f query=orgs')" "gh-pr-reactions"
+rm -f "$USERHOME/.claude/toolsmith/config.json"
+
+# 4. no-user-config-noop: with no user config present, behavior is identical
+#    to today (defaults +/- project config only).
+cat >"$PROJ/.claude/toolsmith/config.json" <<'EOF'
+{ "watchlist": { "add": ["zznoopadd"], "remove": ["(^|[|&;( ])kubectl\\s+"] } }
+EOF
+add_cover "$PROJ/.claude/toolsmith/registry.json" "zznoopadd"
+assert_deny "no-user-config-noop: project add still redirects with no user config" \
+  "$(pre 'echo zznoopadd')" "gh-pr-reactions"
+assert_allow "no-user-config-noop: project remove still drops a default with no user config" \
+  "$(pre 'kubectl get pods')"
+assert_deny "no-user-config-noop: an untouched shipped default is unaffected" \
+  "$(pre 'gh api repos/o/r/pulls/1/comments')" "gh-pr-reactions"
+rm -f "$PROJ/.claude/toolsmith/config.json" "$PROJ/.claude/toolsmith/registry.json.bak"
+write_registry "$SHA" "approved"
+
+# 5. home-rooted-no-double-apply: when the session root IS $HOME, the
+#    "project" config.json path and the user config.json path resolve to the
+#    SAME file (mirrors the registry's projectIsUserRegistry guard, issue
+#    #36). It must be applied once, not twice: a user add still redirects
+#    (proving the layer is actually applied) and the hook emits exactly one
+#    well-formed deny — not a doubled/duplicated result.
+write_user_registry "$USHA" "approved"
+cat >"$USERHOME/.claude/toolsmith/config.json" <<'EOF'
+{ "watchlist": { "add": ["zzhomeadd"] } }
+EOF
+add_cover "$USERHOME/.claude/toolsmith/registry.json" "zzhomeadd"
+HOMEROOT_LAYER_DENY="$(pre_homeroot 'echo zzhomeadd')"
+assert_deny "home-rooted-no-double-apply: user config (== project config here) redirects" \
+  "$HOMEROOT_LAYER_DENY" "gh-user-tool"
+if printf '%s' "$HOMEROOT_LAYER_DENY" | jq -e . >/dev/null 2>&1; then ok; else
+  bad "home-rooted-no-double-apply: output must be a single well-formed JSON object" "$HOMEROOT_LAYER_DENY"
+fi
+rm -f "$USERHOME/.claude/toolsmith/config.json" "$USERHOME/.claude/toolsmith/registry.json"
 
 # --- PostToolUse: logging + rotation ------------------------------------
 rm -f "$PROJ/.claude/toolsmith/history.jsonl"
