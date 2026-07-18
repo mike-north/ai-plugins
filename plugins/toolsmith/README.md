@@ -140,6 +140,9 @@ Under `~/.claude/toolsmith/` (same registry schema):
 
 - `registry.json` — the user's global tools and their approval state (not
   committed).
+- `config.json` — optional watchlist overrides that apply to every project
+  (layered under a project's own `config.json`; see
+  `skills/toolsmith/references/registry-schema.md`).
 - `tools/<name>` — the global scripts themselves.
 
 Global scripts are approved via `/toolsmith:approve <name>` (which runs

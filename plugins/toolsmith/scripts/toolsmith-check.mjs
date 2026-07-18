@@ -135,8 +135,17 @@ function main() {
   }
 
   // Step 2 — redirect. Only meaningful if the command is watched.
-  const config = readJson(join(root, '.claude', 'toolsmith', 'config.json'));
-  const watchlist = effectiveWatchlist(config);
+  const projectConfigPath = join(root, '.claude', 'toolsmith', 'config.json');
+  const userConfigPath = userToolsDir ? join(userToolsDir, 'config.json') : null;
+  // Same $HOME-rooted-session conflation as the registry (issue #36): when the
+  // project root IS the home dir, the user and project config files are the
+  // same file. Reading it as both layers would apply its `add`/`remove`
+  // twice, which is a no-op for `add` (union) but is exactly the kind of
+  // double-application the acceptance criteria call out — so read it once.
+  const projectIsUserConfig = Boolean(userConfigPath) && sameFile(projectConfigPath, userConfigPath);
+  const userConfig = !projectIsUserConfig && userConfigPath ? readJson(userConfigPath) : null;
+  const projectConfig = readJson(projectConfigPath);
+  const watchlist = effectiveWatchlist(userConfig, projectConfig);
   if (!watchlist.some((re) => safeTest(re, command))) return;
 
   for (const tool of tools) {
@@ -324,20 +333,39 @@ function hashDenial(tool) {
   return null;
 }
 
-/** Effective watchlist regexes = shipped defaults − config.remove + config.add. */
-function effectiveWatchlist(config) {
+/**
+ * Effective watchlist = shipped defaults, then the user-scope config, then the
+ * project-scope config, applied broad→specific: at each layer, `add` unions
+ * in new patterns and `remove` subtracts a pattern present so far (a default,
+ * or an `add` from a broader layer already applied) — so a project `remove`
+ * can drop a pattern the user config just added, and a user `remove` can drop
+ * a shipped default for every project.
+ */
+function effectiveWatchlist(userConfig, projectConfig) {
   const defaults = readJson(DEFAULT_WATCHLIST_PATH);
   const defaultPatterns = Array.isArray(defaults?.watchlist)
     ? defaults.watchlist.map((e) => e.pattern).filter((p) => typeof p === 'string')
     : [];
-  const remove = new Set(
-    Array.isArray(config?.watchlist?.remove) ? config.watchlist.remove : [],
-  );
-  const add = Array.isArray(config?.watchlist?.add) ? config.watchlist.add : [];
-  const patterns = [...defaultPatterns.filter((p) => !remove.has(p)), ...add];
+  let patterns = defaultPatterns;
+  for (const config of [userConfig, projectConfig]) {
+    patterns = applyWatchlistLayer(patterns, config);
+  }
   // Multiline so a `^`-anchored pattern still matches a watched command that
   // appears on a later line of a multi-line command string.
   return patterns.map((p) => toRegExp(p, 'm')).filter(Boolean);
+}
+
+/**
+ * Apply one config layer's `remove` (verbatim match against patterns so far)
+ * then union in its `add`: non-string entries are dropped and duplicates of a
+ * pattern already present are not re-added, preserving insertion order.
+ */
+function applyWatchlistLayer(patterns, config) {
+  const remove = new Set(Array.isArray(config?.watchlist?.remove) ? config.watchlist.remove : []);
+  const add = Array.isArray(config?.watchlist?.add)
+    ? config.watchlist.add.filter((p) => typeof p === 'string')
+    : [];
+  return [...new Set([...patterns.filter((p) => !remove.has(p)), ...add])];
 }
 
 function projectRoot(input) {
