@@ -90,10 +90,31 @@ its first path segment is exactly `tools`, so it can only resolve inside
 fully-expanded absolute path (what `/toolsmith:approve` prints) so the
 `Bash(<ABS>:*)` rule matches deterministically.
 
-## `config.json` (optional)
+## `config.json` (optional, layered like the registry)
 
-Overrides the shipped default watchlist. `remove` strings must match a default
-`pattern` verbatim (see `watchlist-defaults.json`).
+Overrides the shipped default watchlist. Like the registry, `config.json`
+exists at both scopes and is merged **broad → specific**:
+
+```
+shipped defaults  ->  user config (~/.claude/toolsmith/config.json)  ->  project config (<projectRoot>/.claude/toolsmith/config.json)
+```
+
+At each layer, `watchlist.add` unions in new patterns and `watchlist.remove`
+subtracts a pattern already present at that point in the merge — a shipped
+default, or an `add` from a broader layer already applied. This means:
+
+- A pattern in the **user** config's `add` is watched in every project,
+  including one with no `config.json` of its own at all.
+- A **project** `remove` can drop a pattern the **user** config just added
+  (project wins on conflict), and a project `add` still applies even when the
+  user layer added nothing.
+- A **user** `remove` can drop a shipped default globally, for every project
+  (absent a project-level re-add).
+
+`remove` strings must match verbatim against whatever pattern string is
+present at that point in the merge — a shipped default (see
+`watchlist-defaults.json`), or a pattern a broader layer's `add` introduced.
+It is not restricted to shipped defaults only.
 
 ```json
 {
@@ -103,6 +124,10 @@ Overrides the shipped default watchlist. `remove` strings must match a default
   }
 }
 ```
+
+When the project root resolves to `$HOME` itself, the user and project
+`config.json` are the same file; it is applied once, not twice (mirrors the
+registry's same-file guard for issue #36).
 
 ## `history.jsonl` (generated, gitignored)
 
