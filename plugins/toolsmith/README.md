@@ -179,6 +179,14 @@ Run the hook regression tests:
 bash scripts/test.sh
 ```
 
+Benchmark the PreToolUse hot path (not wired into CI — perf numbers are
+machine-dependent; run it locally when evaluating a change to
+`toolsmith-gate.sh` or the payload-adapter adoption question for it, see #38):
+
+```bash
+bash scripts/bench.sh [iterations]   # default 50 timed runs per case
+```
+
 ## License
 
 ISC
