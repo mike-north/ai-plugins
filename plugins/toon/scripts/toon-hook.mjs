@@ -13,9 +13,19 @@
  *   signature in registry.json so Pre can rewrite it at the source next time.
  *
  * Host contracts differ and are normalized here:
- * - Claude Code / Codex: payload carries `hook_event_name`; tool `Bash`; output
- *   via the `hookSpecificOutput` envelope (`updatedInput` / `updatedToolOutput`).
- *   Full behavior — Pre rewrite AND Post convert+learn.
+ * - Claude Code: payload carries `hook_event_name`; tool `Bash`; output via the
+ *   `hookSpecificOutput` envelope (`updatedInput` / `updatedToolOutput`), and
+ *   Claude leaves normal permission flow intact for a bare `updatedInput` (no
+ *   `permissionDecision`). Full behavior — Pre rewrite AND Post convert+learn.
+ * - Codex: same envelope shape and `hook_event_name`, but a stricter contract.
+ *   PreToolUse rejects `updatedInput` unless paired with
+ *   `permissionDecision: "allow"` — and `"allow"` would auto-approve
+ *   non-allowlisted commands, a security hole — so Pre skips the rewrite
+ *   entirely on Codex (command runs unmodified). PostToolUse has no supported
+ *   field for replacing Bash output at all: `updatedToolOutput` is parsed but
+ *   not implemented, and emitting it only marks the hook run failed while the
+ *   original output still reaches the model — so Post learns from the output
+ *   (registry writes are wire-format-agnostic) but never attempts the emit.
  * - Cursor: payload has no `hook_event_name`; tool `Shell`; Pre rewrite via
  *   `updated_input`. Cursor can only replace output for MCP tools, not Shell, so
  *   the Post branch is a no-op there — Cursor gets source-rewrite only. Its Pre
@@ -24,6 +34,7 @@
  * Escape hatch: CLAUDE_TOON_HOOK=off disables everything (and toon-pipe).
  *
  * @see https://code.claude.com/docs/en/hooks.md
+ * @see https://learn.chatgpt.com/docs/hooks
  * @see https://cursor.com/docs/hooks
  * @see https://github.com/toon-format/toon
  */
@@ -61,6 +72,23 @@ const NO_CONVERT_COMMANDS = new Set(["cat", "head", "tail", "echo", "printf"]);
 // that genuinely invoke toon, without suppressing unrelated commands.
 const TOON_STAGE_RE = /(^|[|&;(])\s*(\S*\/)?toon(-pipe)?(\s|$)/;
 
+/**
+ * Detect Codex among non-Cursor hosts. Codex PreToolUse/PostToolUse payloads
+ * carry the keys `turn_id` and `model` (Claude Code payloads carry neither).
+ * Checked by **key presence**, mirroring hooks/payload-adapter's convention:
+ * a present-but-null or non-string value must still count as Codex, because
+ * the failure asymmetry is one-sided — a false positive merely skips the TOON
+ * optimization on that call, while a false negative reintroduces the Codex
+ * contract breakage this guards against. `CODEX_HOME` in this process's own
+ * env is a weaker secondary signal when neither key is present.
+ */
+function isCodex(input) {
+  if ("turn_id" in input || "model" in input) {
+    return true;
+  }
+  return Boolean(process.env.CODEX_HOME);
+}
+
 function main() {
   if (process.env.CLAUDE_TOON_HOOK === "off") return;
   let input;
@@ -75,6 +103,7 @@ function main() {
   // envelope; Cursor omits it, uses snake_case output fields, and can't replace
   // Shell output. Detect the host once and thread it through.
   const cursor = typeof input.hook_event_name !== "string";
+  const codex = !cursor && isCodex(input);
   const event = cursor
     ? "tool_output" in input
       ? "post"
@@ -84,8 +113,8 @@ function main() {
       : input.hook_event_name === "PostToolUse"
         ? "post"
         : null;
-  if (event === "pre") preToolUse(input, cursor);
-  else if (event === "post") postToolUse(input, cursor);
+  if (event === "pre") preToolUse(input, cursor, codex);
+  else if (event === "post") postToolUse(input, cursor, codex);
 }
 
 /** Command string, across host payload shapes. */
@@ -233,11 +262,13 @@ function emit(obj) {
   process.stdout.write(JSON.stringify(obj));
 }
 
-function preToolUse(input, cursor) {
+function preToolUse(input, cursor, codex) {
   const cmd = commandOf(input);
   if (typeof cmd !== "string" || !cmd.trim()) return;
   // Conservative skips — the Post branch safety-nets anything we pass on here
-  // (on Claude/Codex; on Cursor there is no net, but the guards are the same).
+  // on Claude (ground-truth convert+learn from actual output). On Cursor and
+  // Codex there is no net (Cursor can't replace Shell output; Codex has no
+  // supported field for it), but the guards are the same regardless.
   if (cmd.includes("\n") || cmd.includes("<<")) return;
   if (TOON_STAGE_RE.test(cmd)) return;
   if (/&\s*$/.test(cmd)) return;
@@ -252,14 +283,20 @@ function preToolUse(input, cursor) {
     isTerminalJq(last) ||
     registryConfirms(signature(last));
   if (!shouldRewrite) return;
+  // Codex rejects a bare `updatedInput` outright — it requires
+  // `permissionDecision: "allow"` alongside it, and "allow" would
+  // auto-approve non-allowlisted commands (a security hole). Skip the
+  // rewrite on Codex; the command runs unmodified through normal flow.
+  if (codex) return;
   // Placement invariant: toon-pipe is only ever APPENDED as the final stage of
   // the whole command — never inserted mid-pipeline.
   const command = `set -o pipefail; ${cmd} | ${TOON_PIPE}`;
   // Cursor: `{ updated_input }`; no permission field so its normal permission
-  // flow is untouched. Claude/Codex: `hookSpecificOutput.updatedInput` — and no
-  // permissionDecision, so the normal flow stays intact there too ("allow"
-  // would silently auto-approve non-allowlisted commands; "defer" is rejected
-  // by some harness versions).
+  // flow is untouched. Claude (Codex already returned above):
+  // `hookSpecificOutput.updatedInput` with no permissionDecision, so Claude's
+  // normal permission flow stays intact too — Claude accepts a bare
+  // `updatedInput`, unlike Codex, which rejects it without an explicit
+  // `permissionDecision: "allow"`.
   if (cursor) emit({ updated_input: { command } });
   else
     emit({
@@ -270,7 +307,7 @@ function preToolUse(input, cursor) {
     });
 }
 
-function postToolUse(input, cursor) {
+function postToolUse(input, cursor, codex) {
   // Cursor cannot replace Shell-tool output (updated_mcp_tool_output is MCP-only;
   // afterShellExecution is fire-and-forget). Nothing to do there.
   if (cursor) return;
@@ -307,6 +344,13 @@ function postToolUse(input, cursor) {
 
   learn(last);
   if (NO_CONVERT_COMMANDS.has(firstWord)) return;
+  // Codex has no supported field for replacing Bash PostToolUse output:
+  // `updatedToolOutput` is parsed but not implemented, and emitting it only
+  // marks the hook run failed while the original output still reaches the
+  // model unchanged — no user-visible break, but no conversion either, and a
+  // wasted toon spawn. Registry learning above already ran (it's a local file
+  // write, host-agnostic) — nothing left to safely do here.
+  if (codex) return;
 
   const toon = spawnSync("toon", [], {
     input: trimmed,
