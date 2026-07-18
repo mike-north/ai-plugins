@@ -7,7 +7,7 @@
   "hooks": {
     "preToolUse": [
       {
-        "command": "node ./hooks/cursor-shim.mjs preToolUse -- '${CLAUDE_PLUGIN_ROOT}/scripts/toon-gate.sh'",
+        "command": "node \"${CLAUDE_PLUGIN_ROOT:-.}/hooks/cursor-shim.mjs\" preToolUse -- '${CLAUDE_PLUGIN_ROOT}/scripts/toon-gate.sh'",
         "matcher": "Shell",
         "failClosed": true
       }

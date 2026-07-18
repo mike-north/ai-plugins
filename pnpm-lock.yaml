@@ -9,11 +9,11 @@ importers:
   .:
     devDependencies:
       '@ai-plugin-marketplace/cli':
-        specifier: ^0.4.1
-        version: 0.4.1
+        specifier: ^0.5.0
+        version: 0.5.0
       '@ai-plugin-marketplace/core':
-        specifier: ^0.7.0
-        version: 0.7.0
+        specifier: ^0.8.0
+        version: 0.8.0
       remark-cli:
         specifier: ^12.0.1
         version: 12.0.1
@@ -32,13 +32,13 @@ importers:
 
 packages:
 
-  '@ai-plugin-marketplace/cli@0.4.1':
-    resolution: {integrity: sha512-GtCKU5E0KN2xzw5A7lMmBAlIakD0iTi3yibmWKmSQp8jEbOoLZPl6Om3SNu8ZB52D5qnsd7CvoW+0XIP8WrA+g==}
+  '@ai-plugin-marketplace/cli@0.5.0':
+    resolution: {integrity: sha512-MHyh+dXyKXghi/OC365BJEgyiEIGwphXYf82YgCVyWywYgNKOjT6ghD+HdWdQWOwNZMJvt8bgTYfwU3cSqAolQ==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
-  '@ai-plugin-marketplace/core@0.7.0':
-    resolution: {integrity: sha512-jrC1C+h0Bv9IC+cfeyAjC6biLfeCDTX1jOWFqYyHSoP+J1zjCGs1/TCSg8GWkJOB8XwG2JrfTOoSjHtXNTyowQ==}
+  '@ai-plugin-marketplace/core@0.8.0':
+    resolution: {integrity: sha512-zTea2BcZizc5XCye3PHPujWjNLaZ0EI6DdBWbxfaJuvL4Alg2iNwnzebUH0VVcDiC/ko2gwvgoBt/i+jYXwPGA==}
     engines: {node: '>=20.0.0'}
 
   '@babel/code-frame@7.29.0':
@@ -905,6 +905,9 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
+  jsonc-parser@3.3.1:
+    resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
+
   lines-and-columns@2.0.4:
     resolution: {integrity: sha512-wM1+Z03eypVAVUCE7QdSqpVIvelbOakn1M0bPDoA4SGWPx3sNDVUiMo3L6To6WWGClB7VyXnhQ4Sn7gxiJbE6A==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -1552,13 +1555,14 @@ packages:
 
 snapshots:
 
-  '@ai-plugin-marketplace/cli@0.4.1':
+  '@ai-plugin-marketplace/cli@0.5.0':
     dependencies:
-      '@ai-plugin-marketplace/core': 0.7.0
+      '@ai-plugin-marketplace/core': 0.8.0
 
-  '@ai-plugin-marketplace/core@0.7.0':
+  '@ai-plugin-marketplace/core@0.8.0':
     dependencies:
       jiti: 2.7.0
+      jsonc-parser: 3.3.1
       yaml: 2.9.0
       zod: 4.4.3
 
@@ -2242,6 +2246,8 @@ snapshots:
   json-parse-even-better-errors@3.0.2: {}
 
   json5@2.2.3: {}
+
+  jsonc-parser@3.3.1: {}
 
   lines-and-columns@2.0.4: {}
 
