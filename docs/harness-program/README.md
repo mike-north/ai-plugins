@@ -47,7 +47,11 @@ these boundaries are defects.
 ## The PM roster
 
 One line PM per product, each driving an eng fleet via `product-led-eng-fleet`. The program
-lead owns the seams. Charters in [charters/](./charters/).
+lead owns the seams. Charters in [charters/](./charters/). Every PM runs as a **dedicated
+session** launched from its charter and resumed from its tracking issue — never as a
+teammate sub-agent of another PM's session (D-014: peer roles get sessions; subordinate
+task-work gets sub-agents). This is what lets roles carry their own model tier, and later
+their own agent-type harness.
 
 | PM | Charter | Canon | Issue label | Status |
 |---|---|---|---|---|
