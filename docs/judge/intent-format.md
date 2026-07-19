@@ -24,11 +24,16 @@ One Markdown file per intent-document version, at `docs/judge/intents/intents-v<
   amendment produces v(N+1) as a new file; prior versions are never edited (rulings cite
   them by version — see [lifecycle](#lifecycle)).
 - **Header**: title, version, status line ("draft for ratification" until Mike's merge;
-  "ratified" thereafter), and ratification date.
-- **Principles**: numbered top-level sections, one per intent. Each principle carries:
+  "ratified" thereafter), and ratification date. The version appears as the exact inline
+  form `**Version**: <N>`, before the first principle heading.
+- **Principles**: one per intent, each opening with a level-2 heading of the exact form
+  `## <n>. \`<slug>\`` — a sequential position number, then the stable slug in backticks.
+  Each principle carries:
   - A **stable slug id** (e.g. `ssh-always`) — the value of `intentRef.id`. Slugs are
-    permanent: a principle may be amended or retired, but its slug is never reused.
-  - A one-sentence **principle statement** — the intent itself, normative.
+    permanent: a principle may be amended or retired, but its slug is never reused, whether
+    for a different principle or by resurrecting a retired one.
+  - A one-sentence **principle statement** — the intent itself, normative — as a bold line
+    immediately below the heading.
   - **Numbered clauses** (`1`, `2`, …) — the citable units `intentRef.sections` refers to.
     Clauses may elaborate the principle, name known violating pathways (explicitly
     non-exhaustive — the judge exists because the list can't be written up front), or state
@@ -51,6 +56,11 @@ This format is the authoritative source for what the
 A citation is **resolvable** iff the named version exists, contains the slug, and contains
 each cited clause number. Conformance checking of intents files against this format (and of
 citations against intents files) is mechanical and belongs in tooling, not judgment.
+
+Every syntactic form above is pinned exactly so that checking is mechanical: a conformance
+checker implements this spec and must never become the de-facto source of a form the spec
+left unstated. Where a checker needs a shape this document does not give, that is a gap in
+this document — amend it here first.
 
 ## Lifecycle
 
