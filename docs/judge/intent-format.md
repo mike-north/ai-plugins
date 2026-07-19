@@ -33,7 +33,9 @@ One Markdown file per intent-document version, at `docs/judge/intents/intents-v<
     Clauses may elaborate the principle, name known violating pathways (explicitly
     non-exhaustive — the judge exists because the list can't be written up front), or state
     exclusions.
-  - Optionally, a **retired** marker with the version at which retirement was ratified.
+  - Optionally, a **retired marker**: the exact line `**Retired**: v<N>` immediately
+    following the principle statement, where `<N>` is the document version at which
+    retirement was ratified. The syntax is pinned so conformance checking is mechanical.
 
 ## Mapping to the changeset frontmatter
 
