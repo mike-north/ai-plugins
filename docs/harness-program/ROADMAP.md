@@ -4,32 +4,35 @@ Maintained by the program lead; reconciled at each portfolio review. Milestones 
 dependency-ordered, not dated — the changeset brief's own sequencing lean ("the ratification
 seam first, since everything ratifies through it") is adopted as the spine.
 
-## M0 — program stands up (current)
+## M0 — program stands up · **COMPLETE 2026-07-19**
 
-- Program canon lands in `docs/harness-program/` (this PR); Mike's merge ratifies it.
-- Labels created; issues #71–77 adopted and relabeled; steering-bound toolsmith issues
-  re-triaged per the [steering↔toolsmith contract](./contracts/steering-toolsmith.md).
-- `ENG_TEAM_INSTRUCTIONS.md` for this repo written.
-- Stakeholder issues filed in attest-it (pure-consumption verification; presence-backed vs.
-  automation signer) and vaultkeeper (judge keypair custody).
-- Command-steering PM and ratification PM kick off from their charters; toolsmith PM receives
-  a scope-change handoff.
+All done: program canon ratified (PR #78, + governance amendments #82/#90/#93); labels
+created; #71–77 adopted and relabeled; steering-bound issues re-triaged per the
+[steering↔toolsmith contract](./contracts/steering-toolsmith.md); `ENG_TEAM_INSTRUCTIONS.md`
+written; stakeholder issues filed (attest-it #149/#150 — #149's pure-consumption
+verification came back **confirmed on all three assumptions**; vaultkeeper #261);
+command-steering and ratification PMs kicked off charter-only and shipped their canon
+skeletons (PRs #87 and #84, both merged and governing).
 
-## M1 — the seam and the engine (parallel tracks)
+## M1 — the seam and the engine (parallel tracks) · **current**
 
-- **Ratification PM**: changeset frontmatter schema spec; CI validation contract (seal
-  validity, signer authorization per gate, frontmatter well-formedness, supersedes
-  integrity); the porcelain fill-seal-PR tool; config-repo bootstrap flow (the config
-  monorepo is created by this flow, not by hand); reconciler design.
-  - Program decision to drive here: **where the reconciler lives** (this layer vs. each
-    consumer pulling its packages) — flagged in the changeset brief.
-- **Command-steering PM**: engine extraction from toolsmith (#74); verdict payload schema
-  (#72) — a contract, co-signed by toolsmith PM; registered-target predicates (#73);
-  telemetry triangle; the bash-coverage experiment (sample real transcripts, measure
-  known-command coverage vs. bail quality — from
-  [bash-command-safety-analysis](./bash-command-safety-analysis.md)).
+- **Ratification PM**: canon skeleton ✅ (frontmatter schema draft, CI validation contract,
+  porcelain sketch, bootstrap flow). Fleet dispatch order: #85 (schema validator) →
+  #86 (CI action) + #88 (porcelain `propose`) → #89 (`init` bootstrap) → #94 (reconciler +
+  apply-manifest format).
+  - Reconciler placement **ruled** (D-010: in the ratification layer, declarative
+    per-package apply manifests).
+- **Command-steering PM**: canon skeleton ✅ (architecture steer, verdict-payload schema
+  draft resolving the redirect-confidence question, telemetry schema). Next: #95 matcher
+  spec (D-011 — one program-wide matcher, steering-owned; field shape
+  `commandPattern: { pattern, matcherVersion }` agreed with ratification on #92), then
+  engine extraction #74, predicates #73, #72 AC2 per-harness verification, bash-coverage
+  experiment #83.
 - **Toolsmith PM**: staged/live split (#75); attest-it admission (#76); steering
-  registration emission (#77).
+  registration emission (#77). Handoff delivered via charter; #44 and #40 closed as
+  superseded.
+- **Cross-track**: `contracts/steering-ratification.md` drafts when the frontmatter schema
+  ratifies (both PMs' field-shape agreement recorded on #92).
 
 ## M2 — the reasoning layer and the harness layer
 
