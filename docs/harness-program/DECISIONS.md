@@ -6,6 +6,20 @@ scope do **not** belong here — they live in that canon.
 
 ---
 
+## D-008 · 2026-07-19 · Merge authority delegated for docs/specs; runtime code stays with Mike
+
+Ruled by Mike: the program lead is the **reviewer and merger of product spec/definition
+changes made by line PMs** — canon docs, contracts, charters, roadmaps, and
+fleet-convention docs. This is a duty, not just an authority: line-PM canon PRs get a
+substantive program-lead review (boundary leaks, invariant violations, contract
+consistency, cross-project fit) and, when sound and green, a program-lead merge.
+**Runtime code merges remain Mike's**, as does anything that loosens a capability (the
+only-humans-loosen invariant is unchanged — the delegation covers documentation of intent,
+not activation of behavior). A PR mixing docs and runtime code is not mergeable under this
+delegation: request a split or route it to Mike. Amends the README's "canon merges are the
+only human gate" line: canon merges remain the ratification mechanism; for pure docs/spec
+canon, the program lead now performs them.
+
 ## D-007 · 2026-07-19 · Naming pass pending
 
 `[NEEDS INPUT — Mike]` All project names except attest-it are working names: *command

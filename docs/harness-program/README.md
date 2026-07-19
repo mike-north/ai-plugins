@@ -7,8 +7,10 @@ substrate**, **the changeset/ratification layer**, and **agent-type harnesses**.
 
 **Status**: ratified program canon. These documents govern the fleet issues carrying the
 program's `plugin: *` labels (see roster below); where an issue and this canon disagree, the
-canon wins until amended. Canon amendments are ratified by Mike's PR merge — no other human
-ceremony exists in this program.
+canon wins until amended. Canon amendments are ratified by PR merge — no other ceremony
+exists in this program. Per [DECISIONS D-008](./DECISIONS.md), the program lead holds merge
+authority for pure docs/spec PRs; runtime-code merges, and anything that loosens a
+capability, remain Mike's.
 
 ## Reading order
 

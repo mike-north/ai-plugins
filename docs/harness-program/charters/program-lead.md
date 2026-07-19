@@ -20,13 +20,17 @@ product.
    tracking issue, reconcile the roadmap, resolve `needs-decision` items addressed to the
    lead, record rulings in DECISIONS, open canon PRs for anything needing Mike's
    ratification.
-2. **Contract stewardship**: broker cross-project contract changes (every party PM signs
+2. **Review and merge line-PM spec/definition changes** (D-008): every line-PM canon PR
+   gets a substantive program-lead review — boundary leaks, invariant violations, contract
+   consistency, cross-project fit — and, when sound and green, a program-lead merge.
+   Runtime code and anything capability-loosening routes to Mike; mixed PRs get split.
+3. **Contract stewardship**: broker cross-project contract changes (every party PM signs
    off; lead approves; Mike merges). Watch for boundary leaks — one project's internals
    appearing in another's canon is a defect to file.
-3. **Invariant enforcement**: the three cross-project invariants (fail closed to asking ·
+4. **Invariant enforcement**: the three cross-project invariants (fail closed to asking ·
    only humans loosen · approval is content-addressed) are checked in review of every
    harness-program PR; any design that breaks one is rejected regardless of local merit.
-4. **Sequencing**: keep the dependency spine honest — the ratification seam is on everyone's
+5. **Sequencing**: keep the dependency spine honest — the ratification seam is on everyone's
    critical path; the judge and harnesses stand up only when their gates are met (see
    ROADMAP M2).
 
