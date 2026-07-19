@@ -2,6 +2,16 @@
 
 Mike North · 2026-07-15
 
+> **Scope note (added 2026-07-19).** Predates toolsmith's narrowing
+> ([toolsmith-narrowed](../harness-program/toolsmith-narrowed.md)). The two approvals, the two tool
+> archetypes, and the role-to-authority thesis remain **governing**. §"Steering principles for the
+> hooks" is **superseded** → [command-steering](../command-steering/architecture-steer.md).
+> One correction worth flagging inline: the enforcement sentence in §"The two approvals" describes
+> the PreToolUse hook returning `permissionDecision: allow` on a valid grant. Under the ratified
+> [contract](../harness-program/contracts/steering-toolsmith.md) §2, **steering never emits
+> `allow`** — native permission rules are the sole grantor and steering only subtracts. See the
+> [canon map](./README.md).
+
 This doc defines what Toolsmith is optimizing for, the vocabulary the other docs assume, and the lines we hold. The [architecture steer](./architecture-steer.md) makes the case; this doc is the reference for day-to-day design calls.
 
 ## The problem, in one sentence

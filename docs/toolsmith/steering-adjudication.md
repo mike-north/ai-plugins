@@ -2,6 +2,13 @@
 
 Mike North · 2026-07-17
 
+> **Scope note (added 2026-07-19).** This document's subject matter — parameterized redirects, the
+> tier model, the adjudicator affordance — belongs wholly to **command steering** after toolsmith's
+> narrowing ([toolsmith-narrowed](../harness-program/toolsmith-narrowed.md)). It is **not governing
+> toolsmith canon**. It physically remains at this path because command-steering's canon references
+> it here; relocating it is the command-steering PM's call, not toolsmith's. See the
+> [canon map](./README.md) §"Known structural wart".
+
 Companion docs: [Architecture steer](./architecture-steer.md), [Product framing and principles](./product-framing-and-principles.md), [Design patterns](./design-patterns.md), [The toolsmith CLI surface](./cli-surface.md). This is a v2 design extension of the steering behavior those docs already describe.
 
 ## What this fixes
