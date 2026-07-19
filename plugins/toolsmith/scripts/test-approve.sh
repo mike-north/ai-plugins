@@ -402,6 +402,32 @@ fi
 rmrf "$PROJ"
 
 # ============================================================================
+# review finding #4: step 6's post-rule registry re-read comes back corrupted
+# (concurrent edit / on-disk corruption) — approve must degrade gracefully
+# (fall back to the in-memory pinned state) instead of throwing. The tool is
+# already placed+pinned+granted by this point (steps 1-5 completed); the
+# corrupted-read fault only affects step 6's "clear staged" bookkeeping.
+# ============================================================================
+PROJ=$(new_proj)
+write_staged "$PROJ" mytool $'#!/bin/bash\necho hi\n'
+write_new_draft_registry "$PROJ" mytool
+EXPECT_SHA=$(shasum -a 256 "$PROJ/.claude/toolsmith/staging/mytool" | awk '{print $1}')
+
+OUT=$(CLAUDE_PROJECT_DIR="$PROJ" TOOLSMITH_APPROVE_CORRUPT_REGISTRY_STEP6=1 node "$APPROVE" scripts/agent-tools/mytool 2>&1)
+RC=$?
+STATUS_AFTER=$(jq -r '.tools[0].status' "$PROJ/.claude/toolsmith/registry.json" 2>/dev/null)
+SHA_AFTER=$(jq -r '.tools[0].approvedSha256' "$PROJ/.claude/toolsmith/registry.json" 2>/dev/null)
+STAGED_AFTER=$(jq -r 'has("staged")' <<<"$(jq -c '.tools[0]' "$PROJ/.claude/toolsmith/registry.json" 2>/dev/null)" 2>/dev/null)
+if [ "$RC" -eq 0 ] && [ "$STATUS_AFTER" = "approved" ] && [ "$SHA_AFTER" = "$EXPECT_SHA" ] \
+   && [ "$STAGED_AFTER" = "false" ] && printf '%s' "$OUT" | grep -qi 'falling back'; then
+  ok
+else
+  bad "finding #4: corrupted post-rule registry re-read degrades gracefully instead of throwing" \
+    "rc=$RC status=$STATUS_AFTER sha=$SHA_AFTER staged_after=$STAGED_AFTER out=$OUT"
+fi
+rmrf "$PROJ"
+
+# ============================================================================
 # negative: entry with no "staged" field at all -> refuse, nothing written.
 # ============================================================================
 PROJ=$(new_proj)
@@ -661,6 +687,49 @@ else
 fi
 if [ "$CHFLAGS_AVAILABLE" -eq 1 ]; then
   if chflags nouchg "$PROJ/scripts/agent-tools/mytool" 2>/dev/null; then ok; else bad "AC3: chflags nouchg succeeds (flag was set by promotion)" "failed"; fi
+fi
+rmrf "$PROJ"
+
+# ============================================================================
+# review finding #1: `chflags nouchg` failing on an existing live file (a
+# genuine command failure, distinct from "chflags not available on this
+# platform") must abort BEFORE any write, with a legible error naming the
+# path/flag/remedy, and leave live completely untouched. Uses a fake
+# `chflags` shim placed first on PATH so the failure is deterministic and
+# does not depend on this host's actual filesystem/flag support.
+# ============================================================================
+PROJ=$(new_proj)
+write_staged "$PROJ" mytool $'#!/bin/bash\necho NEW\n'
+printf '#!/bin/bash\necho OLD\n' >"$PROJ/scripts/agent-tools/mytool"
+LIVE_SHA_BEFORE=$(shasum -a 256 "$PROJ/scripts/agent-tools/mytool" | awk '{print $1}')
+write_revision_registry "$PROJ" mytool "$LIVE_SHA_BEFORE" "Bash(scripts/agent-tools/mytool:*)"
+REG_BEFORE=$(cat "$PROJ/.claude/toolsmith/registry.json")
+
+FAKE_BIN=$(mktemp -d)
+cat >"$FAKE_BIN/chflags" <<'SHIM'
+#!/bin/bash
+if [ "$1" = "nouchg" ]; then
+  echo "chflags: nouchg: Operation not permitted" >&2
+  exit 1
+fi
+exit 0
+SHIM
+chmod +x "$FAKE_BIN/chflags"
+
+OUT=$(CLAUDE_PROJECT_DIR="$PROJ" PATH="$FAKE_BIN:$PATH" node "$APPROVE" scripts/agent-tools/mytool 2>&1)
+RC=$?
+LIVE_AFTER=$(cat "$PROJ/scripts/agent-tools/mytool")
+REG_AFTER=$(cat "$PROJ/.claude/toolsmith/registry.json")
+rm -rf "$FAKE_BIN"
+
+if [ "$RC" -ne 0 ] && [ "$LIVE_AFTER" = "$(printf '#!/bin/bash\necho OLD\n')" ] \
+   && [ "$REG_BEFORE" = "$REG_AFTER" ] \
+   && printf '%s' "$OUT" | grep -qi 'nouchg' \
+   && printf '%s' "$OUT" | grep -qi 'untouched'; then
+  ok
+else
+  bad "finding #1: chflags nouchg failure aborts before any write, live untouched, legible error" \
+    "rc=$RC live_after=$LIVE_AFTER out=$OUT"
 fi
 rmrf "$PROJ"
 

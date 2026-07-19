@@ -435,6 +435,21 @@ function killAfter(step) {
 }
 
 /**
+ * Test-only fault injection: if TOOLSMITH_APPROVE_CORRUPT_REGISTRY_STEP6 is
+ * set, clobbers the on-disk registry with invalid JSON immediately before
+ * step 6 re-reads it, simulating a concurrent edit or on-disk corruption
+ * between step 4's pin-write and step 6's read. Lets the regression suite
+ * assert step 6 degrades gracefully (falls back to the in-memory
+ * `toolsWithPin` state) instead of throwing. Never engages unless the env
+ * var is set, which only the test harness ever does.
+ */
+function maybeCorruptRegistryForTest(regPath) {
+  if (process.env.TOOLSMITH_APPROVE_CORRUPT_REGISTRY_STEP6 === '1') {
+    writeFileSync(regPath, 'not valid json {{{ this simulates corruption', 'utf8');
+  }
+}
+
+/**
  * Minimal unified-style line diff (old -> new), no external dependency.
  * Standard LCS-based diff; scripts are expected to be small (single-purpose
  * tools per the authoring checklist), so the O(n*m) table is fine. Used for
@@ -665,20 +680,65 @@ function runApprove(rawPath, commit, userScope) {
   const migrationNotes = migrateProtection(registry, scope);
 
   // Step 1: nouchg the live path, if it exists and carries the flag from a
-  // prior promotion. A no-op (never errors) if the flag isn't set.
-  if (isRevision) {
-    tryChflags('nouchg', liveAbs);
+  // prior promotion. `chflags` being absent on this platform is a known,
+  // graceful degradation (write-denial layer 1's honest limit — see
+  // docs/toolsmith/staged-live-split.md §Write denial) and must NOT abort
+  // the promotion. A genuine `chflags nouchg` failure on a platform that DOES
+  // have the binary (e.g. an unexpected permission wrinkle) is different: the
+  // rename in step 2 would otherwise fail confusingly against a still-immutable
+  // file, so abort BEFORE any write with a legible, actionable error. Live is
+  // untouched at this point either way.
+  if (isRevision && chflagsAvailable()) {
+    const nouchgResult = tryChflags('nouchg', liveAbs);
+    if (!nouchgResult.ok) {
+      process.stderr.write(
+        [
+          `Error: could not clear the immutable flag before promotion.`,
+          `  path: ${liveAbs}`,
+          `  flag: uchg (chflags nouchg failed: ${nouchgResult.reason})`,
+          `  Live is untouched — nothing was written.`,
+          `  Remedy: run \`chflags nouchg ${liveAbs}\` by hand to diagnose (permissions, ownership), then re-run approve.`,
+        ].join('\n') + '\n',
+      );
+      return 1;
+    }
   }
   killAfter('nouchg');
 
   // Step 2: atomic place — write the staged bytes to a temp file in the live
-  // directory, then rename over the live path. Never a partial write.
-  atomicWrite(liveAbs, stagedBytes);
+  // directory, then rename over the live path. `atomicWrite` can still throw
+  // (e.g. disk full, parent directory permissions) — the rename itself is
+  // atomic, so a thrown error here means it did NOT happen: live is exactly
+  // as it was before this promotion, never a partial write.
+  try {
+    atomicWrite(liveAbs, stagedBytes);
+  } catch (err) {
+    process.stderr.write(
+      `Error: could not place the staged bytes at ${liveAbs}: ${err.message}. ` +
+        `The place step is atomic (write to a temp file, then rename) — it either fully happens or not at all, ` +
+        `and it did not: live is unchanged. Fix the underlying issue (disk space, parent directory permissions) and re-run approve.\n`,
+    );
+    return 1;
+  }
   killAfter('place');
 
   // Step 3: chmod 0555 (r-x, no write bit) + uchg (best-effort BSD immutable
   // flag). This is write-denial layer 1 — see docs/toolsmith/staged-live-split.md.
-  chmodSync(liveAbs, 0o555);
+  // chmodSync can throw (e.g. ownership mismatch); by this point the new
+  // bytes are already placed but the registry pin (step 4) has not been
+  // updated yet, so the live file's hash already mismatches the still-old
+  // registered pin — invocation already fails closed (layer 3) on its own.
+  // State this honestly rather than crashing: re-running approve converges.
+  try {
+    chmodSync(liveAbs, 0o555);
+  } catch (err) {
+    process.stderr.write(
+      `Error: staged bytes were placed at ${liveAbs} but chmod 0555 failed: ${err.message}. ` +
+        `Live now holds the new bytes but is neither mode-protected nor re-pinned; its hash no longer matches ` +
+        `the registered pin, so invocation already fails closed. Re-run approve to converge.\n`,
+    );
+    return 1;
+  }
   const uchgResult = tryChflags('uchg', liveAbs);
   killAfter('mode');
 
@@ -727,7 +787,21 @@ function runApprove(rawPath, commit, userScope) {
   // the promoted tool is no longer pending) and remove the staging file.
   // Re-read the registry from disk in case migrateProtection or a concurrent
   // process touched other entries; re-apply the same pin to this entry's slot.
-  const registryAfterRule = readJsonOrNull(regPath) ?? { ...registry, tools: toolsWithPin };
+  // If the re-read comes back missing entirely or with a corrupted/non-array
+  // "tools" field (concurrent edit or on-disk corruption between step 4's
+  // write and this read), fall back to the in-memory `toolsWithPin` state
+  // from step 4 rather than throwing — the tool is already placed, pinned,
+  // and granted at this point, so step 6 must degrade gracefully, not crash.
+  maybeCorruptRegistryForTest(regPath);
+  let registryAfterRule = readJsonOrNull(regPath);
+  let staleRegistryNote = null;
+  if (!registryAfterRule || !Array.isArray(registryAfterRule.tools)) {
+    staleRegistryNote =
+      `Warning: ${regPath} could not be re-read as a valid registry after the rule was granted ` +
+      `(missing "tools" array — concurrent edit or corruption?); falling back to this promotion's ` +
+      `in-memory state to clear "staged". Re-run approve if the registry looks wrong afterward.`;
+    registryAfterRule = { ...registry, tools: toolsWithPin };
+  }
   const idxAfterRule = registryAfterRule.tools.findIndex((t) => t && t.path === path);
   const finalTools = registryAfterRule.tools.slice();
   if (idxAfterRule !== -1) {
@@ -745,6 +819,7 @@ function runApprove(rawPath, commit, userScope) {
   process.stdout.write(
     [
       ...migrationNotes,
+      ...(staleRegistryNote ? [staleRegistryNote] : []),
       `Promoted ${staged.path} -> ${scope.displayPath(path, liveAbs)}`,
       `Pinned: status=approved, approvedSha256=${placedSha}`,
       `permissionRule set to: ${rule}`,
