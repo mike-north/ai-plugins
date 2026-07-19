@@ -6,6 +6,47 @@ scope do **not** belong here — they live in that canon.
 
 ---
 
+## D-012 · 2026-07-19 · Monorepo invariant affirmed; config surfaces live in one repo
+
+Records the ratification canon's resolution of the changeset brief's critical decision,
+following the brief's own stated lean: the config monorepo is **a real single repo** — one
+changeset root, packages per config surface — preserving the one-to-one invariant rather
+than accepting multiple changeset roots (losing the unified log) or building an aggregation
+layer. Resolved in `docs/ratification/bootstrap-flow.md` §"The monorepo invariant" (PR #84);
+recorded here because the brief flagged it as a critical decision. Any future multi-repo
+pressure on this invariant is a program escalation, not a workaround.
+
+## D-011 · 2026-07-19 · One command matcher: steering owns it, everyone else consumes it
+
+Escalated by the ratification PM (frontmatter schema's `commandPattern` field). Ruling:
+there is exactly **one command-pattern match semantics in the program, owned by
+command-steering** — the same matcher that evaluates `covers` patterns at runtime. The
+changeset frontmatter's `commandPattern`, the judge's "have I ruled on this shape?" lookup
+(M2), and steering's hook evaluation all use it; a parallel matcher would let "the rule
+exists" and "the rule fires" diverge, which is exactly the class of drift the program
+exists to prevent. Consequences: steering documents the matcher's semantics as a versioned
+contract surface (its canon; add to the future steering↔ratification contract when the
+schema ratifies); ratification's schema references it by version rather than defining any
+matching itself; #85 may proceed on the stable field set with `commandPattern` validated
+only syntactically until the matcher spec lands.
+
+## D-010 · 2026-07-19 · The reconciler is a ratification-layer component
+
+Escalated by the ratification PM; the changeset brief and how-the-pieces-fit both left
+placement open. Ruling: **the reconciler lives in the ratification layer** — one
+deterministic applier shipped with the layer, not per-consumer pullers. Rationale: the
+monorepo invariant promises *one atomic decision, one merge*; atomicity must survive past
+merge into apply, and N independent consumer pullers reintroduce exactly the half-applied
+states the invariant forbids (tool landed, rule didn't). One applier is also one audited,
+one-version code path — the same argument as the porcelain tool. Consumers stay
+**declarative**: each config-surface package carries an apply manifest (what goes where,
+what bits flip, what validations run); the reconciler executes manifests, consumers never
+execute themselves. The requirements already stated in
+`docs/ratification/bootstrap-flow.md` §"The reconciler seam" (reads only ratified `main`;
+deterministic + idempotent; fails closed, never partially applies) are ratified as binding.
+Manifest format is ratification-PM scope; anything a manifest asks the reconciler to do
+that widens capability still rides a human-ratified changeset (only humans loosen).
+
 ## D-009 · 2026-07-19 · Decider routing labels supplement `needs-decision`
 
 Refines D-006 (prompted by Mike): the decider is named by **label**, not body text —
