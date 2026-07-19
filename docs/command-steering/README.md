@@ -3,7 +3,8 @@
 Design canon for the **command-steering** plugin — the deterministic, programmable permission
 layer of the harness program. These documents govern the fleet issues labeled
 `plugin: command-steering`; where an issue and this canon disagree, **the canon wins until
-amended**. Canon becomes governing when Mike merges the PR that lands it; until then the docs
+amended**. Canon becomes governing when the PR that lands it is merged to `main` (the program's
+ratification event — see the [program README](../harness-program/README.md) governance line); until then the docs
 below marked _draft_ are proposals, not rules.
 
 The program-level brief this canon serves is
@@ -18,9 +19,10 @@ an escalation to the program lead, not a local edit (see the charter,
 **Skeleton (M1).** The plugin as shipped lives inside the toolsmith plugin's PreToolUse hook; the
 program has ruled that steering becomes its own plugin and toolsmith drops its hook (issue #74).
 This canon is the destination the extraction lands against. The substrate spec — the verdict log,
-`steering` config, ask-cost surfacing, fatigue, and latency budget — currently lives at
-`docs/toolsmith/steering-spec.md` (PR #67) and **transfers into this canon** per the contract's
-Related note; the telemetry doc below is its forward-looking home and marks the transfer explicitly.
+`steering` config, ask-cost surfacing, fatigue, and latency budget — is authored in **PR #67**
+(landing at `docs/toolsmith/steering-spec.md`, not yet on `main`) and **transfers into this canon** on
+that PR's merge per the contract's Related note; the telemetry doc below is its forward-looking home
+and marks the transfer explicitly.
 
 ## Reading order
 

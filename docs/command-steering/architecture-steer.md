@@ -63,10 +63,17 @@ other outcome is a defer.
 | Leg | Trigger | Verdict | Notes |
 |---|---|---|---|
 | **Redirect** | A watched command matches an **approved** target's coverage. | `deny` naming the target with a runnable, filled invocation. | The strongest teaching case. The suggested form MUST match what the native rule actually allowlists (the #36 §1 deadlock rule) or the redirect is worse than none. |
-| **Soft block** | A command in the effective `ask` set that **no** approved target covers. | `deny` surfacing the cost, pointing at the forge flow, warning against circumvention. | Escape hatch: a trailing `# proceed` marker makes the hook **defer** to the harness's own `ask`. |
+| **Soft block** | A command in the effective `ask` set that **no** approved target covers. | `deny` surfacing the cost, pointing at the forge flow, warning against circumvention. | Escape hatch: a trailing `# toolsmith:proceed` marker makes the hook **defer** to the harness's own `ask`. |
 | **Ask, cost surfaced** | An `ask`-gated command where the payload carries approval-cost + pattern density. | `ask` with the cost in the reason. | The agent decides whether the cost is worth paying or worth routing around via a forge proposal. |
 | **Registered-target predicate** | Invocation of a registered tool path. | Integrity mismatch → `ask` (fail closed); no valid grant → `ask`; valid grant → **defer**. | Content-addressed enforcement (contract §2). Never `allow`. |
 | **Everything else** | No match; genuinely novel command. | **defer** (emit nothing). | Never blocked. Blocking punishes the long tail. |
+
+The escape-hatch marker is written `# toolsmith:proceed` to match the ratified contract and the shipped
+hook exactly ([contract §2](../harness-program/contracts/steering-toolsmith.md); PR #67 steering-spec §1,
+which survives it only for steering's soft-block UX, never for tamper). Whether the token is
+re-branded when the engine leaves the toolsmith plugin is an open extraction-naming question tracked
+on #74 (alongside the `CLAUDE_TOOLSMITH_HOOK` env-var disposition); until #74 rules, the canon uses the
+ratified token rather than inventing a new one.
 
 The _shape_ of a redirect (subset / gap / no-cover legs, the tiered
 template→adjudicator→floor mechanism, the parameterized filled invocation) is specified in the

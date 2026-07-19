@@ -2,7 +2,7 @@
 
 > **Status**: **draft proposal** (issue #72). This document resolves the _shape_ of steering's
 > return type as a proposal; **ownership is already settled** — steering defines the schema,
-> consumers fill it (contract §3). It becomes governing canon when Mike merges. The remaining
+> consumers fill it (contract §3). It becomes governing canon when this PR is merged to `main`. The remaining
 > completion work #72 tracks is the empirical per-harness verification (AC2) — the Claude Code row
 > below is grounded in the shipped emitter, the Codex and Cursor rows are grounded in the toon /
 > cursor-shim code but must be re-verified against each harness's _current_ contract before the
@@ -164,7 +164,7 @@ Agent runs a command in the `ask` set that nothing covers.
 ```
 
 > The soft-block variant of case 3 is a `deny` (not `ask`) carrying the four-part reason (cost /
-> forge pointer / proceed-marker / anti-circumvention), per the transferred substrate spec's §1 legs
+> forge pointer / `# toolsmith:proceed` marker / anti-circumvention), per the transferred substrate spec's §1 legs
 > table. Whether a no-cover ask-set command soft-blocks (`deny`) or surfaces cost (`ask`) is the
 > redirect-confidence question resolved below.
 

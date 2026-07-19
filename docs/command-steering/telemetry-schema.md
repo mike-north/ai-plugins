@@ -2,10 +2,11 @@
 
 > **Status**: **draft** (steering ↔ toolsmith [contract §5](../harness-program/contracts/steering-toolsmith.md)).
 > This document is the forward-looking home for steering's telemetry contract. The verdict-log leg's
-> field-level detail currently lives in `docs/toolsmith/steering-spec.md` §2 (PR #67) and
-> **transfers here** on merge per the contract's Related note; this draft states the triangle as a
-> whole and the reader contract, and defers to §2 for the verdict-log field schema until the transfer
-> lands rather than restating (and risking divergence from) it. Becomes governing when Mike merges.
+> field-level detail is authored in **PR #67's steering-spec §2** (which will land at
+> `docs/toolsmith/steering-spec.md` — not yet on `main`) and **transfers here** on that PR's merge per
+> the contract's Related note; this draft states the triangle as a whole and the reader contract, and
+> defers to that §2 for the verdict-log field schema until the transfer lands rather than restating
+> (and risking divergence from) it. Becomes governing when this PR is merged to `main`.
 
 Steering owns the telemetry triangle. It is **local, load-bearing product surface** — the substrate
 the toolsmith curator (and later the judge) reads to propose tools and crystallize rules — **not
@@ -32,7 +33,7 @@ directly countable.
 
 ## Verdict-log field schema (transfers from steering-spec §2)
 
-Until PR #67's `steering-spec.md` §2 transfers into this canon, its field schema is the normative
+Until PR #67's steering-spec §2 (not yet on `main`) transfers into this canon, its field schema is the normative
 source and is **not restated here** to avoid a divergent second copy. Its load-bearing properties,
 recorded so this doc stands alone as a pointer:
 
