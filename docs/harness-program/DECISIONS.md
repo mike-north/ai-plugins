@@ -6,6 +6,29 @@ scope do **not** belong here — they live in that canon.
 
 ---
 
+## D-016 · 2026-07-19 · Dedicated code-review role; merge-authority matrix amended
+
+Ruled by Mike. A dedicated **code-review agent** joins the program (own session per
+D-014; charter: [code-reviewer](./charters/code-reviewer.md)), holding a high quality bar
+over all code in this repo. The merge-authority matrix (amending D-008):
+
+| PR contents | Reviewer | Merger |
+|---|---|---|
+| **Pure code** (no product-centric artifacts) | code-review agent | **code-review agent**, when its bar is met |
+| **Mixed** (code + product-centric artifacts) | code-review agent (code) + program lead (product) | **program lead**, accountable that every code change passed the code-review agent and all its feedback is addressed before merge |
+| **Pure product/spec docs** | program lead | program lead (D-008, unchanged) |
+| **Anything capability-loosening, direction-changing, or `[NEEDS INPUT — Mike]`** | as above, plus escalation | **Mike**, always — this row overrides every other row |
+
+**Product-centric artifacts** are: everything under `docs/` (canons, contracts, charters,
+ROADMAP, DECISIONS, intent documents), `ENG_TEAM_INSTRUCTIONS.md`, and plugin/marketplace
+manifests that change an agent-facing surface's declared behavior. In-package code READMEs
+and code comments are code, not product artifacts. When classification is genuinely
+unclear, the PR is treated as mixed — fail toward the more-gated row.
+
+The only-humans-loosen invariant is untouched: no agent row ever merges a capability
+loosening; the last row is absolute. Consequence for in-flight work: PR #99 (pure runtime
+code) re-routes from Mike's queue to the code-review agent's.
+
 ## D-015 · 2026-07-19 · The config monorepo IS the harness layered-source repo
 
 Ruled by the program lead (the ruling the roadmap assigned "before M2"; fulfills, not
