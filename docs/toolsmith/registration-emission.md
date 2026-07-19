@@ -15,7 +15,8 @@ Governing canon: [contract](../harness-program/contracts/steering-toolsmith.md) 
 [matcher contract](../command-steering/command-pattern-matcher.md) (D-011 — pattern shape and
 version pinning); the [verdict payload schema](../command-steering/verdict-payload-schema.md)
 (which fields toolsmith fills); [staged/live split](./staged-live-split.md) (when emission happens);
-[attest-it admission](./attest-it-admission.md) (what the seal covers).
+attest-it admission (what the seal covers) — `./attest-it-admission.md`, landing in PR #114;
+the link resolves once that merges.
 
 ## The one-way rule, made structural
 
