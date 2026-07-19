@@ -48,10 +48,11 @@ attest-it change, we stop and file a stakeholder issue; nothing program-specific
 attest-it.
 
 The **reconciler** — the deterministic step that applies merged `main` to the live system —
-is designed against here but its *placement* (this layer vs. each consumer pulling its own
-packages) is a program decision co-driven with the lead. See
-[bootstrap-flow](./bootstrap-flow.md) §"The reconciler seam" for what this layer needs from
-it, wherever it lands.
+lives in **this layer** ([DECISIONS D-010](../harness-program/DECISIONS.md)): one applier
+ships with ratification; consumers stay declarative via per-package apply manifests and never
+run their own pullers, so atomicity survives past merge into apply. See
+[bootstrap-flow](./bootstrap-flow.md) §"The reconciler seam" for its binding requirements and
+the apply-manifest scope.
 
 ## The three invariants
 

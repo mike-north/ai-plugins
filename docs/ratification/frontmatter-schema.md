@@ -66,7 +66,7 @@ stated condition; `opt` = optional.
 
 | Field | Req | Type | Notes |
 |---|---|---|---|
-| `commandPattern` | cond | string | Machine-matchable shape of the governed command. **The single highest-leverage field** — turns "have I ruled on this shape?" into a lookup. Required for command-governing rulings; `null`/absent for non-command config (e.g. a pure tool admission). Match semantics (glob vs. the steering matcher) is an open question — must reuse steering's, not invent one. |
+| `commandPattern` | cond | string | Machine-matchable shape of the governed command. **The single highest-leverage field** — turns "have I ruled on this shape?" into a lookup. Required for command-governing rulings; `null`/absent for non-command config (e.g. a pure tool admission). **Match semantics are command-steering's matcher, referenced by version, never reimplemented here ([D-011](../harness-program/DECISIONS.md)).** Until steering's matcher spec lands, this field is validated syntactically only. |
 | `verdict` | req | enum | `deny` \| `redirect` \| `open`. Mirrors the steering verdict vocabulary (a change that *opens* is the only one that loosens, and only a human merge ratifies it). |
 | `direction` | req | enum | `tightening` \| `loosening`. Redundant-by-design with `verdict` for cheap filtering and for enforcing "only humans loosen": any `loosening` changeset is a human-authored/human-ratified event. |
 | `redirectTarget` | cond | string | For `verdict: redirect` — the approved replacement (a forged-tool invocation or safer command). Required iff `verdict = redirect`; must be runnable as-is (matches what the native rule allowlists). |
@@ -109,9 +109,13 @@ judge memory, per the brief). Rules:
 
 ## Open questions (gate ratification)
 
-- **`commandPattern` match semantics.** Must be the *same* matcher command steering uses at
-  runtime, not a parallel one — otherwise "have I ruled on this shape?" and "does this rule
-  fire?" can disagree. Blocked on steering's matcher spec; coordinate before freezing.
+- **`commandPattern` match semantics** — *ruled* ([D-011](../harness-program/DECISIONS.md)):
+  exactly one matcher program-wide, **owned by command-steering**, referenced by this schema by
+  version, never reimplemented. Remaining work is coordination, not decision: agree the
+  version-reference mechanics with the steering PM, and — when this schema ratifies — promote
+  the binding to a steering↔ratification `contracts/` doc. `commandPattern` is validated
+  syntactically only until steering's matcher spec lands (issue #85 proceeds on that basis;
+  tracked in #92).
 - **Who sets `ratificationStatus: ratified`?** Two candidates: the reconciler stamps it on
   apply, or merge-to-`main` *is* the ratified state and the field is advisory. Leaning the
   latter (the git state is the source of truth; a field can drift) — but it interacts with how

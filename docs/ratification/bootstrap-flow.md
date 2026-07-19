@@ -58,12 +58,17 @@ program escalation (charter: "any multi-repo pressure on the monorepo invariant"
 
 After a human merges to `main`, a deterministic **reconciler** applies main to the live system:
 places forged tools, flips executable bits, updates `settings.json`, activates steering rules —
-the step that turns a ratified changeset into live configuration. This layer designs *against*
-the reconciler but does not decide **where it lives** (this layer vs. each consumer pulling its
-own packages) — that is a between-projects question, a program decision co-driven with the lead
-([how the pieces fit](../harness-program/how-the-pieces-fit.md) open questions; charter escalation).
+the step that turns a ratified changeset into live configuration.
 
-What this layer *requires* of the reconciler, wherever it lands:
+**Placement is ruled ([DECISIONS D-010](../harness-program/DECISIONS.md)): the reconciler lives
+in this layer.** One deterministic applier ships with ratification; consumers stay declarative
+via **per-package apply manifests** (what goes where, which executable bits flip, which
+validations run) and never execute their own pullers. Rationale: atomicity must survive past
+merge into apply — N independent pullers reintroduce the half-applied states the changeset model
+exists to prevent. The **apply-manifest format is this layer's scope** (spec owed in the M1
+batch; see the reconciler/manifest issue).
+
+The requirements below are ratified as binding (D-010). The reconciler must:
 
 - It reads only **merged, ratified** content from `main` — never a PR head, never an unsealed
   or unvalidated changeset. Apply happens strictly after the human merge.
