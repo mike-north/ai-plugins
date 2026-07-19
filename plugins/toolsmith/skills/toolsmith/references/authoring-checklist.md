@@ -35,31 +35,53 @@ If a script satisfies none of these, don't build it — use the native command.
 
 ## Where it lives: project vs. user (global)
 
-- **Project scope** (repo-specific, committed, reviewed in PRs): the script
-  lives at `scripts/agent-tools/<name>`, the draft entry goes in
-  `.claude/toolsmith/registry.json`.
+Every tool has a **live** location (its registered `path`, where it actually
+runs from) and a **staging** location (where the agent authors it — see
+docs/toolsmith/staged-live-split.md). You always write to staging; only
+`/toolsmith:approve` ever places bytes at the live path.
+
+- **Project scope** (repo-specific, committed, reviewed in PRs): the live
+  script will be `scripts/agent-tools/<name>`; author the draft at
+  `.claude/toolsmith/staging/<name>` and add a `draft` entry (with a `staged`
+  field pointing at that draft) to `.claude/toolsmith/registry.json`.
 - **User/global scope** (personal, reused across every project, not
-  committed): the script lives at `~/.claude/toolsmith/tools/<name>`, the
-  draft entry goes in `~/.claude/toolsmith/registry.json`. Build here when
-  you'd otherwise be re-authoring the same tool in every repo.
+  committed): the live script will be `~/.claude/toolsmith/tools/<name>`;
+  author the draft at `~/.claude/toolsmith/staging/<name>` and add a `draft`
+  entry to `~/.claude/toolsmith/registry.json`. Build here when you'd
+  otherwise be re-authoring the same tool in every repo.
+
+**Never write directly at the live path.** Nothing here is enforced against
+you doing so by accident-proofing alone (see the design doc's honest-limits
+section on write denial) — but the workflow, and the harness's own deny
+rules where configured, both assume every write lands in staging first.
 
 ## Lifecycle
 
-1. Write the script under `scripts/agent-tools/<name>` (project) or
-   `~/.claude/toolsmith/tools/<name>` (user/global) and add a `draft` entry
-   to the matching registry (see `registry-schema.md`).
-2. Ask the user to **proofread the exact contents**.
+1. Write the script under `.claude/toolsmith/staging/<name>` (project) or
+   `~/.claude/toolsmith/staging/<name>` (user/global). Add a `draft` entry to
+   the matching registry declaring the eventual live `path`, with a `staged`
+   field pointing at the draft (`path`, a one-line `note`, `since` — see
+   `registry-schema.md`). Iterate here freely: nothing here is executable or
+   registered with steering, and editing it never disturbs a live version of
+   the same tool if one already exists (no lockout).
+2. Ask the user to **proofread the exact contents** of the staged draft.
 3. Run `/toolsmith:approve <path>` (project) or `/toolsmith:approve <name>`
-   (user/global — this runs `--user` under the hood) — it shows the script +
-   the precise permission rule (via a `--dry-run` preview of
+   (user/global — this runs `--user` under the hood) — it shows the review
+   surface (a diff against current live for a revision, full text for a new
+   tool) and the precise permission rule (via a `--dry-run` preview of
    `scripts/toolsmith-approve.mjs`), and on the user's confirmation runs the
    bare `scripts/toolsmith-approve.mjs` command (add `--user` for a global
-   tool), which pins the sha256, flips `status` to `approved`, and adds
+   tool). This promotes the staged bytes to the live path (atomically), sets
+   the live file to `0555` + the BSD immutable flag where available, pins the
+   sha256 recomputed from the placed bytes, flips `status` to `approved`,
+   clears the entry's `staged` field, removes the staging file, and adds
    `Bash(<path>:*)` (project) or `Bash(<absolute-path>:*)` (user/global) to
    the corresponding `settings.json`.
-4. Any later edit changes the sha256, so the hook blocks the tool until it is
-   re-approved. Re-run `/toolsmith:approve` (with `--user` again, for a
-   global tool) after re-review.
+4. To change an already-approved tool, author the revision in staging again
+   (same draft location) and repeat from step 2 — the previous live version
+   keeps running the whole time the revision is pending. Any later edit to
+   the *live* file's bytes (which shouldn't happen outside promotion) changes
+   the sha256, so the hook blocks the tool until it is re-approved.
 
 ## Worked example
 
