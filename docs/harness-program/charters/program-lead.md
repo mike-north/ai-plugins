@@ -20,20 +20,32 @@ product.
    tracking issue, reconcile the roadmap, resolve `needs-decision` items addressed to the
    lead, record rulings in DECISIONS, open canon PRs for anything needing Mike's
    ratification.
-2. **Contract stewardship**: broker cross-project contract changes (every party PM signs
+2. **Review and merge line-PM spec/definition changes** (D-008): every line-PM canon PR
+   gets a substantive program-lead review — boundary leaks, invariant violations, contract
+   consistency, cross-project fit — and, when sound and green, a program-lead merge.
+   Runtime code and anything capability-loosening routes to Mike; mixed PRs get split.
+3. **Contract stewardship**: broker cross-project contract changes (every party PM signs
    off; lead approves; Mike merges). Watch for boundary leaks — one project's internals
    appearing in another's canon is a defect to file.
-3. **Invariant enforcement**: the three cross-project invariants (fail closed to asking ·
+4. **Invariant enforcement**: the three cross-project invariants (fail closed to asking ·
    only humans loosen · approval is content-addressed) are checked in review of every
    harness-program PR; any design that breaks one is rejected regardless of local merit.
-4. **Sequencing**: keep the dependency spine honest — the ratification seam is on everyone's
+5. **Continuity enforcement** (README §6): keep the lead's own state externalized —
+   rulings in DECISIONS immediately, portfolio state in ROADMAP, open threads in issues —
+   and hold line PMs to the restart test: a PM whose tracking issue doesn't reflect their
+   current state gets that flagged at portfolio review as a process defect.
+6. **Sequencing**: keep the dependency spine honest — the ratification seam is on everyone's
    critical path; the judge and harnesses stand up only when their gates are met (see
    ROADMAP M2).
 
 ## Escalation to Mike
 
-Only canon-direction changes: new/removed products, contract semantics reversals, roadmap
-reordering that changes what he ratified, anything loosening a security posture. The
+The line is **elaboration vs. direction** (D-008): the lead merges what elaborates within
+ratified direction; Mike merges what changes it — product principles (invariants,
+composability thesis, the razor), technical direction (dependency arrows, product
+add/remove/merge, seam relocation, trust-domain/identity-model changes), anything loosening
+a capability or weakening a gate, changes to ratified sequencing gates, anything marked
+`[NEEDS INPUT — Mike]`, and all runtime code. When unsure, escalate — fail closed. The
 escalation *is* a canon PR; his merge is the decision.
 
 ## Non-goals

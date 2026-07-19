@@ -7,8 +7,10 @@ substrate**, **the changeset/ratification layer**, and **agent-type harnesses**.
 
 **Status**: ratified program canon. These documents govern the fleet issues carrying the
 program's `plugin: *` labels (see roster below); where an issue and this canon disagree, the
-canon wins until amended. Canon amendments are ratified by Mike's PR merge — no other human
-ceremony exists in this program.
+canon wins until amended. Canon amendments are ratified by PR merge — no other ceremony
+exists in this program. Per [DECISIONS D-008](./DECISIONS.md), the program lead holds merge
+authority for pure docs/spec PRs; runtime-code merges, and anything that loosens a
+capability, remain Mike's.
 
 ## Reading order
 
@@ -87,6 +89,18 @@ requests are filed as issues in its repo, and nothing program-specific may leak 
    spec-audit against the governing canon on any spec-implementing PR, and review against the
    three cross-project invariants (fail closed to asking · only humans loosen · approval is
    content-addressed) on every harness-program PR.
-6. **Dogfooding ratchet.** Until the ratification plugin ships, ratification = plain PR merge
+6. **Continuity: sessions are disposable; roles are not.** A role ("the PM of toolsmith")
+   is the durable entity; any given session is a disposable executor of it. All context
+   that belongs to the role must therefore live on the role's durable surfaces — charter +
+   canon + tracking issue + issue queue — never only in a conversation. The discipline:
+   decisions land in canon or DECISIONS the moment they're made; work items land as
+   issues; working state, open threads, and next-actions land as a status comment on the
+   tracking issue **at every convenient stopping point** (end of a work batch, before a
+   long wait, after any ruling), not just session end. The restart test: could a fresh
+   session with your charter pick up exactly where you stopped? If something would be
+   lost, persist it before stopping — the externalized state is what makes discarding a
+   session free. (This is the agent-type-harnesses thesis applied to ourselves: identity
+   and context attach to the role, and the PM roster is its first dogfooding cohort.)
+7. **Dogfooding ratchet.** Until the ratification plugin ships, ratification = plain PR merge
    by Mike. Once it works, the program's own config decisions ride signed changesets. Later,
    the PM roster becomes the first agent-type harness roster.
