@@ -8,9 +8,11 @@ substrate**, **the changeset/ratification layer**, and **agent-type harnesses**.
 **Status**: ratified program canon. These documents govern the fleet issues carrying the
 program's `plugin: *` labels (see roster below); where an issue and this canon disagree, the
 canon wins until amended. Canon amendments are ratified by PR merge — no other ceremony
-exists in this program. Per [DECISIONS D-008](./DECISIONS.md), the program lead holds merge
-authority for pure docs/spec PRs; runtime-code merges, and anything that loosens a
-capability, remain Mike's.
+exists in this program. Merge authority follows the [D-016](./DECISIONS.md) matrix: pure
+code → the code-review agent; mixed code+product PRs → the program lead (accountable that
+all code passed the code-review agent with feedback addressed); pure product/spec docs →
+the program lead (D-008); anything capability-loosening or direction-changing → Mike,
+always.
 
 ## Reading order
 
@@ -61,6 +63,7 @@ their own agent-type harness.
 | Ratification | [ratification-pm](./charters/ratification-pm.md) | `docs/ratification/` | `plugin: ratification` | active |
 | Judge | [judge-pm](./charters/judge-pm.md) | `docs/judge/` | `plugin: judge` | active — canon-first (D-013; runtime gated on M2) |
 | Harnesses | [harnesses-pm](./charters/harnesses-pm.md) | `docs/harnesses/` | `plugin: harnesses` | Phase 2 — unstaffed |
+| Code reviewer | [code-reviewer](./charters/code-reviewer.md) | — (quality gate, not a canon owner) | — | active (D-016) |
 
 All project names except attest-it are working names pending the naming pass
 ([DECISIONS](./DECISIONS.md) carries the `[NEEDS INPUT]`).
