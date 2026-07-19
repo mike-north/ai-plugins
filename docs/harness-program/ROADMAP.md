@@ -28,11 +28,18 @@ skeletons (PRs #87 and #84, both merged and governing).
   `commandPattern: { pattern, matcherVersion }` agreed with ratification on #92), then
   engine extraction #74, predicates #73, #72 AC2 per-harness verification, bash-coverage
   experiment #83.
-- **Toolsmith PM**: staged/live split (#75); attest-it admission (#76); steering
-  registration emission (#77). Handoff delivered via charter; #44 and #40 closed as
-  superseded.
-- **Cross-track**: `contracts/steering-ratification.md` drafts when the frontmatter schema
-  ratifies (both PMs' field-shape agreement recorded on #92).
+- **Toolsmith PM**: staged/live design ✅ merged (PR #111) — implementation dispatching;
+  then attest-it admission (#76) and steering registration emission (#77, gated on the
+  matcher dialect via #95 Part B/#74). Handoff delivered; #44 and #40 closed as superseded.
+- **Judge PM** (canon-first per D-013): canon skeleton ✅ merged (PR #103 — triage policy,
+  intent format, crystallization, identity design, risk vocabulary); all four
+  ratification-schema answers delivered (#92); intent document v1 at Mike's gate (PR #104,
+  `decider: mike`); design issues #105–#107 in queue, M2 work parked `backlog`
+  (#108–#110).
+- **Cross-track**: `contracts/steering-ratification.md` drafting from the PR #97 record
+  (matcher spec §2–§5 + both PMs' sign-offs); formal party acks + Mike's merge finalize it
+  alongside the schema's ratification. The M2 repo question is ruled: **the config
+  monorepo is the harness layered-source repo** (D-015).
 
 ## M2 — the reasoning layer and the harness layer
 
@@ -43,10 +50,10 @@ Gate: verdict schema + adjudicator affordance ratified (steering), ratification 
   (needs the attest-it/vaultkeeper stakeholder answers from M0).
 - **Harnesses PM stands up.** Launcher, layer materializer, base config root, first vertical
   slice (the public API reviewer, per the brief's lean).
-- Program decision to make **before M2 kicks off**: *is the config monorepo also the
-  harness layered-source repo?* The changeset monorepo invariant and the harness
-  materialized-branch design strongly suggest yes — one repo, `main` = layered source,
-  materialized branch = artifact. Recorded in [DECISIONS](./DECISIONS.md) when ruled.
+- ~~Program decision to make before M2 kicks off: config monorepo ≟ harness
+  layered-source repo~~ **Ruled (D-015): one repo** — `main` = layered source (config
+  packages + harness layers), materialized branches = per-agent-type artifacts. The
+  harnesses PM's stand-up gate is now only: ratification flow usable + Mike's launch.
 
 ## M3 — convergence
 

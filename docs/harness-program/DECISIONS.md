@@ -6,6 +6,36 @@ scope do **not** belong here — they live in that canon.
 
 ---
 
+## D-015 · 2026-07-19 · The config monorepo IS the harness layered-source repo
+
+Ruled by the program lead (the ruling the roadmap assigned "before M2"; fulfills, not
+alters, that gate). **One repo**: the config monorepo that `ratify init` creates is also
+the agent-type-harnesses layered-source repo — `main` holds the layered, human-reviewed
+source (config-surface changeset packages *and* harness layer definitions); materialized
+branch(es) hold the flattened per-agent-type artifacts the launcher points at.
+
+Rationale: (1) harness-layer changes **are** config decisions — a base-CLAUDE.md edit or a
+role-permission change is exactly the class of thing the ratification ceremony exists for;
+a second repo would mean a second ratification surface and a split decision log,
+contradicting the unified-log preference D-012 just affirmed. (2) The changeset monorepo
+invariant (one atomic decision, one merge) extends naturally: a decision spanning a
+steering rule and a harness layer is one changeset, one merge. (3) Ratification's
+bootstrap layout was explicitly designed not to foreclose this
+(`docs/ratification/bootstrap-flow.md` §"The M2 gate question"), so the cost is near zero
+now and grows if deferred. (4) The materialized branches carry **no changesets and no
+canon** — they are build artifacts (the materializer's output, per the agent-type-harnesses
+brief's source-vs-artifact split), so they cannot pollute the decision log.
+
+Consequences: harness layer definitions join the config monorepo as packages (layout
+detail is the harnesses PM's on stand-up); the materializer reads `main`, writes
+materialized branches, and is a *distinct* deterministic transform from D-010's reconciler
+(reconciler applies ratified config to the live system; materializer flattens layers into
+harness roots — same repo, different outputs; whether they share machinery is a harnesses↔
+ratification design conversation, not presumed here). The harnesses PM's stand-up gate is
+now only: ratification flow usable + Mike's launch. Escape hatch: if materialization or
+harness-source volume measurably degrades the changeset log's usability as the judge's
+memory, that is a program escalation to revisit — not a quiet workaround.
+
 ## D-014 · 2026-07-19 · Line PMs run as dedicated sessions, never as teammate sub-agents
 
 Ruled by Mike (on program-lead recommendation). The rule: **peer roles get sessions;
