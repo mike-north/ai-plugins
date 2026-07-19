@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "homelab",
+  "version": "0.0.1",
+  "description": "Homelab ops for Unraid, UniFi Network, and Home Assistant: MCP servers for all three plus skills for Unraid control (including web-UI-hang diagnosis), macOS-on-KVM VM gotchas, and homelab networking (Tailscale split DNS/subnet routing, step-ca cert renewal).",
+  "author": {
+    "name": "Mike North"
+  },
+  "keywords": ["homelab", "unraid", "unifi", "home-assistant", "mcp", "self-hosted", "vm", "tailscale"],
+  "skills": ["./skills/unraid-control", "./skills/homelab-macos-vms", "./skills/homelab-networking"],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Homelab Ops",
+    "shortDescription": "MCP servers + runbooks for Unraid, UniFi Network, and Home Assistant.",
+    "longDescription": "Operational tooling for a self-hosted homelab. Bundles three MCP servers — UniFi Network, Home Assistant (via mcp-proxy), and Unraid (read-only by default) — with every endpoint and credential supplied through environment variables (nothing committed). Adds three skills: unraid-control (MCP-vs-CLI surface detection, a read-only/safe-write/destructive safety model, an approval + confirm-token flow, and web-UI-hang / D-state I/O-saturation diagnosis); homelab-macos-vms (running macOS guests on KVM without GPU passthrough — virtio-net placement, vmvga-vs-qxl, auto-login/recovery, and screen-sharing gotchas); and homelab-networking (Tailscale split-DNS and subnet routing, step-ca mutual-TLS cert renewal, and Apple trust caveats).",
+    "category": "developer-tools",
+    "capabilities": [
+      "MCP servers for UniFi Network, Home Assistant, and Unraid — all env-var-driven, no committed secrets",
+      "Unraid control with a read-only/safe-write/destructive safety model and web-UI-hang diagnosis",
+      "macOS-on-KVM VM operations and homelab networking (Tailscale, step-ca TLS) runbooks"
+    ],
+    "defaultPrompt": "Show the Unraid array status and any degraded disks."
+  }
+}
