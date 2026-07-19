@@ -33,7 +33,9 @@ schemaVersion: 1
 id: cs-2026-07-19-ssh-always-001
 verdict: deny
 direction: tightening
-commandPattern: "curl * | sh"
+commandPattern:
+  pattern: "curl * | sh"
+  matcherVersion: "1.4.0"
 # ... (full field set below)
 ---
 
@@ -66,7 +68,9 @@ stated condition; `opt` = optional.
 
 | Field | Req | Type | Notes |
 |---|---|---|---|
-| `commandPattern` | cond | string | Machine-matchable shape of the governed command. **The single highest-leverage field** — turns "have I ruled on this shape?" into a lookup. Required for command-governing rulings; `null`/absent for non-command config (e.g. a pure tool admission). **Match semantics are command-steering's matcher, referenced by version, never reimplemented here ([D-011](../harness-program/DECISIONS.md)).** Until steering's matcher spec lands, this field is validated syntactically only. |
+| `commandPattern` | cond | object | Machine-matchable shape of the governed command — **the single highest-leverage field** (turns "have I ruled on this shape?" into a lookup). An object `{ pattern, matcherVersion }`, both sub-fields required when present. Required for command-governing rulings; `null`/absent for non-command config (e.g. a pure tool admission). |
+| `commandPattern.pattern` | cond | string | The pattern text. Match semantics are **command-steering's matcher, never reimplemented here** ([D-011](../harness-program/DECISIONS.md)). |
+| `commandPattern.matcherVersion` | cond | semver string | The steering matcher version this ruling was authored against, **pinned per pattern** so a matcher bump never silently re-matches an old changeset (same trust-drift discipline as `intentRef.version` / `judgeHarnessVersion`). Validated as syntactic semver here; *satisfiability* (can the local matcher honor this version?) is decided by steering's compatibility contract — a version the local matcher can't satisfy **fails closed** (CI rejects the changeset; the judge doesn't apply the rule). Until steering's matcher spec lands, `pattern` is validated syntactically only. |
 | `verdict` | req | enum | `deny` \| `redirect` \| `open`. Mirrors the steering verdict vocabulary (a change that *opens* is the only one that loosens, and only a human merge ratifies it). |
 | `direction` | req | enum | `tightening` \| `loosening`. Redundant-by-design with `verdict` for cheap filtering and for enforcing "only humans loosen": any `loosening` changeset is a human-authored/human-ratified event. |
 | `redirectTarget` | cond | string | For `verdict: redirect` — the approved replacement (a forged-tool invocation or safer command). Required iff `verdict = redirect`; must be runnable as-is (matches what the native rule allowlists). |
@@ -111,11 +115,15 @@ judge memory, per the brief). Rules:
 
 - **`commandPattern` match semantics** — *ruled* ([D-011](../harness-program/DECISIONS.md)):
   exactly one matcher program-wide, **owned by command-steering**, referenced by this schema by
-  version, never reimplemented. Remaining work is coordination, not decision: agree the
-  version-reference mechanics with the steering PM, and — when this schema ratifies — promote
-  the binding to a steering↔ratification `contracts/` doc. `commandPattern` is validated
-  syntactically only until steering's matcher spec lands (issue #85 proceeds on that basis;
-  tracked in #92).
+  version, never reimplemented. **Field shape agreed** with the steering PM (#92):
+  `commandPattern: { pattern, matcherVersion }`, with `matcherVersion` pinned per pattern so a
+  changeset is self-describing and a matcher bump never silently re-matches an old ruling; a
+  referenced version the local matcher can't satisfy fails closed. Remaining work is
+  coordination, not decision: the compatibility/satisfiability contract is steering's
+  (their #95 Part A), the porcelain tool (#88) must stamp the **active matcher version** at
+  propose time, and — when this schema ratifies — the binding graduates to a
+  steering↔ratification `contracts/` doc. `commandPattern.pattern` is validated syntactically
+  only until steering's matcher spec lands (issue #85 proceeds on that basis).
 - **Who sets `ratificationStatus: ratified`?** Two candidates: the reconciler stamps it on
   apply, or merge-to-`main` *is* the ratified state and the field is advisory. Leaning the
   latter (the git state is the source of truth; a field can drift) — but it interacts with how

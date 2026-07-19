@@ -44,9 +44,11 @@ What it does, in order:
    current base policy — fail *before* writing anything (no orphaned branches).
 2. **Fill the template.** Assemble the [frontmatter schema](./frontmatter-schema.md) header
    from the flags, allocate a stable `id`, set `ratificationStatus: proposed` and the
-   `schemaVersion`, and attach the body (the judge's risk template). Validate the header
-   locally against the schema — the same well-formedness check CI runs first — so a malformed
-   changeset never leaves the machine.
+   `schemaVersion`, and — for a `commandPattern` — stamp the **active steering matcher version**
+   into `commandPattern.matcherVersion` (D-011; the ruling is pinned to the semantics it was
+   authored against). Attach the body (the judge's risk template). Validate the header locally
+   against the schema — the same well-formedness check CI runs first — so a malformed changeset
+   never leaves the machine.
 3. **Write the changeset file** into the named package(s) under the config monorepo. A
    multi-package decision writes one coherent set (one atomic decision → one changeset → one
    PR), per the monorepo invariant.
