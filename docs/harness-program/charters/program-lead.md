@@ -36,8 +36,12 @@ product.
 
 ## Escalation to Mike
 
-Only canon-direction changes: new/removed products, contract semantics reversals, roadmap
-reordering that changes what he ratified, anything loosening a security posture. The
+The line is **elaboration vs. direction** (D-008): the lead merges what elaborates within
+ratified direction; Mike merges what changes it — product principles (invariants,
+composability thesis, the razor), technical direction (dependency arrows, product
+add/remove/merge, seam relocation, trust-domain/identity-model changes), anything loosening
+a capability or weakening a gate, changes to ratified sequencing gates, anything marked
+`[NEEDS INPUT — Mike]`, and all runtime code. When unsure, escalate — fail closed. The
 escalation *is* a canon PR; his merge is the decision.
 
 ## Non-goals

@@ -20,6 +20,24 @@ delegation: request a split or route it to Mike. Amends the README's "canon merg
 only human gate" line: canon merges remain the ratification mechanism; for pure docs/spec
 canon, the program lead now performs them.
 
+**The escalation line — elaboration vs. direction.** The program lead merges what
+*elaborates within ratified direction*; anything that *changes direction* escalates to
+Mike, even when it's pure docs. Concretely:
+
+*Program lead merges:* canon skeletons and specs that detail ratified briefs (schemas,
+contract elaboration, telemetry formats, CI check definitions); charter/process/roadmap
+edits that don't alter what Mike ratified; contract changes signed off by all party PMs
+that stay inside the ratified architecture; editorial and consistency fixes.
+
+*Escalates to Mike (his merge):* changes to **product principles** (the three invariants,
+the composability thesis, fail-closed posture, the razor); changes to **technical
+direction** (dependency-graph direction, adding/removing/merging products, relocating a
+seam, trust-domain or identity-model changes); anything **loosening a capability or
+weakening a gate**; **roadmap changes to ratified sequencing gates** (as opposed to
+reflowing work within them); anything marked `[NEEDS INPUT — Mike]` (e.g. naming, D-007);
+and **all runtime code**. When genuinely unsure which side of the line a change sits on,
+it escalates — the same fail-closed default the products themselves follow.
+
 ## D-007 · 2026-07-19 · Naming pass pending
 
 `[NEEDS INPUT — Mike]` All project names except attest-it are working names: *command
