@@ -26,9 +26,10 @@ together.
 5. **Acceptance criteria are the contract.** Map each criterion to a named test and say so
    in the PR. Wrong/unachievable criterion → comment on the issue *before* building around
    it.
-6. **Not for pickup:** `needs-decision` (design unresolved — the issue body names the
-   decider: line PM, program lead, or Mike) and `backlog` (decided but deferred). Deadlines
-   in titles (`due YYYY-MM-DD`) outrank undated work.
+6. **Not for pickup:** `needs-decision` (design unresolved — a `decider: program-lead` or
+   `decider: mike` label routes the escalation; no decider label means the line PM decides)
+   and `backlog` (decided but deferred). Deadlines in titles (`due YYYY-MM-DD`) outrank
+   undated work.
 7. **Blocked or descoping?** Comment what/why and drop the `in progress` label. Never go
    silent on a claimed issue.
 
