@@ -24,6 +24,16 @@ command -v jq >/dev/null 2>&1 || { echo "SKIP: jq not installed"; exit 0; }
 CHFLAGS_AVAILABLE=0
 command -v chflags >/dev/null 2>&1 && CHFLAGS_AVAILABLE=1
 
+# Portable octal file mode. `stat -f '%Lp'` is BSD/macOS; on GNU coreutils `-f`
+# means --file-system and *succeeds* while printing a filesystem dump, so a
+# bare `stat -f … || stat -c …` fallback silently yields garbage rather than
+# failing over. Detect the flavor instead of relying on exit status.
+if stat -c '%a' . >/dev/null 2>&1; then
+  file_mode() { stat -c '%a' "$1" 2>/dev/null; }   # GNU coreutils
+else
+  file_mode() { stat -f '%Lp' "$1" 2>/dev/null; }  # BSD / macOS
+fi
+
 pass=0
 fail=0
 ok()  { pass=$((pass + 1)); }
@@ -247,7 +257,7 @@ fi
 
 if [ ! -f "$PROJ/.claude/toolsmith/staging/mytool" ]; then ok; else bad "AC5: staging draft file removed after promotion" "still present"; fi
 
-MODE=$(stat -f '%Lp' "$PROJ/scripts/agent-tools/mytool" 2>/dev/null || stat -c '%a' "$PROJ/scripts/agent-tools/mytool" 2>/dev/null)
+MODE=$(file_mode "$PROJ/scripts/agent-tools/mytool")
 if [ "$MODE" = "555" ]; then ok; else bad "AC5: live file mode is 0555 (r-x, no write)" "mode=$MODE"; fi
 
 if [ -f "$PROJ/.claude/settings.json" ] && jq -e '.permissions.allow == ["Bash(scripts/agent-tools/mytool:*)"]' "$PROJ/.claude/settings.json" >/dev/null 2>&1; then
@@ -622,7 +632,7 @@ jq -n --arg lsha "$LEGACY_SHA" --arg since "$SINCE" '{
 }' >"$PROJ/.claude/toolsmith/registry.json"
 
 run_approve "$PROJ" scripts/agent-tools/mytool >/dev/null
-LEGACY_MODE=$(stat -f '%Lp' "$PROJ/scripts/agent-tools/legacy-tool" 2>/dev/null || stat -c '%a' "$PROJ/scripts/agent-tools/legacy-tool" 2>/dev/null)
+LEGACY_MODE=$(file_mode "$PROJ/scripts/agent-tools/legacy-tool")
 LEGACY_SHA_AFTER=$(shasum -a 256 "$PROJ/scripts/agent-tools/legacy-tool" | awk '{print $1}')
 if [ "$LEGACY_MODE" = "555" ] && [ "$LEGACY_SHA_AFTER" = "$LEGACY_SHA" ]; then
   ok
