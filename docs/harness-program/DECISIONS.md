@@ -6,6 +6,31 @@ scope do **not** belong here — they live in that canon.
 
 ---
 
+## D-014 · 2026-07-19 · Line PMs run as dedicated sessions, never as teammate sub-agents
+
+Ruled by Mike (on program-lead recommendation). The rule: **peer roles get sessions;
+subordinate task-work gets teammate/sub-agents.** A line PM is a peer — it holds distinct
+authority and must be able to check the program lead structurally — so every line PM runs
+as its own dedicated session, launched from its charter and resumed from its tracking
+issue. Teammate sub-agents remain correct for work that is a means to its parent's end
+(monitors, explorers, reviewers, fleet implementers), inside the parent's trust domain.
+
+Rationale, from the first day's evidence and the program's own principles: (1) trust
+domain — a teammate shares the parent session's permissions, credentials, and identity;
+the agent-type-harnesses thesis requires each role to get its own harness and environment,
+and the judge in particular is context-starved by design with its own signing identity;
+(2) lifecycle — teammates die with the parent session and consume its context, fighting
+"sessions are disposable, roles are not"; (3) capability — sub-agents cannot run their own
+background monitors or orchestration loops; (4) drift — the only state-sync confusions of
+day one occurred in the fast messaging side-channel, while durable-surface coordination
+never drifted. Session separation also enables **per-role model tiering**: line PMs on a
+mid-tier model, the program lead on a frontier model — differentiation via harness, not
+just prompt, per the agent-type-harnesses brief. The steering and ratification PMs
+(bootstrapped as teammates at M0 kickoff) migrate to dedicated sessions at their next
+convenient stopping point; the continuity discipline makes the migration free by
+construction. The PM roster thereby becomes directly adoptable as the first agent-type
+harness roster at M2.
+
 ## D-013 · 2026-07-19 · Judge PM stood up early, canon-first; runtime gate unchanged
 
 Ruled by Mike (on program-lead recommendation): the judge PM stands up ahead of the M2
