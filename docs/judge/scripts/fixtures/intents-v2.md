@@ -20,10 +20,10 @@
 
 **Publishing and releasing are mine alone.**
 
+**Retired**: v2
+
 1. Agents never touch version/release PRs.
 2. Agents never publish a package or flip visibility.
-
-**Retired**: v2
 
 ## 3. `secrets-stay-in-1password`
 

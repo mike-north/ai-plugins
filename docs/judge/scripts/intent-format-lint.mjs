@@ -8,15 +8,14 @@
 // permanence, sequential clause numbering, and citation resolvability. Any
 // well-formed set of principles/clauses passes regardless of what they say.
 //
-// Retirement-marker convention: the format doc ("Optionally, a retired
-// marker with the version at which retirement was ratified") doesn't pin an
-// exact syntax, so this checker defines the concrete form as part of
-// implementing the format: a line of the shape
-//
-//   **Retired**: v<N>
-//
-// appearing anywhere in a principle's block, where <N> is the intent-document
-// version at which the retirement was ratified.
+// Retirement-marker syntax: `**Retired**: v<N>`, immediately following the
+// principle statement — pinned by intent-format.md §Format (this checker
+// originally had to infer the concrete form; the spec now states it
+// exactly, and the spec is the authority — this comment records where the
+// form comes from, not a decision made here). This checker matches the
+// marker anywhere in a principle's block (not just immediately after the
+// statement) so it still extracts the version even from a misplaced marker;
+// exact positional conformance is not separately enforced.
 //
 // Usage (CLI):
 //   node intent-format-lint.mjs <intents-vN.md> [<intents-vM.md> ...]
@@ -46,7 +45,7 @@ export function filenameVersion(filename) {
 
 /**
  * Parse an intent document's structure. This is a pure, permissive
- * extraction — it never throws; malformed input just produces principals
+ * extraction — it never throws; malformed input just produces principles
  * with fewer/odd fields, and the check functions below turn that into
  * errors.
  *
@@ -87,7 +86,13 @@ export function parseIntentDocument(content) {
     const blockLines = lines.slice(idx + 1, nextIdx);
     const blockText = blockLines.join("\n");
 
-    const statementMatch = /^\*\*(.+)\*\*\s*$/m.exec(blockText);
+    // Per intent-format.md §Format, the statement is "a bold line
+    // immediately below the heading" — so take the first non-blank line of
+    // the block specifically, not the first bold line anywhere in it. This
+    // also keeps a `**Retired**: v<N>` marker (itself a bold line) from
+    // ever being mistaken for the statement.
+    const firstNonBlank = blockLines.find((l) => l.trim() !== "");
+    const statementMatch = firstNonBlank ? /^\*\*(.+)\*\*\s*$/.exec(firstNonBlank) : null;
     const statement = statementMatch ? statementMatch[1] : null;
 
     const clauses = [];
@@ -179,6 +184,34 @@ export function checkSequentialClauseNumbering(content, filename) {
 }
 
 /**
+ * Check 1c-bis: a principle's declared retirement version cannot be later
+ * than its own document's version — a principle cannot be retired at a
+ * version that doesn't exist yet. This guards the input that
+ * `checkNoSlugReuseAcrossVersions` depends on: a future-dated (malformed)
+ * `**Retired**: v<N>` marker must be flagged here rather than silently
+ * accepted, or the reuse check downstream would fail open (see that
+ * function's doc comment).
+ * @param {string} content
+ * @param {string} filename
+ * @returns {string[]} errors
+ */
+export function checkRetiredMarkerVersion(content, filename) {
+  const errors = [];
+  const docVersion = filenameVersion(filename);
+  if (docVersion === null) return errors; // reported by checkVersionHeaderMatchesFilename
+
+  const { principles } = parseIntentDocument(content);
+  for (const p of principles) {
+    if (p.retiredAtVersion !== null && p.retiredAtVersion > docVersion) {
+      errors.push(
+        `principle "${p.slug}" in "${path.basename(filename)}" (v${docVersion}) declares "**Retired**: v${p.retiredAtVersion}", a version that doesn't exist yet`,
+      );
+    }
+  }
+  return errors;
+}
+
+/**
  * Run all single-document structural checks (criteria 1a-1c).
  * @param {{filename: string, content: string}} doc
  * @returns {{errors: string[]}}
@@ -188,6 +221,7 @@ export function lintIntentDocument({ filename, content }) {
     ...checkVersionHeaderMatchesFilename(content, filename),
     ...checkUniqueSlugsWithinDocument(content, filename),
     ...checkSequentialClauseNumbering(content, filename),
+    ...checkRetiredMarkerVersion(content, filename),
   ];
   return { errors };
 }
@@ -199,6 +233,22 @@ export function lintIntentDocument({ filename, content }) {
  * `**Retired**: v<N>`) at version N, it must never appear as an active
  * (non-retired) principle in any later version.
  *
+ * Coverage: this mechanically enforces only the "a retired slug never
+ * reappears as active" half of the spec's "slugs are permanent... never
+ * reused" rule. The other half — a still-live (never-retired) slug silently
+ * reassigned to a genuinely different principle — is NOT detectable here:
+ * from structure alone, an amended statement/clauses under the same slug is
+ * indistinguishable from a reused slug. That half is out of scope for a
+ * structural checker and is not attempted.
+ *
+ * Fail-closed note: the retirement version recorded here is the *declaring
+ * document's own version* (`doc.version`), not the value written in the
+ * `**Retired**: v<N>` marker. A malformed/future-dated marker (e.g.
+ * `**Retired**: v99` inside `intents-v2.md`) is caught as its own structural
+ * error by `checkRetiredMarkerVersion`, but even if that check were bypassed,
+ * anchoring to the declaring document's actual version means a bad marker
+ * can never move the comparison point and silently disable reuse detection.
+ *
  * @param {Array<{filename: string, content: string}>} docs
  * @returns {string[]} errors
  */
@@ -209,7 +259,7 @@ export function checkNoSlugReuseAcrossVersions(docs) {
     .filter((d) => d.version !== null)
     .sort((a, b) => a.version - b.version);
 
-  const retiredAt = new Map(); // slug -> version it was retired at
+  const retiredAt = new Map(); // slug -> version of the document that declared retirement
 
   for (const doc of parsed) {
     for (const p of doc.principles) {
@@ -220,7 +270,9 @@ export function checkNoSlugReuseAcrossVersions(docs) {
         );
       }
       if (p.retiredAtVersion !== null && !retiredAt.has(p.slug)) {
-        retiredAt.set(p.slug, p.retiredAtVersion);
+        // Anchor to the declaring document's own version, not the (possibly
+        // malformed) declared value — see the fail-closed note above.
+        retiredAt.set(p.slug, doc.version);
       }
     }
   }
@@ -298,6 +350,6 @@ function main() {
   process.stdout.write(`0 errors across ${docs.length} document(s)\n`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   main();
 }

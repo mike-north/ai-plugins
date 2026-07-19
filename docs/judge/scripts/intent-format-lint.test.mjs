@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import {
   checkCitationResolvable,
   checkNoSlugReuseAcrossVersions,
+  checkRetiredMarkerVersion,
   checkSequentialClauseNumbering,
   checkUniqueSlugsWithinDocument,
   checkVersionHeaderMatchesFilename,
@@ -152,6 +153,22 @@ describe("checkSequentialClauseNumbering (criterion 1: sequentially numbered cla
   });
 });
 
+describe("checkRetiredMarkerVersion (criterion 1: a principle cannot be retired at a version that doesn't exist yet)", () => {
+  it("passes when the retired marker's version does not exceed the document's own version", () => {
+    expect(checkRetiredMarkerVersion(V2, "intents-v2.md")).toEqual([]);
+  });
+
+  it("fails when a principle declares retirement at a version later than its own document [negative: future-dated retirement marker]", () => {
+    // Fixture file is named "...-future-retired.md" for readability on disk;
+    // its own "**Version**: 2" header is what matters, so it's checked
+    // under the logical filename "intents-v2.md".
+    const futureRetiredContent = readFixture("intents-v2-future-retired.md");
+    const errors = checkRetiredMarkerVersion(futureRetiredContent, "intents-v2.md");
+    expect(errors.length).toBe(1);
+    expect(errors[0]).toMatch(/declares "\*\*Retired\*\*: v5", a version that doesn't exist yet/);
+  });
+});
+
 describe("lintIntentDocument (aggregates single-document checks)", () => {
   it("returns no errors for a well-formed document", () => {
     expect(lintIntentDocument({ filename: "intents-v1.md", content: V1 }).errors).toEqual([]);
@@ -182,6 +199,19 @@ describe("checkNoSlugReuseAcrossVersions (criterion 1: no slug reuse across a su
       fixtureDoc("intents-v2.md"),
     ]);
     expect(errors.length).toBe(1);
+  });
+
+  it("still catches resurrection when the retirement marker itself is future-dated (malformed) [regression: fail-open on trusted retirement version]", () => {
+    // intents-v2-future-retired.md declares "**Retired**: v5" inside a v2
+    // document. If checkNoSlugReuseAcrossVersions trusted that declared
+    // value verbatim, v3 > 5 would be false and the reuse below would go
+    // undetected — the exact fail-open this check exists to prevent. It
+    // must instead anchor retirement to the declaring document's own
+    // version (v2), so v3 > 2 still fires.
+    const v2FutureRetired = { filename: "intents-v2.md", content: readFixture("intents-v2-future-retired.md") };
+    const errors = checkNoSlugReuseAcrossVersions([v2FutureRetired, fixtureDoc("intents-v3.md")]);
+    expect(errors.length).toBe(1);
+    expect(errors[0]).toMatch(/slug "releases-are-mikes-gate" was retired at v2 but reappears/);
   });
 });
 
@@ -241,21 +271,34 @@ describe("checkCitationResolvable (criterion 2: citation resolvability)", () => 
   });
 });
 
-describe("real, shipped intent documents (if any have been ratified into the repo)", () => {
-  it("conform to the format — zero structural errors", () => {
-    if (!fs.existsSync(INTENTS_DIR)) {
-      // No ratified intents-v*.md exists yet (docs/judge/intents/ ships once
-      // an intent document is merged). Nothing to check.
-      return;
-    }
-    const files = fs
+// Resolved once, at collection time, so the "no ratified intents yet" state
+// is visible in the test report as an explicit skip rather than a silently
+// passing assertion (nothing here would fail either way today, since
+// docs/judge/intents/ doesn't exist on main yet).
+const realIntentFiles = fs.existsSync(INTENTS_DIR)
+  ? fs
       .readdirSync(INTENTS_DIR)
       .filter((f) => /^intents-v\d+\.md$/.test(f))
-      .map((f) => path.join(INTENTS_DIR, f));
-    if (files.length === 0) return;
+      .map((f) => path.join(INTENTS_DIR, f))
+  : [];
 
-    const docs = files.map((filename) => ({ filename, content: fs.readFileSync(filename, "utf8") }));
-    const { errors } = lintIntentDocumentSet(docs);
-    expect(errors).toEqual([]);
+describe("real, shipped intent documents (if any have been ratified into the repo)", () => {
+  it.skipIf(realIntentFiles.length === 0)(
+    "conform to the format — zero structural errors",
+    () => {
+      const docs = realIntentFiles.map((filename) => ({ filename, content: fs.readFileSync(filename, "utf8") }));
+      const { errors } = lintIntentDocumentSet(docs);
+      expect(errors).toEqual([]);
+    },
+  );
+
+  it("names the current state explicitly, so a skip above isn't mistaken for coverage", () => {
+    if (realIntentFiles.length === 0) {
+      expect(fs.existsSync(INTENTS_DIR), "docs/judge/intents/ does not exist yet — no ratified intent documents to check").toBe(
+        false,
+      );
+    } else {
+      expect(realIntentFiles.length).toBeGreaterThan(0);
+    }
   });
 });
