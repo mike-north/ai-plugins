@@ -33,7 +33,7 @@ attest-it, fingerprinting spans the whole surface — change any of it and the s
 | Toolsmith concept | attest-it primitive |
 |---|---|
 | The admission gate | a gate in `.attest-it/policy.yaml` covering the toolbox paths (staging file + registry entry), `authorizedSigners`: the human identity only |
-| The admission ceremony | a suite whose command is the **proposal gate** (`lint`) — `attest-it run --suite toolsmith-admission` runs lint, then prompts the human to confirm the seal (never `--yes` on this suite) |
+| The admission ceremony | a suite whose command is the **proposal gate** (`lint`) — `attest-it run --suite toolsmith-admission` runs lint, then prompts the human to confirm the seal (never `--yes` on this suite). *`run` is chosen over the bare `seal` verb deliberately*: both exist in the CLI (verified 0.10.1), but `run` binds the seal to a **successful gate execution**, so a tool cannot be admitted without its proposal gate having actually passed. `seal` would let the ceremony and the check drift apart. |
 | The signature | Ed25519 seal by the human's presence-backed identity |
 | "May this exist at all" | seal present + signer authorized for the gate |
 | `approvedSha256` | derived from the sealed fingerprint at promotion (recomputed from placed bytes, per the staged/live TOCTOU rule) — the pin becomes a *cache of* the seal's content-address, not an independent authority |
@@ -65,6 +65,22 @@ branch). Consequences, in order of arrival:
    monorepo's CI (changeset layer), the GitHub Action verifies against the trusted base and
    the sealed-root-gate guarantee holds in full. This design's artifacts (gate, suite, seal)
    are exactly the shape that CI consumes — nothing is redone, the verification point moves.
+
+**Version dependency (verified against the published CLI, 2026-07-19).** The base-anchored
+path is documented on attest-it's `main`, but `main` reads `version: 1.0.0` while the latest
+**published** npm release is `0.10.1`, whose `verify` exposes only `--json` — there is no
+`--base` flag in the installable version. Filed as
+[attest-it#151](https://github.com/mike-north/attest-it/issues/151) (release/doc alignment;
+no API change requested). Consequences for this design, none of them blocking:
+
+- Step 2's **signer-fingerprint pin is load-bearing, not belt-and-braces**, for as long as
+  `--base` is unavailable to consumers installing from npm. It is what makes interim
+  admission meaningfully agent-proof, and AC1 tests exactly that.
+- The GitHub-Action route (used by ratification's CI) is unaffected — it is the boundary
+  regardless of the local CLI's flags.
+- Implementation must **pin the attest-it version** it consumes and re-check this when
+  adopting a newer one; a release that adds `--base` lets promotion's step 4 upgrade from
+  "plain verify + signer pin" to base-anchored verification with no other change.
 
 ## Scope split: project now, user gated on a ruling
 
