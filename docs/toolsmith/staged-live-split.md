@@ -44,7 +44,7 @@ mechanism and its honest limits, the promotion step, and the registry/schema cha
 | State | Where the bytes live | Executable | Native rule | Steering registration |
 |---|---|---|---|---|
 | **Staged** (new or revision) | `…/staging/<name>` | never (0644) | none | none — steering never sees staging |
-| **Live** | the tool's registered path (unchanged from today) | yes (0755) | `Bash(<path>:*)` | covers + pin + grants per contract §1 |
+| **Live** | the tool's registered path (unchanged from today) | yes (0555 — r-x, no write bit; see §write denial) | `Bash(<path>:*)` project scope / `Bash(<ABS>:*)` user scope, per the shared-contract table in `registry-schema.md` | covers + pin + grants per contract §1 |
 | **Retired** | removed from live path; registry entry deleted or `status: retired` | — | rule removed | registration removed |
 
 An **edit to a live tool never touches live**: the draft accumulates in staging while live
@@ -74,9 +74,14 @@ the previous misses, each leaving a bypass *visible and deliberate* rather than 
    varies; where a harness can't express it, layer 1 still holds. The exact rule set ships
    with this feature and is documented in the skill references.
 3. **Steering integrity pin (contract §2).** If bytes at the live path nonetheless drift
-   from the registered pin, invocation fails closed to ask. This is the backstop that makes
-   layers 1–2 *safety*, not *security*: even a successful out-of-band write (dotfile sync,
-   manual edit, flag-strip) cannot ride the standing grant.
+   from the registered pin, invocation fails closed — the drifted tool cannot ride the
+   standing grant. *Interim vs. target semantics*: today's shipped check (`hashDenial` in
+   `toolsmith-check.mjs`) emits a **deny** on mismatch; the contract-§2 target is
+   fail-closed-to-**ask**, which lands when steering's registered-target predicate (#73)
+   takes this check over. Both satisfy the invariant's real content — a mismatch never
+   silently executes — and the deny→ask softening is #73's scope, not this design's. This
+   backstop is what makes layers 1–2 *safety*, not *security*: even a successful
+   out-of-band write (dotfile sync, manual edit, flag-strip) is caught here.
 
 The three layers honor content-addressing end to end: the pin is authoritative, the
 filesystem makes accidents fail fast, the harness rules make the common tools refuse
@@ -107,6 +112,15 @@ Additions to a tool entry (all optional; absent = today's semantics):
   }
 }
 ```
+
+`staged.path` follows the same per-scope resolution convention as the entry's `path`
+(the shared-contract table in `registry-schema.md`): in a **project** registry it is
+project-root-relative (`.claude/toolsmith/staging/<name>`, resolving to
+`<projectRoot>/.claude/toolsmith/staging/<name>`); in a **user** registry it is relative to
+`<home>/.claude/toolsmith/` (`staging/<name>`, resolving to
+`<home>/.claude/toolsmith/staging/<name>`), validated with the same strict `normalizePath`
+rules with `staging` required as the first segment (mirroring the `tools`-prefix rule for
+user `path`).
 
 - A brand-new tool is `status: draft` with only `staged` populated (no live path fields
   active) — same as today's draft semantics, now with a mandated location.
@@ -164,11 +178,14 @@ approve's ceremony for auditability).
 2. **Staged inert**: executing a staged file directly fails (mode); `bash <staged>` falls to
    the normal ask flow (no rule). Test both routes.
 3. **Live write-denied**: an in-place write to a live tool file fails with EPERM (mode +
-   `uchg`); after a forced out-of-band edit (`nouchg` + write in the test), invocation falls
-   to ask via the pin, never runs silently. (The second half exercises today's hash check
-   until #73 relocates it.)
+   `uchg`); after a forced out-of-band edit (`nouchg` + write in the test), invocation is
+   refused via the pin and never runs silently — asserted as today's **deny** (`hashDenial`)
+   until #73 relocates the check to steering, at which point the assertion flips to **ask**
+   per contract §2. The invariant under test is "drifted bytes never execute on the standing
+   grant," not the specific refusal verdict.
 4. **Promotion atomicity + idempotence**: kill promotion between place and pin-write →
-   invocation asks (never silent-runs); re-run approve → converges to live+pinned+granted.
+   invocation is refused (deny today; ask once #73 lands), never silent-runs; re-run
+   approve → converges to live+pinned+granted.
 5. **New-tool flow**: draft → staged → approve → live+granted, end to end, with the
    review surface showing exactly the placed bytes.
 6. **No hot-path regression**: the staging namespace adds zero reads to steering's
