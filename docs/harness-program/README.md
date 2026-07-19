@@ -55,7 +55,7 @@ lead owns the seams. Charters in [charters/](./charters/).
 | Toolsmith | [toolsmith-pm](./charters/toolsmith-pm.md) | `docs/toolsmith/` | `plugin: toolsmith` | active |
 | Command steering | [command-steering-pm](./charters/command-steering-pm.md) | `docs/command-steering/` | `plugin: command-steering` | active |
 | Ratification | [ratification-pm](./charters/ratification-pm.md) | `docs/ratification/` | `plugin: ratification` | active |
-| Judge | [judge-pm](./charters/judge-pm.md) | `docs/judge/` | `plugin: judge` | Phase 2 — unstaffed |
+| Judge | [judge-pm](./charters/judge-pm.md) | `docs/judge/` | `plugin: judge` | active — canon-first (D-013; runtime gated on M2) |
 | Harnesses | [harnesses-pm](./charters/harnesses-pm.md) | `docs/harnesses/` | `plugin: harnesses` | Phase 2 — unstaffed |
 
 All project names except attest-it are working names pending the naming pass
@@ -83,8 +83,10 @@ requests are filed as issues in its repo, and nothing program-specific may leak 
      amended if needed, labels removed on resolution.
    - **Mike** — only what changes ratified canon direction. Label `decider: mike`; the
      decision *is* a canon PR he merges, and the label marks work blocked on drafting it.
-4. **Status flows through tracking issues.** Each project has a pinned
-   "<project>: program tracking" issue; its PM posts a status comment per working session
+4. **Status flows through tracking issues.** Each project has a
+   "<project>: program tracking" issue, canonical by label query (`program` +
+   `plugin: <name>`; pinning is best-effort — GitHub caps pins at 3, per D-013); its PM
+   posts a status comment per working session
    (shipped / in flight / blocked / decisions needed). The program lead runs a portfolio
    review at milestone boundaries: reconcile [ROADMAP](./ROADMAP.md), resolve escalations,
    open canon PRs. Mike reads exactly two things: the roadmap and canon PRs.

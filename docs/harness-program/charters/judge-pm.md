@@ -1,9 +1,13 @@
 # Charter: judge PM
 
-**Status**: **Phase 2 — unstaffed.** Stands up when the M2 gate is met: steering's
-verdict-payload schema and adjudicator affordance ratified, and the attest-it/vaultkeeper
-identity questions answered. Until then the steering PM holds the affordance spec and the
-program lead holds this charter. Working name pending D-007.
+**Status**: **active — canon-first** (stood up 2026-07-19 per [D-013](../DECISIONS.md),
+ahead of the M2 gate, to author the judge canon and unblock the ratification schema's
+judge-addressed open questions). **The M2 gate is unchanged for runtime work**: no hook
+wiring, adjudicator implementation, or live triage until steering's verdict-payload schema
+ratifies, the adjudicator-affordance contract exists, and the identity-custody answers
+land (attest-it#150, vaultkeeper#261) — implementation issues carry `backlog` until then.
+The steering PM retains custody of the affordance spec until it ratifies. Working name
+pending D-007. Tracking issue: #98.
 
 **Mission**: adversarial triage of the ask set — accident prevention and desperation
 pushback, never anti-malice — converging expensive reasoning into cheap deterministic rules

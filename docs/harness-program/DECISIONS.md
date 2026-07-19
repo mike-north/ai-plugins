@@ -6,6 +6,23 @@ scope do **not** belong here — they live in that canon.
 
 ---
 
+## D-013 · 2026-07-19 · Judge PM stood up early, canon-first; runtime gate unchanged
+
+Ruled by Mike (on program-lead recommendation): the judge PM stands up ahead of the M2
+gate, scoped to **canon-first** work — authoring `docs/judge/` (intent-document format,
+triage policy with the ratified probation posture, crystallization flow, identity design,
+risk vocabulary) and answering the ratification frontmatter schema's judge-addressed open
+questions (`ratificationStatus`, `intentRef` serialization, `riskLevel`, body-template
+ownership), which were blocking that schema's path to ratification. **The M2 gate itself
+is unchanged**: no runtime judge (hook wiring, adjudicator implementation, live triage)
+until steering's verdict-payload schema ratifies, the adjudicator-affordance contract
+exists, and the identity-custody answers land (attest-it#150, vaultkeeper#261).
+Implementation issues are filed `backlog` until the gate lifts. The harnesses PM remains
+Phase 2 — nothing blocks on it, and it wants the config-monorepo≟harness-source ruling
+first. Corollary convention fix: GitHub caps pinned issues at 3, so tracking issues are
+canonical by **label query** (`program` + `plugin: <name>`, title "<project>: program
+tracking"), with pinning best-effort only. Judge tracking issue: #98.
+
 ## D-012 · 2026-07-19 · Monorepo invariant affirmed; config surfaces live in one repo
 
 Records the ratification canon's resolution of the changeset brief's critical decision,
