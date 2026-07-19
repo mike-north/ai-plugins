@@ -42,10 +42,55 @@ What the judge *can* see:
   context, because escalation patterns are visible from the outside even when each
   individual command looks plausible.
 
-**Open (line-PM decision, not yet ruled): the command-history window.** Escalation
-detection needs enough window to see drift; the right scope (session, day, agent type) is
-undecided. Tracked as a design issue; until ruled, no design in this canon may assume a
-window wider than the current session.
+### The command-history window (ruled)
+
+Escalation detection needs enough window to see drift; too wide a window reconstructs the
+very narrative context starvation exists to exclude. The window is therefore split along
+the distinction steering's telemetry contract already draws — the verdict log is a *verdict*
+log, not a command log:
+
+- **Raw command history** (`history.jsonl`) — **current session, current project only.**
+- **Steering decisions** (`steering.jsonl`) — the current session plus a **bounded
+  look-back over the most recent prior decisions in the same project**, decision-shaped
+  only (timestamp, verdict, machine-stable reason slug), never re-expanded into narrative.
+- **Never across projects.** The logs are project-local by design and no user-level
+  aggregate exists; cross-project rollup is a consumer's job and building one would be a
+  steering canon change, not the judge's to make.
+
+Why this split, under the trust asymmetry:
+
+- **Too narrow fails cheap.** A missed cross-session pattern means the judge passes the
+  command through to the human — the guaranteed floor, and during probation there is no
+  auto-allow for it to weaken. The failure mode is a human tap, which is survivable.
+- **Too wide fails expensively in three ways**: it drags more plaintext,
+  credential-bearing command text into adjudication; it lets one actor's escalation be
+  imputed to another's unrelated command, producing noisy blocks that erode the judge's
+  credibility (the actual scarce currency); and it degrades context starvation into
+  narrative reconstruction by the back door.
+
+The look-back earns its keep precisely because decisions are small and already abstracted:
+"I blocked something adjacent recently" is the cross-session signal worth having, and it
+carries none of the raw command text that makes a wide window hazardous.
+
+### Handling of adjudication context
+
+Command history is credential-bearing plaintext (steering's telemetry contract flags this
+explicitly: a logged command may embed `Authorization: Bearer …`). Two binding rules follow:
+
+- Adjudication context is **never persisted beyond the ruling** and never copied outside
+  `.claude/toolsmith/`.
+- **`triggeringObservation` is redacted before it is written.** That frontmatter field
+  records "the actual command that provoked the ruling" into a file that is signed and
+  committed to the config monorepo — a verbatim copy would commit any credential the
+  command carried, permanently and content-addressed. The judge writes a redacted form
+  (the command shape, with argument values bearing secret-like material replaced) and
+  never the raw string.
+
+**Parked for steering (not blocking):** the verdict log's fields carry no agent-type
+attribution, so the look-back cannot today distinguish one actor's escalation ladder from
+another's. Scoping by agent type would need a versioned schema addition, which is steering's
+to make under the reader contract. Until then the look-back is project-scoped and the judge
+treats attribution as unknown — which argues for the bounded size, not against the window.
 
 ## 3. Trust asymmetry
 
