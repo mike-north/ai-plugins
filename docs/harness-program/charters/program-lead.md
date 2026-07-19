@@ -30,7 +30,11 @@ product.
 4. **Invariant enforcement**: the three cross-project invariants (fail closed to asking ·
    only humans loosen · approval is content-addressed) are checked in review of every
    harness-program PR; any design that breaks one is rejected regardless of local merit.
-5. **Sequencing**: keep the dependency spine honest — the ratification seam is on everyone's
+5. **Continuity enforcement** (README §6): keep the lead's own state externalized —
+   rulings in DECISIONS immediately, portfolio state in ROADMAP, open threads in issues —
+   and hold line PMs to the restart test: a PM whose tracking issue doesn't reflect their
+   current state gets that flagged at portfolio review as a process defect.
+6. **Sequencing**: keep the dependency spine honest — the ratification seam is on everyone's
    critical path; the judge and harnesses stand up only when their gates are met (see
    ROADMAP M2).
 

@@ -89,6 +89,16 @@ requests are filed as issues in its repo, and nothing program-specific may leak 
    spec-audit against the governing canon on any spec-implementing PR, and review against the
    three cross-project invariants (fail closed to asking · only humans loosen · approval is
    content-addressed) on every harness-program PR.
-6. **Dogfooding ratchet.** Until the ratification plugin ships, ratification = plain PR merge
+6. **Continuity: no PM context lives only in a conversation.** Every PM (program lead
+   included) must be restartable from durable surfaces alone — charter + canon + tracking
+   issue + issue queue — with zero loss of product-management context or cohesion. The
+   discipline: decisions land in canon or DECISIONS the moment they're made; work items
+   land as issues; working state, open threads, and next-actions land as a status comment
+   on the tracking issue **at every convenient stopping point** (end of a work batch,
+   before a long wait, after any ruling), not just session end. The restart test: could a
+   fresh session with your charter pick up exactly where you stopped? If something would
+   be lost, persist it before stopping. Context clears happen at chosen stopping points,
+   not mid-thought — but the externalized state is what makes the choice free.
+7. **Dogfooding ratchet.** Until the ratification plugin ships, ratification = plain PR merge
    by Mike. Once it works, the program's own config decisions ride signed changesets. Later,
    the PM roster becomes the first agent-type harness roster.
