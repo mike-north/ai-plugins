@@ -74,12 +74,15 @@ requests are filed as issues in its repo, and nothing program-specific may leak 
    [contracts/](./contracts/). A contract change requires a PR touching the contract doc,
    sign-off from every party PM, program-lead approval, and Mike's merge. Code PRs changing a
    shared schema must link the contract revision.
-3. **Decision routing.** `needs-decision` blocks pickup; the issue body names the decider:
-   - **Line PM** — anything inside their canon's ratified scope.
+3. **Decision routing.** `needs-decision` blocks pickup; a **decider label** routes the
+   escalation so each decider's queue is a label query, not a body-text scan (D-009):
+   - **Line PM** — anything inside their canon's ratified scope. No decider label; this is
+     the default and never leaves their queue.
    - **Program lead** — cross-project questions (seams, sequencing, ownership disputes).
-     Recorded in [DECISIONS](./DECISIONS.md); canon amended if needed.
-   - **Mike** — only what changes ratified canon direction, and the decision *is* a canon PR
-     he merges.
+     Label `decider: program-lead`; ruling recorded in [DECISIONS](./DECISIONS.md), canon
+     amended if needed, labels removed on resolution.
+   - **Mike** — only what changes ratified canon direction. Label `decider: mike`; the
+     decision *is* a canon PR he merges, and the label marks work blocked on drafting it.
 4. **Status flows through tracking issues.** Each project has a pinned
    "<project>: program tracking" issue; its PM posts a status comment per working session
    (shipped / in flight / blocked / decisions needed). The program lead runs a portfolio

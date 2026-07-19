@@ -6,6 +6,15 @@ scope do **not** belong here — they live in that canon.
 
 ---
 
+## D-009 · 2026-07-19 · Decider routing labels supplement `needs-decision`
+
+Refines D-006 (prompted by Mike): the decider is named by **label**, not body text —
+`decider: program-lead` and `decider: mike` applied alongside bare `needs-decision`.
+Bare `needs-decision` stays the pickup-blocker (fleet tooling and cross-repo conventions
+key on that exact label); the decider labels make each escalation queue a one-line label
+query instead of a read-every-issue scan. Line-PM-decided questions carry no decider label
+— that's the default tier and never escalates. Labels are removed when the decision lands.
+
 ## D-008 · 2026-07-19 · Merge authority delegated for docs/specs; runtime code stays with Mike
 
 Ruled by Mike: the program lead is the **reviewer and merger of product spec/definition
