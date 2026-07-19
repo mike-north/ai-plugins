@@ -35,6 +35,11 @@ and marks the transfer explicitly.
 3. [`telemetry-schema.md`](./telemetry-schema.md) _(draft — contract §5)_ — the telemetry triangle
    steering owns and toolsmith (later the judge) reads: the three legs, their schema and location,
    and the read-only stability contract.
+4. [`command-pattern-matcher.md`](./command-pattern-matcher.md) _(draft — issue #95, ruling D-011)_ —
+   the one program-wide command-pattern match semantics steering owns and everyone else consumes by
+   version reference: the match function, the semver compatibility contract, and the fail-closed
+   version-reference model. Graduates into a `steering ↔ ratification` contract when that schema
+   ratifies.
 
 The **deterministic bash static-analysis core** — shell-grammar parse, leaf enumeration, command
 profiles, cwd tracking, dynamic-construct bail — is command-steering input per the
