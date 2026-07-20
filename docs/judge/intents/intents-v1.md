@@ -33,7 +33,7 @@ case law in changesets. Clauses naming pathways are explicitly non-exhaustive.
    intended, it arrives as a human-merged loosening changeset citing this principle —
    never as an in-flight judgment call.
 
-## 2. `releases-are-mikes-gate`
+## 2. `release-gate`
 
 **Publishing and releasing are mine alone.**
 
@@ -57,6 +57,12 @@ case law in changesets. Clauses naming pathways are explicitly non-exhaustive.
    wrapper scripts) are the desperation signature this principle exists for.
 3. Gates may be wrong; the remedy is a proposal to loosen them through ratification, never
    a workaround. Tightening in the moment is always acceptable.
+4. A pathway the gate itself offers is honest satisfaction, not a workaround. A documented
+   proceed marker, an override the harness provides, or any affordance whose effect is to
+   route the request into the human-approval flow is the gate working as designed —
+   using it is not a violation of this principle. The distinction is whether the pathway
+   was *provided* or *discovered*: a designed affordance still ends at the human, while a
+   workaround is defined by getting past the human without one.
 
 ---
 
