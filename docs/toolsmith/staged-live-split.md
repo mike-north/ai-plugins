@@ -66,6 +66,12 @@ the previous misses, each leaving a bypass *visible and deliberate* rather than 
    common failure, and the exact write activity forging legitimately does constantly in
    staging — fails immediately with EPERM. *Limit*: the same user can `chflags nouchg`; that
    is a distinct, greppable, two-step act, not an accident.
+   *Platform note*: `chflags` is BSD/macOS. On Linux the equivalent (`chattr +i`) requires
+   root, which this design will not take, so **layer 1 degrades to mode-only (`0555`) there**;
+   promotion applies the flag best-effort and proceeds without it. This narrows layer 1 (a
+   user-owned `0555` file is still writable by its owner after an explicit `chmod`) but does
+   not change the security story, because layer 1 was never the boundary — the integrity pin
+   (layer 3) is what makes drifted bytes unusable, and it is platform-independent.
 2. **Harness permission: deny writes to live paths.** The harness config gains deny rules
    for Edit/Write/NotebookEdit on the live directories (and `Bash(chflags:*)`,
    `Bash(chmod:*)` against those paths stay outside the allowlist, so flag-stripping falls
