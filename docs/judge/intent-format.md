@@ -53,6 +53,23 @@ This format is the authoritative source for what the
 | `intentRef.version` | the intent-document version interpreted (the integer `N`, serialized as a string) |
 | `intentRef.sections` | clause numbers within that principle (as strings, e.g. `["2", "4"]`) |
 
+**Clause addressing is bare clause numbers, scoped by `intentRef.id`.** A citation names
+exactly one principle in `intentRef.id`, so `sections: ["2"]` unambiguously means clause 2
+*of that principle*. A compound `<principle>.<clause>` form (`"2.1"`) is deliberately **not**
+used: it restates the principle the `id` field already carries, and any drift between the
+two — `id: ssh-always` with `sections: ["3.1"]` — would produce a citation that is
+self-contradictory rather than merely wrong. One authority per fact.
+
+The principle's *position number* (the `<n>` in its heading) is presentational only and is
+never cited; the stable slug is the identifier. Renumbering principles across versions
+therefore cannot invalidate a citation, which is the point of scoping by slug.
+
+**Known limitation, for the ratification layer, not resolved here:** the schema carries a
+single `intentRef`, so a ruling that genuinely interprets two principles cannot cite both.
+The judge cites the nearest-governing principle and names any secondary one in the body
+prose. If multi-principle citation ever needs to be first-class, that is a schema change
+through the contract-change rule — not something this document can grant itself.
+
 A citation is **resolvable** iff the named version exists, contains the slug, and contains
 each cited clause number. Conformance checking of intents files against this format (and of
 citations against intents files) is mechanical and belongs in tooling, not judgment.
