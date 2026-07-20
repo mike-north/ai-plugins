@@ -6,6 +6,21 @@ scope do **not** belong here — they live in that canon.
 
 ---
 
+## D-018 · 2026-07-20 · User-scope admission waits for the ratification bootstrap; no interim git-init
+
+Rules issue #116 (escalated from the attest-it admission design, PR #114). **User-scope
+attest-it admission waits for `ratify init` (#89); no interim `git init` of
+`~/.claude/toolsmith/`.** Rationale: an interim git-init hand-scaffolds exactly the runtime
+state D-003 forbids the program to create by hand — and D-015 already designates the config
+monorepo as user-scope config's eventual home, so a throwaway topology would exist only to
+be migrated out of. The interim posture the design already specifies is fail-closed
+adequate: today's pin-plus-human-confirmation ceremony, hardened with the signer-fingerprint
+pin wherever a seal exists. Project-scope admission proceeds now and does not wait.
+Consequence for sequencing: user-scope admission becomes part of the ratification
+bootstrap's acceptance surface — the ratification PM should account for the toolsmith
+gate/suite scaffolding in #89's design (coordinate via the shared-surface process, not by
+either line specifying the other's work).
+
 ## D-017 · 2026-07-20 · The nudge tier: adopted as direction; seam ruled; five binding rules
 
 Rules issue #128 (proposal from Mike, worked through with the judge PM). The **nudge
