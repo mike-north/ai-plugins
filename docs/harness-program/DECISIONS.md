@@ -6,6 +6,65 @@ scope do **not** belong here — they live in that canon.
 
 ---
 
+## D-017 · 2026-07-20 · The nudge tier: adopted as direction; seam ruled; five binding rules
+
+Rules issue #128 (proposal from Mike, worked through with the judge PM). The **nudge
+tier** — the judge returning an agent-addressed response on ask-set commands it would
+otherwise pass through: cost stated, permitted alternatives named, decomposition
+suggested, and terms for coming back with a rationale that rides to the human — is
+**adopted as ratified design direction**. Nothing is authorized to build yet; runtime
+remains M2-gated. It needs no probation exception: a nudge is a block that teaches,
+improving the block side without touching the forbidden allow side.
+
+**The seam (Q1).** Split by the D-001 one-way dependency, neither line specifying the
+other's work:
+
+- **Judge canon** owns nudge *policy*: when to nudge, the content obligations
+  (alternatives, decomposition, return terms), the retry bound, and the
+  insufficiency-report format.
+- **Steering canon** owns *shape and emission* — and already does: the nudge is the
+  existing soft-block leg (`deny`, model-audience reason) with a new producer;
+  `provenance.source: "adjudicator"` already distinguishes it, so the wire shape likely
+  changes not at all. The proceed-token UX and the rationale carrier are steering's.
+- **The cross-surface rules land in the adjudicator-affordance contract**
+  (`contracts/steering-judge.md`), drafted when steering hands the affordance spec over at
+  M2 per D-001; #128's content is that contract's first reserved section. Until the
+  contract exists, neither line implements the tier.
+
+**Five binding rules, ratified now** (violating any is a defect regardless of local
+merit):
+
+1. **Rationale never re-enters adjudication and never converts a nudge into any allow.**
+   It is carried to the human, redacted but otherwise unedited. A persuasive explanation
+   must buy exactly nothing from the machine — otherwise we have built a channel that
+   teaches agents to write explanations, and desperation gets the door context starvation
+   closed (only-humans-loosen, at the tier's core).
+2. **At most one nudge per command shape per session; the second pass reaches the human
+   regardless.** Honest use of the offered return path is provided-not-discovered (intent
+   v1, `approval-gates-are-load-bearing` clause 4); laundering near-variations through it
+   is the §3.2 desperation signature and is treated as such.
+3. **A suggested alternative must be verifiably permitted at suggestion time.** A wrong
+   redirect is worse than none (steering's own core principle); the judge never guesses an
+   affordance into existence.
+4. **The rationale carrier must not break content-addressed grants or matcher semantics.**
+   Annotating the command string changes its hash and what the matcher sees; the carrier
+   design is steering's under D-011, and inline-comment annotation is presumptively wrong
+   until steering rules otherwise.
+5. **The redaction discipline extends to rationale text** on every persisted surface
+   (adjudication context, telemetry, any changeset field) — agent-authored rationale is
+   credential-bearing plaintext until proven otherwise, same as `triggeringObservation`.
+
+**Q2 (naming)**: the judge PM's axis is endorsed — tiers order *addressee and cost*
+(agent-addressed/recoverable → human-addressed/attention-consuming → terminal), never
+linter-style severity. Final names ride the D-007 naming pass. **Q6 (alternative
+discovery)**: what the judge may read (package scripts, toolsmith registry, permission
+config) is a capability-floor question answered by the judge's harness definition at M2,
+coordinated with the harnesses line; design may assume read-only affordance access subject
+to that spec. **The insufficiency-report feedback loop** (reports of "why the safe
+alternatives were insufficient" as a tool-forging queue) is endorsed as direction — it is
+the safety analysis's two-speed loop arriving in structured form — and lands as a
+toolsmith↔judge touchpoint designed no earlier than M2.
+
 ## D-016 · 2026-07-19 · Dedicated code-review role; merge-authority matrix amended
 
 Ruled by Mike. A dedicated **code-review agent** joins the program (own session per
