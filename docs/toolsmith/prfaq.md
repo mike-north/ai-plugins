@@ -2,6 +2,12 @@
 
 Mike North · 2026-07-15 · Draft for internal review
 
+> **Scope note (added 2026-07-19).** Predates toolsmith's narrowing
+> ([toolsmith-narrowed](../harness-program/toolsmith-narrowed.md)). Answers about forging, signing,
+> review fatigue, and the two archetypes remain **governing**. Answers about blocking/redirect
+> behavior and telemetry describe **command steering** and are superseded →
+> [`docs/command-steering/`](../command-steering/). See the [canon map](./README.md).
+
 ---
 
 ## Press release

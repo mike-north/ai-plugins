@@ -2,6 +2,15 @@
 
 Mike North · 2026-07-15
 
+> **Scope note (added 2026-07-19).** This document predates toolsmith's narrowing
+> ([toolsmith-narrowed](../harness-program/toolsmith-narrowed.md)). §"The toolsmith sub-agent"
+> (the curator remit) remains **governing toolsmith canon**. §"Hooks: steer, don't block" and the
+> telemetry-triangle paragraph describe **command steering**, which has left toolsmith's scope —
+> they are historical context here, and the governing home is
+> [`docs/command-steering/`](../command-steering/architecture-steer.md) and
+> [telemetry-schema](../command-steering/telemetry-schema.md). See the
+> [canon map](./README.md).
+
 Companion docs: [Product framing and principles](./product-framing-and-principles.md), [Design patterns](./design-patterns.md), [Forge runtime spec](./runtime-spec.md), [Steering & gap-adjudication](./steering-adjudication.md), [The toolsmith CLI surface](./cli-surface.md). This doc is the place to start.
 
 ## The problem
