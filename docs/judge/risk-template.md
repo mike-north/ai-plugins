@@ -54,6 +54,13 @@ Loosening proposals (`direction: loosening`) additionally require:
 
 - **Never bare.** A `riskLevel` in the header is only valid with its argument here
   ([risk-vocabulary](./risk-vocabulary.md)).
+- **Approval volume is never authorization.** For any allow-direction rule, the Provenance
+  section names the *specific, legible human feedback* that authorized it — a stated reason
+  ("read-only, no mutating subcommand reachable"), not a count. That a pattern has been
+  approved many times may appear as corroboration and never as the anchor: a bare approval
+  is weak evidence, since it may reflect the pattern being safe, this instance being safe,
+  or approval fatigue ([triage-policy](./triage-policy.md) §4). A body whose provenance
+  reduces to volume is not ratifiable as written.
 - **Written for the human, once.** The body is read by a person deciding whether to merge.
   It never addresses the calling agent and never argues for expedience.
 - **Authorship, never endorsement.** The body may state that the judge assesses a change as
@@ -109,8 +116,8 @@ form, and the scope is one agent type rather than global.
 
 ## Factors weighed
 
-- Necessary because CI-status polling is the single highest-volume ask from this agent
-  type, and every one of them has been approved unchanged.
+- Necessary because CI-status polling stalls PR monitoring on a human tap. Volume is what
+  makes it worth proposing, but volume is not why it is safe — see Provenance.
 - Risk is bounded by agent-type scope and by the pattern's exclusion of subcommand
   arguments that write.
 - A session-scoped grant was considered and rejected: it would re-ask on every new session
@@ -128,9 +135,18 @@ form, and the scope is one agent type rather than global.
 ## Provenance
 
 Interprets `approval-gates-are-load-bearing` v1 §3 (the remedy for a wrong gate is a
-proposal, not a workaround). Allow-direction authorization: the approval history for this
-exact invocation shape, which a human must confirm as legible reason at merge — this
-proposal asserts authorship only.
+proposal, not a workaround).
+
+Allow-direction authorization rests on one specific piece of legible human feedback: on
+2026-07-02, approving this invocation, the human stated the reason as "fine — `checks` is
+read-only, there's no mutating subcommand reachable from it, and it can't see anything the
+PR page doesn't already show." That is the reasoning this grant encodes, and the pattern
+below is drawn to exactly that boundary — it excludes every `gh pr` subcommand that writes.
+
+Approval volume (routinely approved unchanged since) is corroboration only. It is not the
+authorization and could not be: a bare approval is weak evidence, since it may reflect the
+pattern being safe, this instance being safe, or fatigue. This proposal asserts authorship
+only.
 ```
 
 ## Non-goals
