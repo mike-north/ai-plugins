@@ -32,6 +32,8 @@
     "remark-frontmatter": "^5.0.0",
     "remark-preset-lint-consistent": "^6.0.1",
     "remark-preset-lint-recommended": "^7.0.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "yaml": "^2.7.0",
+    "zod": "^4.0.0"
   }
 }
