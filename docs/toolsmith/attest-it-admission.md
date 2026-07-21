@@ -111,7 +111,7 @@ attest-it seals **committed content in a clean git tree** — it is git-shaped b
 - **User scope** (`~/.claude/toolsmith/`): not a git repo today. Making it one just for
   seals would hand-scaffold exactly the runtime state D-003 says the ratification
   bootstrap creates (the config monorepo is user-scope config's eventual home). **Ruled
-  (D-018, 2026-07-21): user-scope admission waits for the ratification bootstrap (`ratify
+  (D-018, 2026-07-20): user-scope admission waits for the ratification bootstrap (`ratify
   init`, #89) — no interim local git-init.** Until that lands, user-scope admission keeps
   today's ceremony (pin + human confirmation) plus the signer-pin hardening where a seal
   exists; project-scope admission proceeds now and does not wait. Per D-018, user-scope
@@ -191,8 +191,8 @@ deleted (history is the audit trail) — the registry state and live placement a
    command and review surface and polls for the resulting seal; it never hosts the attest-it
    prompt in its own TTY. Test: an agent-driven `approve` produces no seal by itself (the
    presence step is external), and resumes to VERIFY only once a seal produced in a separate
-   terminal appears — proving the approval signal reaches toolsmith only as a forgeable-proof
-   seal, not as an agent-relayed confirmation.
+   terminal appears — proving the approval signal reaches toolsmith only as an
+   agent-unforgeable seal, not as an agent-relayed confirmation.
 4. **Lockout stays dead**: sealing a *revision* while live serves the prior admission never
    interrupts the live tool (staged/live invariant preserved end-to-end with seals on).
 5. **Dirty-tree refusal**: admission against a dirty tree fails with attest-it's own error,
