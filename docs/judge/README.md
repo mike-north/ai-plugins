@@ -39,6 +39,9 @@ M2-gated issues carry `backlog` until the gate lifts.
    ratification's `riskLevel` enum.
 7. [risk-template](./risk-template.md) — the changeset body the judge signs: required
    sections, rules, and worked examples.
+8. [nudge-policy](./nudge-policy.md) — the nudge tier ([D-017](../harness-program/DECISIONS.md)):
+   when the judge returns an agent-addressed nudge instead of passing through, and the rules
+   that keep it from becoming an allow.
 
 ## What the judge does not own
 
