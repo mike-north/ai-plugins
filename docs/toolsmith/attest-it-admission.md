@@ -1,6 +1,6 @@
 # attest-it as the admission gate
 
-Toolsmith PM · 2026-07-19 · design for issue #76
+Toolsmith PM · 2026-07-19 · design for issue #76 · amended 2026-07-21 (#133, Mike's approval-channel ruling)
 
 Governing canon: [Toolsmith, narrowed](../harness-program/toolsmith-narrowed.md) (admission
 seals); [attest-it as substrate](../harness-program/attest-it-substrate.md) (the role, the
@@ -12,10 +12,29 @@ attest-it #149 — pure consumption confirmed on all three assumptions).
 ## What admission becomes
 
 **Toolbox admission = an attest-it seal over the reviewed surface, by a human
-presence-backed identity.** The agent-side `approve` ceremony stops being the authority and
-becomes the *orchestrator* of a ceremony whose authority is cryptographic: agents literally
-cannot produce the human's signature (the private key lives in 1Password/Keychain/YubiKey
-behind a presence action), rather than being constitutionally discouraged from writing a pin.
+presence-backed identity.** The agent-side `approve` ceremony is a *facilitator*, never the
+authority and never the intermediary: agents literally cannot produce the human's signature,
+rather than being constitutionally discouraged from writing a pin.
+
+**Presence is a per-signature requirement, not a property the backend happens to have**
+(Mike's ruling, 2026-07-21, #133). The identity stack lists 1Password / Keychain / YubiKey,
+but those backends differ exactly where it matters: a vault-resident key that signs from an
+already-unlocked session — no per-signature interaction — is completable by an agent driving a
+pty, and the "non-interactive invocation fails fast" check (AC3) does not catch an agent that
+*can* drive interactive input through a pty helper. So the requirement is on the *signature
+event*, not the storage: **the admission identity MUST demand a per-signature human-presence
+action (hardware touch / biometric) that no software path can supply.** A key configured to
+sign without that interaction does not satisfy admission. `approve --setup` verifies and
+records this property and refuses an identity that cannot demonstrate it (see §Acceptance
+criteria, AC3a).
+
+**The agent is never the intermediary between the human's approval and toolsmith** (same
+ruling). Agents may *facilitate* — open an independent terminal, kick off the review flow,
+poll for the resulting seal — but the review→approval→signature moment happens in the human's
+own terminal, never inside an agent-controlled TTY. The mechanics are in §Promotion
+integration; the principle is that the only thing crossing back from the human to toolsmith is
+a cryptographic seal the agent cannot forge, produced by a presence action the agent cannot
+perform.
 
 The **sealed surface** is exactly what contract §1 calls the reviewed surface — one seal
 covers, atomically:
@@ -91,22 +110,42 @@ attest-it seals **committed content in a clean git tree** — it is git-shaped b
   (which also gives admission a durable review artifact for free).
 - **User scope** (`~/.claude/toolsmith/`): not a git repo today. Making it one just for
   seals would hand-scaffold exactly the runtime state D-003 says the ratification
-  bootstrap creates (the config monorepo is user-scope config's eventual home). Whether
-  user-scope admission **waits for the ratification bootstrap (#89)** or gets an **interim
-  local git-init** is a cross-project sequencing question — escalated as a `needs-decision`
-  / `decider: program-lead` issue filed alongside this design. Until ruled: user-scope
-  admission keeps today's ceremony (pin + human confirmation) plus the signer-pin hardening
-  where a seal exists; this design's project-scope path does not block on it.
+  bootstrap creates (the config monorepo is user-scope config's eventual home). **Ruled
+  (D-018, 2026-07-21): user-scope admission waits for the ratification bootstrap (`ratify
+  init`, #89) — no interim local git-init.** Until that lands, user-scope admission keeps
+  today's ceremony (pin + human confirmation) plus the signer-pin hardening where a seal
+  exists; project-scope admission proceeds now and does not wait. Per D-018, user-scope
+  admission becomes part of #89's acceptance surface: the ratification bootstrap must account
+  for scaffolding the toolsmith gate/suite, coordinated via the shared-surface process (neither
+  line specifies the other's work).
 
 ## Promotion integration (staged/live step 3, filled in)
+
+Two hosting modes, because *whose terminal runs the seal* is the crux of Mike's ruling:
+
+- **Human-driven** (a person runs `approve` at their own terminal): steps 1–6 run inline; the
+  attest-it prompt at step 3 is already in the human's TTY, so the presence moment is native.
+- **Agent-driven** (an agent runs `approve` as part of a task): `approve` does **not** host the
+  seal. It runs the pre-checks (lint, dirty-tree), then **emits the exact seal command and the
+  review surface for the human to run in their own independent terminal**, and stops. The agent
+  may open that terminal and kick the flow off, then **poll for the seal to appear** — but the
+  attest-it prompt is never wrapped in an agent-controlled pty. The agent resumes (step 4
+  onward) only once a valid seal exists on disk. This is the agent-never-intermediary rule made
+  mechanical: the only thing crossing back from the human is the seal itself.
 
 ```
 approve <name>:
   1. lint staged file                      (unchanged)
-  2. show human: diff/full text + registration data   (unchanged)
-  3. SEAL: attest-it run --suite toolsmith-admission   ← this design
+  2. render review surface from the SEALED content — the diff/full-text the human
+     reviews is generated from the exact committed bytes the seal will cover, and the
+     printed seal command comes from the SAME deterministic tool output, so a
+     re-rendering agent is not in the trust path (amendment 3, #133)
+  3. SEAL: attest-it run --suite toolsmith-admission
      - refuses on dirty tree (attest-it's own rule)
-     - human confirms at the attest-it prompt (the presence moment)
+     - runs in the HUMAN's independent terminal; the human confirms at the attest-it
+       prompt via the per-signature presence action (the presence moment)
+     - agent-driven mode: approve emits this exact command + review surface and polls
+       for the seal; it never hosts the prompt
   4. VERIFY: plain verify + signer-fingerprint pin check; refuse on either failing
   5. apply manifest (place, 0555+uchg, recompute pin, ensure rule)   (unchanged)
   6. register into steering                       (unchanged, #77)
@@ -125,9 +164,9 @@ deleted (history is the audit trail) — the registry state and live placement a
   staged content).
 - Existing approved tools remain pin-only until their next promotion, at which point they
   acquire a seal — same lazy-migration posture as the staged/live protection bits.
-- One-time setup per scope: `attest-it init` scaffolding + identity check + gate/suite
-  definition + signer-fingerprint pin recorded. Shipped as an `approve --setup` (or skill
-  step), never run silently.
+- One-time setup per scope: `attest-it init` scaffolding + identity check (**including the
+  per-signature-presence verification of AC3a**) + gate/suite definition + signer-fingerprint
+  pin recorded. Shipped as an `approve --setup` (or skill step), never run silently.
 - No version of this weakens an existing gate: a tool that fails seal verification falls to
   refuse-promotion / ask, never to silent allowance.
 
@@ -141,6 +180,19 @@ deleted (history is the audit trail) — the registry state and live placement a
    sealing voids the admission — promotion refuses. Test each element.
 3. **Presence moment is real**: `run --suite toolsmith-admission` prompts (no `--yes` path
    in the promotion flow); non-interactive invocation fails fast rather than sealing.
+3a. **Per-signature presence is required, not assumed** (#133): `approve --setup` accepts an
+   identity only if it demands a per-signature human-presence action (hardware touch /
+   biometric), and refuses one that can sign from an unlocked session with no interaction.
+   Test: an identity backed by a key that signs without per-use presence is rejected at setup;
+   a touch/biometric-gated identity is accepted. This is what closes the pty-driver hole AC3
+   alone leaves open — an agent that *can* drive interactive input still cannot supply a
+   hardware presence action.
+3b. **Agent is never the intermediary** (#133): in agent-driven mode, `approve` emits the seal
+   command and review surface and polls for the resulting seal; it never hosts the attest-it
+   prompt in its own TTY. Test: an agent-driven `approve` produces no seal by itself (the
+   presence step is external), and resumes to VERIFY only once a seal produced in a separate
+   terminal appears — proving the approval signal reaches toolsmith only as a forgeable-proof
+   seal, not as an agent-relayed confirmation.
 4. **Lockout stays dead**: sealing a *revision* while live serves the prior admission never
    interrupts the live tool (staged/live invariant preserved end-to-end with seals on).
 5. **Dirty-tree refusal**: admission against a dirty tree fails with attest-it's own error,
@@ -159,4 +211,4 @@ deleted (history is the audit trail) — the registry state and live placement a
   judge brief).
 - Any attest-it modification (pure consumption per #149; anything discovered otherwise gets
   filed on attest-it, not built around).
-- User-scope git topology (escalated; see scope split).
+- User-scope git topology (ruled D-018 — waits for the ratification bootstrap; see scope split).
