@@ -64,30 +64,53 @@ exact string. `/toolsmith:approve` prints the absolute path to use.
 
 Follow `references/authoring-checklist.md`. In short: one operation, no
 arbitrary-API escape hatch, scope baked in (hardcode the repo/org/method),
-validate narrow arguments, stable bare name, `--help`, fail closed. Put it at
-`scripts/agent-tools/<name>` (project) or `~/.claude/toolsmith/tools/<name>`
-(user/global) and add a `draft` entry to the corresponding registry
-(`references/registry-schema.md`).
+validate narrow arguments, stable bare name, `--help`, fail closed.
 
-## Approval lifecycle
+**Always write to staging, never to the live path.** Put the draft at
+`.claude/toolsmith/staging/<name>` (project) or
+`~/.claude/toolsmith/staging/<name>` (user/global) and add a `draft` entry to
+the corresponding registry with a `staged` field pointing at it
+(`references/registry-schema.md`). Nothing in staging is executable or known
+to steering — iterate there freely. The tool's eventual live location
+(`scripts/agent-tools/<name>` / `~/.claude/toolsmith/tools/<name>`) is where
+`/toolsmith:approve` will place it; you never write there directly.
 
-`draft` → user proofreads the exact contents → `/toolsmith:approve <path>` →
-the deterministic `scripts/toolsmith-approve.mjs` tool computes the sha256,
-flips `status` to `approved`, pins `approvedSha256`, and adds exactly one
-`Bash(<path>:*)` rule to `.claude/settings.json`. For a user/global tool, the
-same command runs `toolsmith-approve.mjs --user`, which reads/writes
+## The staged/live split and the approval lifecycle
+
+Every tool exists in one of three states — staged (draft, inert, agent-
+writable), live (registered, `0555` + immutable-flagged, agent-unwritable),
+or retired. See
+[`docs/toolsmith/staged-live-split.md`](../../../../docs/toolsmith/staged-live-split.md)
+for the full design, including the write-denial mechanism's honest limits.
+
+`draft` (staged) → user proofreads the exact staged contents →
+`/toolsmith:approve <path>` → the deterministic `scripts/toolsmith-approve.mjs`
+tool **promotes** the staged draft to live as an atomic apply manifest: place
+the bytes → set `0555` + the BSD immutable flag (`uchg`, where available) →
+recompute the sha256 from the bytes actually placed (never trusted from the
+staging draft) → pin it as `approvedSha256` → flip `status` to `approved` →
+grant exactly one `Bash(<path>:*)` rule in `.claude/settings.json` → clear the
+entry's `staged` field → remove the staging file. For a user/global tool, the
+same command runs `toolsmith-approve.mjs --user`, reading/writing
 `~/.claude/toolsmith/registry.json` and `~/.claude/settings.json` instead, and
 grants `Bash(<absolute-path>:*)`. From then on the tool runs without a prompt.
 The agent never freehands the hash computation, the registry pin, or the
 permission grant — `/toolsmith:approve` runs the deterministic tool with
-`--dry-run` first (no writes) so the user can confirm the exact rule before
-anything is written, then runs the bare command (no flag) to approve only
-after explicit confirmation.
-Any edit to the script changes the hash, so the hook blocks the tool until you
-re-run `/toolsmith:approve`. **Never** add the permission rule yourself or ask
-the user to widen the allowlist — the approve command's deterministic tool is
-the only sanctioned path, because it couples the allowlist grant to a specific
-reviewed script version, in either scope.
+`--dry-run` first (no writes), showing a diff against current live for a
+revision or the full text for a new tool, so the user reviews exactly what
+will be placed before anything is written, then runs the bare command (no
+flag) to promote only after explicit confirmation.
+
+**Revising an already-approved tool never touches live.** Author the revision
+into the same staging location and repeat the approval handshake — the
+previous live version keeps serving every invocation while the revision is
+pending, so there is no lockout waiting on re-approval. Any drift between a
+live file's bytes and its pinned hash (which should only ever happen via
+promotion) blocks the tool until it is re-approved. **Never** add the
+permission rule yourself, write directly to a live path, or ask the user to
+widen the allowlist — `/toolsmith:approve` is the only sanctioned path into
+live, because it couples the allowlist grant to a specific reviewed,
+content-addressed script version, in either scope.
 
 ## Discovering what to build
 
@@ -115,5 +138,6 @@ pinned hash.
 ## References
 
 - `references/authoring-checklist.md` — the rubric and the script authoring standard.
-- `references/registry-schema.md` — `registry.json`, `config.json`, `history.jsonl` schemas.
+- `references/registry-schema.md` — `registry.json` (including the staging namespace and `staged` fields), `config.json`, `history.jsonl` schemas, and the recommended harness deny-rule set.
 - `references/watchlist-defaults.json` — shipped watched-command patterns and rationale.
+- `docs/toolsmith/staged-live-split.md` — the staged/live split design: write-denial mechanism and its honest limits, the promotion apply manifest, rollout.

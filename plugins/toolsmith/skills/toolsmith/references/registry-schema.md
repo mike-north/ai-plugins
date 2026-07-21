@@ -13,6 +13,42 @@ The hook builds an *effective* tool set from both: all project tools, plus
 any user tool whose `name` isn't already defined by a project tool — a
 project tool **shadows** a same-named user tool.
 
+## The staged/live split
+
+Every tool's on-disk bytes exist in one of three states — see
+[`docs/toolsmith/staged-live-split.md`](../../../../docs/toolsmith/staged-live-split.md)
+for the full design (write-denial mechanism and its honest limits, the
+promotion apply manifest, rollout):
+
+- **Staged** — an agent-authored draft (new tool, or a proposed revision of
+  an existing one) under the staging namespace below. Never executable, never
+  registered with steering. The hook never reads it.
+- **Live** — the registered `path`, unchanged from today. Owner-writable only
+  through `/toolsmith:approve`'s promotion; otherwise `0555` (r-x, no write)
+  and (on macOS/BSD) the `uchg` immutable flag.
+- **Retired** — removed from live; the registry entry's `status` becomes
+  `retired`.
+
+**An edit to a live tool never touches live.** The agent always authors into
+staging; `/toolsmith:approve <path>` is the only path that moves bytes from
+staging to live (the promotion apply manifest: place → mode+flag → recompute
++ pin the hash from the placed bytes → grant the rule → clear `staged` →
+remove the staging file). The last-approved live version keeps running the
+whole time a revision is pending, so there is no re-sign lockout.
+
+### Staging namespace
+
+- **Project scope**: `<projectRoot>/.claude/toolsmith/staging/<name>`.
+- **User scope**: `<home>/.claude/toolsmith/staging/<name>`.
+
+A project entry's `staged.path` is project-root-relative and **must** resolve
+strictly under `.claude/toolsmith/staging/` — validated with the same strict
+`normalizePath` rules used for the live `path` field, plus a check that its
+first three segments are exactly `.claude`, `toolsmith`, `staging`. A user
+entry's `staged.path` is relative to `<home>/.claude/toolsmith/` (e.g.
+`staging/<name>`) and validated the same way the live `tools/<name>` path is,
+with `staging` required as the first segment instead of `tools`.
+
 ## `registry.json`
 
 ```json
@@ -31,31 +67,45 @@ project tool **shadows** a same-named user tool.
       ],
       "status": "approved",
       "approvedSha256": "9f2b…（64 hex chars）",
-      "permissionRule": "Bash(scripts/agent-tools/gh-pr-reactions:*)"
+      "permissionRule": "Bash(scripts/agent-tools/gh-pr-reactions:*)",
+      "staged": {
+        "path": ".claude/toolsmith/staging/gh-pr-reactions",
+        "sha256": "advisory — recomputed at promotion, never trusted",
+        "note": "adds a --json flag",
+        "since": "2026-07-19T18:00:00Z"
+      }
     }
   ]
 }
 ```
+
+A brand-new tool (never yet live) is `status: draft` with only `staged`
+populated — no `approvedSha256`/`permissionRule` active yet. `staged` is
+**optional**: its absence means there is no pending draft for that entry
+(today's semantics, unchanged).
 
 Field reference:
 
 | Field | Meaning |
 |---|---|
 | `name` | Stable bare command name, also the basename of `path`. Used to detect invocation and in messages. |
-| `path` | Location of the executable script, relative to the registry's own scope (see the shared-contract table below). |
+| `path` | Location of the **live** executable script, relative to the registry's own scope (see the shared-contract table below). Unchanged by promotion — the live location is fixed at registration time. |
 | `purpose` | One sentence: what the tool does. Shown to the agent in redirect messages. |
 | `args` | Human-readable argument summary (e.g. `<pr-number>`), shown in the suggested call. |
 | `scope` | What the tool is bounded to (repo/org/read-only). Documentation for the reviewer. |
 | `covers` | Array of JavaScript RegExp strings tested against the raw Bash command. If a **watched** command matches any of an **approved** tool's `covers`, the hook denies it and points here. |
-| `status` | `draft` (registered, not yet approved) or `approved`. Only `approved` tools redirect; invoking a `draft`/unapproved tool is denied. |
-| `approvedSha256` | sha256 of the script contents, computed and pinned by the bare `scripts/toolsmith-approve.mjs` command (or `--user` for a global tool) at approval. The hook denies execution if the on-disk file no longer matches. |
-| `permissionRule` | The exact allowlist rule added to the scope's `settings.json` at approval (via `/toolsmith:approve`) — see the shared-contract table for the exact form per scope. |
+| `status` | `draft` (registered, not yet approved), `approved`, or `retired` (removed from live; see the design doc's Rollout/Demotion notes). Only `approved` tools redirect; invoking a `draft`/`retired`/unapproved tool is denied. |
+| `approvedSha256` | sha256 of the **live** script's bytes, recomputed from the bytes actually placed at promotion time (never trusted from `staged.sha256`) and pinned by `/toolsmith:approve`. The hook denies execution if the on-disk live file no longer matches. |
+| `permissionRule` | The exact allowlist rule added to the scope's `settings.json` at promotion — see the shared-contract table for the exact form per scope. |
+| `staged` (optional) | Present iff a draft is pending promotion. `path` — the staging draft's location (see "Staging namespace" above). `sha256` — advisory only, shown by `/toolsmith:list`; promotion always recomputes from the placed bytes. `note` — one-line agent-authored summary of the change. `since` — ISO 8601 timestamp the draft was authored/updated. |
 
 `name`, `path`, `purpose`, `args`, `scope`, and `covers` must be authored by
-hand as a `draft` entry before running `/toolsmith:approve` — the
-deterministic tool only ever pins `status`, `approvedSha256`, and
-`permissionRule`; it refuses to run against a path with no existing registry
-entry rather than inventing the rest.
+hand as a `draft` entry before running `/toolsmith:approve`; `staged` is
+authored by hand too (the agent writes the draft file into staging and points
+`staged.path` at it). The deterministic promotion tool only ever pins
+`status`, `approvedSha256`, and `permissionRule`, and clears `staged` — it
+refuses to run against a path with no existing registry entry, or against an
+entry with no `staged` draft to promote, rather than inventing the rest.
 
 **Author `covers` for wrapper binaries too.** A `covers` pattern is tested
 against the raw command string, same as a `watchlist` pattern — it does not
@@ -128,6 +178,49 @@ It is not restricted to shipped defaults only.
 When the project root resolves to `$HOME` itself, the user and project
 `config.json` are the same file; it is applied once, not twice (mirrors the
 registry's same-file guard for issue #36).
+
+## Write denial on live: the harness deny-rule layer
+
+Per docs/toolsmith/staged-live-split.md §Write denial, layer 2 (defense in
+depth alongside the live file's `0555` + `uchg` mode/flag, and the hook's
+integrity-pin backstop, layer 3): the harness's own native permission config
+should **deny** the agent's editing tools (Edit/Write/NotebookEdit — whatever
+the host calls its file-write tool) from targeting a scope's live tool
+directories, and should keep `Bash(chflags:*)`/`Bash(chmod:*)` **out** of the
+allowlist for those paths so flag-stripping falls to a manual ask rather than
+being silently allowed.
+
+This plugin does **not** write these rules into any user's `settings.json` —
+that would be an unreviewed, host-specific edit to a file this plugin doesn't
+own. The recommended rule shape (Claude Code's `permissions.deny`, adapted per
+host) is:
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Edit(scripts/agent-tools/**)",
+      "Write(scripts/agent-tools/**)",
+      "NotebookEdit(scripts/agent-tools/**)",
+      "Edit(~/.claude/toolsmith/tools/**)",
+      "Write(~/.claude/toolsmith/tools/**)",
+      "NotebookEdit(~/.claude/toolsmith/tools/**)"
+    ]
+  }
+}
+```
+
+Adjust the project-scope glob to match wherever `scripts/agent-tools/` (or
+this repo's chosen live directory) actually lives. Staging directories
+(`.claude/toolsmith/staging/` and `~/.claude/toolsmith/staging/`) are
+deliberately **not** denied here — the agent is expected to write there
+constantly; that write activity is exactly what the split is for.
+
+**Honest limit:** per-harness support for path-scoped write-deny rules
+varies. Where a harness can't express this, layer 1 (mode + `uchg`) and
+layer 3 (the hook's integrity pin) still hold — this layer only makes the
+*common* accidental edit fail earlier and more politely (a clear denial from
+the agent's own tool, before ever reaching the filesystem).
 
 ## `history.jsonl` (generated, gitignored)
 

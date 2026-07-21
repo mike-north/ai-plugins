@@ -457,6 +457,134 @@ post 'echo rotate' 0
 n=$(wc -l <"$HIST" | tr -d ' ')
 if [ "$n" -le 1501 ]; then ok; else bad "rotation caps history" "$n lines"; fi
 
+# --- staged/live split (docs/toolsmith/staged-live-split.md) -------------
+# Test-to-acceptance-criteria mapping for this section (the rest of the split's
+# ACs — AC1, AC4, AC5, AC7 — are covered in test-approve.sh; see its header):
+#   AC2 staged inert (both invocation routes)
+#   AC3 live write-denied (mode/uchg + hashDenial never silently runs)
+#   AC6 no hot-path regression (staging is invisible to the hook)
+rm -f "$PROJ/.claude/toolsmith/registry.json" "$PROJ/.claude/toolsmith/config.json"
+mkdir -p "$PROJ/.claude/toolsmith/staging"
+
+CHFLAGS_AVAILABLE=0
+command -v chflags >/dev/null 2>&1 && CHFLAGS_AVAILABLE=1
+
+# --- AC2: staged is inert by construction, not by hook enforcement ---------
+STAGED="$PROJ/.claude/toolsmith/staging/staged-tool"
+printf '#!/bin/bash\necho staged\n' >"$STAGED"
+# Deliberately NOT chmod +x'd and NOT referenced by any registry entry —
+# matches how an agent-authored staging draft actually looks on disk.
+
+# Route 1: direct execution attempt. This is a real filesystem property (no
+# execute bit), not a hook decision — the hook doesn't even see this path.
+if "$STAGED" >/dev/null 2>&1; then
+  bad "AC2: staged draft is not directly executable (mode)" "ran successfully"
+else
+  ok
+fi
+
+# Route 2: interpreter invocation (`bash <staged>`). The hook must not
+# recognize/redirect/grant it — it is simply not a registered tool, so it
+# falls through untouched to the normal ask flow (no Bash(...) rule exists
+# for a staging path, so the native permission system, not this hook, is
+# what actually gates it at runtime).
+assert_allow "AC2: staged draft via bash wrapper is not specially recognized by the hook" \
+  "$(pre "bash $STAGED")"
+assert_allow "AC2: staged draft invoked directly is not specially recognized by the hook" \
+  "$(pre "$STAGED")"
+rm -f "$STAGED"
+
+# --- AC3: live write-denied (mode + uchg where available) -------------------
+mkdir -p "$PROJ/scripts/agent-tools"
+LIVE="$PROJ/scripts/agent-tools/protected-tool"
+printf '#!/bin/bash\necho protected\n' >"$LIVE"
+LIVE_SHA=$(shasum -a 256 "$LIVE" | awk '{print $1}')
+chmod 0555 "$LIVE"
+if [ "$CHFLAGS_AVAILABLE" -eq 1 ]; then chflags uchg "$LIVE" 2>/dev/null; fi
+
+cat >"$PROJ/.claude/toolsmith/registry.json" <<EOF
+{
+  "version": 1,
+  "tools": [
+    {
+      "name": "protected-tool",
+      "path": "scripts/agent-tools/protected-tool",
+      "purpose": "x", "args": "", "scope": "x", "covers": [],
+      "status": "approved",
+      "approvedSha256": "$LIVE_SHA",
+      "permissionRule": "Bash(scripts/agent-tools/protected-tool:*)"
+    }
+  ]
+}
+EOF
+
+# A direct write attempt to the live file fails (mode denies it) — this is a
+# real write attempt, not a stat of the mode bits, and holds regardless of
+# chflags availability (standard POSIX mode enforcement).
+if { printf 'x' >>"$LIVE"; } 2>/dev/null; then
+  bad "AC3: a protected live file's mode (0555) denies a direct write attempt" "write succeeded"
+else
+  ok
+fi
+
+# Invoking the still-matching, untampered live tool is allowed as normal.
+assert_allow "AC3: an untampered protected live tool still invokes normally" \
+  "$(pre 'scripts/agent-tools/protected-tool')"
+
+if [ "$CHFLAGS_AVAILABLE" -eq 1 ]; then
+  # Forced out-of-band edit (the same-user bypass the design's honest-limits
+  # section names: nouchg is a distinct, greppable, two-step act, not an
+  # accident). Even after that, the hook's hashDenial backstop (write-denial
+  # layer 3) must refuse the drifted tool — it must NEVER silently run.
+  chflags nouchg "$LIVE" 2>/dev/null
+  chmod u+w "$LIVE"
+  printf '#!/bin/bash\necho TAMPERED\n' >"$LIVE"
+  chmod 0555 "$LIVE"
+  chflags uchg "$LIVE" 2>/dev/null
+  assert_deny "AC3: a forced out-of-band edit to a protected live tool is still refused (never silent-runs)" \
+    "$(pre 'scripts/agent-tools/protected-tool')" "changed since it was approved"
+  chflags nouchg "$LIVE" 2>/dev/null
+else
+  echo "SKIP: chflags not available on this platform — uchg-specific AC3 cases skipped (mode-only assertions above still ran)"
+fi
+rm -f "$LIVE"
+
+# --- AC6: staging is invisible to the hot path — a "staged" field on an
+# approved entry changes nothing about hash-pin or redirect behavior, and a
+# malformed "staged" value doesn't perturb the hook (it never reads the key).
+mkdir -p "$PROJ/scripts/agent-tools"
+HOTPATH_TOOL="$PROJ/scripts/agent-tools/hotpath-tool"
+printf '#!/bin/bash\necho hotpath\n' >"$HOTPATH_TOOL"
+chmod +x "$HOTPATH_TOOL"
+HOTPATH_SHA=$(shasum -a 256 "$HOTPATH_TOOL" | awk '{print $1}')
+
+for STAGED_VALUE in \
+  '{"path":".claude/toolsmith/staging/hotpath-tool","sha256":"x","note":"n","since":"2024-01-15T10:30:00.000Z"}' \
+  '"a malformed string instead of an object"' \
+  '12345' \
+  'null'
+do
+  jq --arg sha "$HOTPATH_SHA" --argjson staged "$STAGED_VALUE" '{
+    version: 1,
+    tools: [{
+      name: "hotpath-tool", path: "scripts/agent-tools/hotpath-tool",
+      purpose: "x", args: "", scope: "x", covers: [],
+      status: "approved", approvedSha256: $sha,
+      permissionRule: "Bash(scripts/agent-tools/hotpath-tool:*)",
+      staged: $staged
+    }]
+  }' -n >"$PROJ/.claude/toolsmith/registry.json"
+  assert_allow "AC6: a 'staged' field (even malformed: $STAGED_VALUE) doesn't change hash-pin allow behavior" \
+    "$(pre 'scripts/agent-tools/hotpath-tool')"
+done
+rm -f "$PROJ/.claude/toolsmith/registry.json" "$HOTPATH_TOOL"
+
+# The not-opted-in fast path itself is entirely unchanged by this feature —
+# toolsmith-check.mjs was not modified for the staged/live split at all, so
+# the existing "no registry => gate exits fast" case earlier in this suite
+# already covers it; this section only adds the "staged key present/malformed
+# doesn't perturb behavior" invariant above.
+
 # --- summary -------------------------------------------------------------
 echo
 echo "toolsmith tests: $pass passed, $fail failed"

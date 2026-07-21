@@ -37,9 +37,30 @@ Show the state of both the project's and the user's purpose-built tools.
    hashes in prose.
 
 4. Render as two tables, grouped **Project tools** and **User tools**, each
-   listing every tool with its OK/DRIFTED/MISSING/draft status. List any
-   `draft` tools separately as awaiting approval within their scope.
+   listing every tool with its OK/DRIFTED/MISSING/draft status (this reflects
+   the LIVE pin only — see step 5 for pending staged drafts, which are a
+   separate concern per docs/toolsmith/staged-live-split.md).
+
+5. **Pending drafts.** For each registry entry (either scope) carrying a
+   `staged` field, render a **Pending drafts** section (per scope) listing:
+   `name`, `staged.note`, `staged.since`, and a **three-way drift state**
+   comparing:
+   - the entry's pinned `approvedSha256` (what the hook currently enforces),
+   - the live file's actual on-disk hash (from the OK/DRIFTED/MISSING check
+     above),
+   - the staged file's actual on-disk hash (compute it directly — sha256 of
+     the file at the resolved `staged.path`; do not trust `staged.sha256`,
+     which is advisory bookkeeping only).
+
+   Report one of: **pending** (live matches its pin; staged differs from live
+   — the normal case, a draft awaiting promotion), **live-drifted-too** (live
+   itself no longer matches its pin — surface this prominently, since
+   promoting now would be reviewing a stale diff), or **staged-missing** (the
+   registry references a `staged.path` that doesn't exist on disk — the entry
+   claims a pending draft that isn't there). For a brand-new tool (`status:
+   draft`, no live path active yet), report **new** instead of a drift state.
 
 Summarize how many tools are OK / drifted / missing / draft, per scope and in
-total. Remember: a project tool shadows a same-named user tool — if both
-registries define the same `name`, note that the project entry governs.
+total, plus how many pending drafts exist per scope. Remember: a project tool
+shadows a same-named user tool — if both registries define the same `name`,
+note that the project entry governs.
