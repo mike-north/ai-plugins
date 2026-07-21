@@ -37,6 +37,8 @@ M2-gated issues carry `backlog` until the gate lifts.
    custody, and the risk-template (changeset body) ownership.
 6. [risk-vocabulary](./risk-vocabulary.md) — the calibration vocabulary that feeds
    ratification's `riskLevel` enum.
+7. [risk-template](./risk-template.md) — the changeset body the judge signs: required
+   sections, rules, and worked examples.
 
 ## What the judge does not own
 
