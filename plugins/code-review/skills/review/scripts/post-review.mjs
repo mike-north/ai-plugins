@@ -30,7 +30,7 @@
 // --force-recreate is given).
 
 import * as fs from "node:fs";
-import { CliError, DriftError, EXIT, UsageError, ValidationError, parseArgs, runCli } from "./lib/cli.mjs";
+import { CliError, DriftError, EXIT, UsageError, ValidationError, parseArgs, runCli, isMainModule } from "./lib/cli.mjs";
 import { api, currentLogin, graphql } from "./lib/gh.mjs";
 import { resolvePrRef } from "./lib/gh.mjs";
 import { parseHunks, rangeContains } from "./lib/hunks.mjs";
@@ -651,7 +651,7 @@ function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   runCli(main);
   process.exit(process.exitCode ?? EXIT.OK);
 }

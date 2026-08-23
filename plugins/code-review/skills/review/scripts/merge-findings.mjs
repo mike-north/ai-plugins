@@ -23,7 +23,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
-import { DriftError, EXIT, UsageError, parseArgs, runCli } from "./lib/cli.mjs";
+import { DriftError, EXIT, UsageError, parseArgs, runCli, isMainModule } from "./lib/cli.mjs";
 import { buildRenameMap, parseUnifiedDiff, resolveHunkSurvival } from "./lib/hunks.mjs";
 import { SARIF_SCHEMA, SARIF_VERSION, SRCROOT } from "./lib/sarif.mjs";
 import { diffWorktree, readState, withLock } from "./lib/snapshot.mjs";
@@ -425,7 +425,7 @@ function main() {
   );
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   runCli(main);
   process.exit(process.exitCode ?? EXIT.OK);
 }

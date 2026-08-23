@@ -14,7 +14,7 @@
 // Exit codes: 0 ok, 2 usage.
 
 import * as fs from "node:fs";
-import { EXIT, UsageError, parseArgs, runCli } from "./lib/cli.mjs";
+import { EXIT, UsageError, parseArgs, runCli, isMainModule } from "./lib/cli.mjs";
 import { readHeadBlob } from "./lib/snapshot.mjs";
 
 export const VALID_FORMATS = new Set(["terminal", "markdown", "github-body"]);
@@ -271,7 +271,7 @@ function resolveWorktreeForCli(log, workAreaOverride) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   runCli(main);
   process.exit(process.exitCode ?? EXIT.OK);
 }

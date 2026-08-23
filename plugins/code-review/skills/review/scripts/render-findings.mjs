@@ -8,6 +8,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { isMainModule } from "./lib/cli.mjs";
 
 const LEVEL_ORDER = ["error", "warning", "note"];
 const LEVEL_LABEL = { error: "CRITICAL", warning: "IMPORTANT", note: "SUGGESTION" };
@@ -94,6 +95,6 @@ function main() {
   process.stdout.write(renderFindings(logs));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   main();
 }

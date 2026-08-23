@@ -10,6 +10,7 @@
 // deleted or touched).
 
 import * as fs from "node:fs";
+import { pathToFileURL } from "node:url";
 
 export const EXIT = { OK: 0, UNEXPECTED: 1, USAGE: 2, INVALID: 3, DRIFT: 4, PARTIAL: 5, FOREIGN_PENDING: 6 };
 
@@ -77,5 +78,29 @@ export function runCli(fn) {
     const code = e instanceof CliError ? e.exitCode : EXIT.UNEXPECTED;
     process.stderr.write(`error: ${e.message}\n`);
     process.exitCode = code;
+  }
+}
+
+/**
+ * True when `moduleUrl` (a script's `import.meta.url`) is the module Node was
+ * asked to run directly — i.e. the script should execute its CLI entry.
+ *
+ * A hand-built `file://${process.argv[1]}` comparison breaks whenever the
+ * install path needs URL encoding (`import.meta.url` percent-encodes a space
+ * as %20 — e.g. under "…/Application Support/…"), and a plain
+ * `pathToFileURL(process.argv[1])` comparison still breaks when argv[1]
+ * reaches the script through a symlink (macOS `/tmp` → `/private/tmp`),
+ * because Node resolves the main ES module to its real path before loading
+ * it. Either failure mode makes the script exit 0 with no output — a silent
+ * no-op that looks like success. So: realpath argv[1], then compare
+ * canonically encoded file URLs.
+ */
+export function isMainModule(moduleUrl) {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try {
+    return moduleUrl === pathToFileURL(fs.realpathSync(entry)).href;
+  } catch {
+    return false;
   }
 }
