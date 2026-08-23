@@ -72,15 +72,22 @@ function runDirect(scriptPath) {
     timeout: 30_000,
   });
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+  // spawnSync reports status null when the child timed out or died to a
+  // signal — a hang or crash, never proof the entry ran.
+  const completed = result.error == null && result.signal == null && result.status != null;
   // A broken guard's signature: clean exit with no output at all.
-  return { entryRan: result.status !== 0 || output.trim().length > 0, status: result.status };
+  return {
+    entryRan: completed && (result.status !== 0 || output.trim().length > 0),
+    status: result.status,
+    signal: result.signal,
+  };
 }
 
 describe("direct invocation from a path containing a space", () => {
   for (const script of CLI_SCRIPTS) {
     it(`${script} runs its CLI entry (not a silent no-op)`, () => {
-      const { entryRan, status } = runDirect(path.join(scriptsDir, script));
-      expect(entryRan, `${script} exited ${status} with no output — entry guard did not fire`).toBe(true);
+      const { entryRan, status, signal } = runDirect(path.join(scriptsDir, script));
+      expect(entryRan, `${script} exited status=${status} signal=${signal} with no output — entry guard did not fire`).toBe(true);
     });
   }
 });
@@ -88,8 +95,8 @@ describe("direct invocation from a path containing a space", () => {
 describe("direct invocation through a symlinked directory", () => {
   for (const script of CLI_SCRIPTS) {
     it(`${script} runs its CLI entry (not a silent no-op)`, () => {
-      const { entryRan, status } = runDirect(path.join(symlinkDir, script));
-      expect(entryRan, `${script} exited ${status} with no output — entry guard did not fire`).toBe(true);
+      const { entryRan, status, signal } = runDirect(path.join(symlinkDir, script));
+      expect(entryRan, `${script} exited status=${status} signal=${signal} with no output — entry guard did not fire`).toBe(true);
     });
   }
 });
