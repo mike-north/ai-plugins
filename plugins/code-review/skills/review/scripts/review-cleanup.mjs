@@ -11,7 +11,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { EXIT, UsageError, parseArgs, runCli } from "./lib/cli.mjs";
+import { EXIT, UsageError, parseArgs, runCli, isMainModule } from "./lib/cli.mjs";
 import { deleteSnapshotRefs, readState } from "./lib/snapshot.mjs";
 
 /** @returns {{ workArea: string, refsDeleted: string }} */
@@ -35,7 +35,7 @@ function main() {
   process.stdout.write(JSON.stringify(out) + "\n");
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   runCli(main);
   process.exit(process.exitCode ?? EXIT.OK);
 }

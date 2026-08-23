@@ -14,7 +14,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { EXIT, UsageError, ValidationError, parseArgs, runCli } from "./lib/cli.mjs";
+import { EXIT, UsageError, ValidationError, parseArgs, runCli, isMainModule } from "./lib/cli.mjs";
 import {
   createSnapshot,
   execGit,
@@ -90,7 +90,7 @@ function main() {
   process.stdout.write(JSON.stringify(out) + "\n");
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   runCli(main);
   process.exit(process.exitCode ?? EXIT.OK);
 }

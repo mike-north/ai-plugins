@@ -10,6 +10,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isMainModule } from "./lib/cli.mjs";
 import { parseFrontmatter } from "./route-lenses.mjs";
 
 const MAX_LENS_WORDS = 1200;
@@ -221,6 +222,6 @@ function main() {
   process.stdout.write(`\n0 errors, ${warnings.length} warning(s)\n`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   main();
 }

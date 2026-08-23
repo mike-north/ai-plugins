@@ -12,6 +12,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { execFileSync } from "node:child_process";
+import { isMainModule } from "./lib/cli.mjs";
 
 const MANIFEST_PATTERNS = [
   "package.json",
@@ -345,6 +346,6 @@ function main() {
   process.stdout.write(`${JSON.stringify(signals, null, 2)}\n`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   main();
 }
