@@ -31,5 +31,11 @@ permissions in this command.
    `covers` regex(es) that would match the observed commands, and a short script
    sketch. Note which existing registry tools (if any) already cover it.
 
-End by inviting the user to pick candidates to build, then follow the toolsmith
-skill's forging + `/toolsmith:approve` flow for each.
+End by inviting the user to pick candidates to build. For each pick, dispatch
+one `tool-curator` agent, passing that candidate's block (name, purpose,
+covers, sketch, and the observed commands it was clustered from) as its
+capability brief. The curator re-adjudicates from scratch — this command's
+clustering never checks native porcelain, so a `no-tool-needed` verdict is
+possible and correct even for a candidate that looked solid here. This
+command only proposes; the curator (via a staging draft) and the human via
+`/toolsmith:approve` are what actually change anything.
