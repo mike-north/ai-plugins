@@ -42,11 +42,12 @@ install story.
 
 3. **The curator returns a verdict.** Here it's `curated`: nothing existing
    covers this cleanly, and there's no native porcelain shortcut, so it
-   forges the script at `scripts/agent-tools/gh-pr-comments` and a matching
-   `draft` entry in `.claude/toolsmith/registry.json`. (A `use-existing-tool`
-   or `no-tool-needed` verdict is just as valid an outcome — the curator
-   never promotes either way; only a `curated` verdict produces a staging
-   draft.)
+   forges the draft at `.claude/toolsmith/staging/gh-pr-comments` — never the
+   live path directly — and a matching `draft` entry in
+   `.claude/toolsmith/registry.json` recording the eventual live path
+   `scripts/agent-tools/gh-pr-comments`. (A `use-existing-tool` or
+   `no-tool-needed` verdict is just as valid an outcome — the curator never
+   promotes either way; only a `curated` verdict produces a staging draft.)
 
 4. **The user runs `/toolsmith:approve scripts/agent-tools/gh-pr-comments`.**
    It previews first, read-only, via `toolsmith-approve.mjs --dry-run`:

@@ -188,21 +188,27 @@ hook** — `scripts/toolsmith-write-check.mjs`, wired via
 `scripts/toolsmith-write-gate.sh` on `PreToolUse` for
 `Write`/`Edit`/`NotebookEdit` (see `hooks/claude.yaml` and its per-host
 mirrors). It denies any of those tools when the resolved target path falls
-under a scope's live tool directory or settings.json:
+under a scope's live tool directory:
 
 - project live dir: `<project>/scripts/agent-tools/`
 - user live dir: `~/.claude/toolsmith/tools/`
-- project settings: `<project>/.claude/settings.json`
-- user settings: `~/.claude/settings.json`
 
-This rule is unconditional — it fires whether or not the project has a
-toolsmith registry at all, unlike the redirect/hash-pin logic in
+For either scope's settings file (`<project>/.claude/settings.json`,
+`~/.claude/settings.json`) the check is **content-targeted, not blanket**: an
+edit is denied only when it would *introduce* a `Bash(...)` rule pointing at
+a toolsmith live tool path — the self-grant reserved for `/toolsmith:approve`.
+All other settings edits (other permissions, hooks, env, plugin config) pass
+through untouched, so installing toolsmith never makes the harness's main
+configuration files uneditable.
+
+The live-dir rule is unconditional — it fires whether or not the project has
+a toolsmith registry at all, unlike the redirect/hash-pin logic in
 `toolsmith-check.mjs`. Staging directories (`.claude/toolsmith/staging/` and
 `~/.claude/toolsmith/staging/`) are deliberately never checked — the agent is
 expected to write there constantly; that write activity is exactly what the
-split is for. Denying `settings.json` directly does not break the promotion
-handshake: `toolsmith-approve.mjs` writes it via `node:fs`, not the Write/Edit
-tools, so it is unaffected by this hook.
+split is for. The settings guard does not break the promotion handshake
+either: `toolsmith-approve.mjs` writes settings via `node:fs`, not the
+Write/Edit tools, so it is unaffected by this hook.
 
 Keeping `Bash(chflags:*)`/`Bash(chmod:*)` **out** of the allowlist for live
 paths (so flag-stripping falls to a manual ask) remains a recommendation this

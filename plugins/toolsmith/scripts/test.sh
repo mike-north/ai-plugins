@@ -606,12 +606,36 @@ assert_deny "Write to a project live path is denied" \
   "$(pre_write Write file_path "$PROJ/scripts/agent-tools/x")" "write-protected"
 assert_allow "Write to the project staging dir is allowed" \
   "$(pre_write Write file_path "$PROJ/.claude/toolsmith/staging/x")"
-assert_deny "Edit of the project settings.json is denied" \
-  "$(pre_write Edit file_path "$PROJ/.claude/settings.json")" "/toolsmith:approve"
+# settings.json is content-targeted (PR #137 review): only edits that
+# INTRODUCE a Bash rule for a toolsmith live tool path are denied; every
+# other settings edit — other permissions, hooks, env — passes through.
+pre_edit_settings() { # $1 = path, $2 = old_string, $3 = new_string
+  jq -cn --arg path "$1" --arg old "$2" --arg new "$3" --arg cwd "$PROJ" \
+    '{hook_event_name:"PreToolUse",tool_name:"Edit",cwd:$cwd,tool_input:{file_path:$path,old_string:$old,new_string:$new}}' \
+    | "$WRITEGATE"
+}
+pre_write_settings() { # $1 = path, $2 = content
+  jq -cn --arg path "$1" --arg content "$2" --arg cwd "$PROJ" \
+    '{hook_event_name:"PreToolUse",tool_name:"Write",cwd:$cwd,tool_input:{file_path:$path,content:$content}}' \
+    | "$WRITEGATE"
+}
+
+assert_allow "settings.json edit adding an unrelated permission is allowed" \
+  "$(pre_edit_settings "$PROJ/.claude/settings.json" '"allow": [' '"allow": ["Bash(npm test:*)",')"
+assert_deny "settings.json edit introducing a project live-tool grant is denied" \
+  "$(pre_edit_settings "$PROJ/.claude/settings.json" '"allow": [' '"allow": ["Bash(scripts/agent-tools/x:*)",')" "/toolsmith:approve"
+assert_allow "settings.json edit that only carries an existing toolsmith rule as context is allowed" \
+  "$(pre_edit_settings "$PROJ/.claude/settings.json" '"Bash(scripts/agent-tools/x:*)", "a"' '"Bash(scripts/agent-tools/x:*)", "b"')"
+assert_deny "settings.json Write whose content adds a toolsmith grant is denied" \
+  "$(pre_write_settings "$PROJ/.claude/settings.json" '{"permissions":{"allow":["Bash(scripts/agent-tools/x:*)"]}}')" "/toolsmith:approve"
+assert_allow "settings.json Write without any toolsmith grant is allowed" \
+  "$(pre_write_settings "$PROJ/.claude/settings.json" '{"permissions":{"allow":["Bash(npm test:*)"]}}')"
 
 mkdir -p "$USERHOME/.claude"
-assert_deny "Edit of the user (~) settings.json is denied" \
-  "$(pre_write Edit file_path "$USERHOME/.claude/settings.json")" "/toolsmith:approve"
+assert_deny "user (~) settings.json edit introducing a user live-tool grant is denied" \
+  "$(pre_edit_settings "$USERHOME/.claude/settings.json" '"allow": [' "\"allow\": [\"Bash($USERHOME/.claude/toolsmith/tools/y:*)\",")" "/toolsmith:approve"
+assert_allow "user (~) settings.json edit without a toolsmith grant is allowed" \
+  "$(pre_edit_settings "$USERHOME/.claude/settings.json" '"model": "opus"' '"model": "sonnet"')"
 
 mkdir -p "$USERHOME/.claude/toolsmith/tools"
 assert_deny "NotebookEdit of a user live path is denied" \

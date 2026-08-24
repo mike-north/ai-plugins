@@ -7,12 +7,18 @@
  * integrity-pin backstop in toolsmith-check.mjs).
  *
  * Denies Write/Edit/NotebookEdit whose target path resolves under a scope's
- * LIVE tool directory or either scope's settings.json:
+ * LIVE tool directory:
  *
  *   - project live dir:  <project>/scripts/agent-tools/
  *   - user live dir:     ~/.claude/toolsmith/tools/
- *   - project settings:  <project>/.claude/settings.json
- *   - user settings:     ~/.claude/settings.json
+ *
+ * For either scope's settings.json (<project>/.claude/settings.json,
+ * ~/.claude/settings.json) the check is CONTENT-TARGETED, not blanket: the
+ * edit is denied only when it would INTRODUCE a Bash allowlist rule pointing
+ * at a toolsmith live tool path — the self-grant that only /toolsmith:approve
+ * may make. Ordinary settings edits (other permissions, hooks, env, plugin
+ * config) pass through untouched; toolsmith being installed must not make the
+ * harness's main configuration files uneditable.
  *
  * Staging directories (.claude/toolsmith/staging/ in either scope) are
  * deliberately never checked here — the agent is expected to write there
@@ -93,14 +99,57 @@ function main() {
   ];
   for (const settingsPath of settingsPaths) {
     if (samePath(target, resolveExistingOrLexical(settingsPath))) {
-      deny(
-        `Permission grants in settings.json are only made by the toolsmith ` +
-          `promotion handshake (\`/toolsmith:approve\`), never by a direct ` +
-          `edit. Run \`/toolsmith:approve\` to add or change a rule.`,
-        isCursor,
-      );
+      // Targeted, not blanket: only the toolsmith self-grant is reserved for
+      // the promotion handshake. Every other settings.json edit is allowed.
+      if (introducesToolsmithGrant(input, target)) {
+        deny(
+          `Permission rules for toolsmith live tool paths are only granted by ` +
+            `the promotion handshake (\`/toolsmith:approve\`), never by a ` +
+            `direct settings.json edit. Stage the tool and have the user run ` +
+            `\`/toolsmith:approve\` — the grant is coupled to the reviewed, ` +
+            `content-addressed script version.`,
+          isCursor,
+        );
+      }
       return;
     }
+  }
+}
+
+// A Bash allowlist rule whose target lives under a toolsmith-managed live
+// tool directory (project `scripts/agent-tools/` or any scope's
+// `.claude/toolsmith/tools/`). Matched textually — settings.json rules always
+// carry these substrings regardless of the absolute prefix.
+const TOOLSMITH_RULE_RE = /Bash\([^)"']*(?:scripts\/agent-tools\/|\.claude\/toolsmith\/tools\/)[^)"']*\)/g;
+
+function toolsmithGrants(text) {
+  if (typeof text !== 'string') return [];
+  return text.match(TOOLSMITH_RULE_RE) || [];
+}
+
+/**
+ * True when the pending edit would add a toolsmith live-path Bash rule that
+ * the "before" text does not already contain. For Edit, before/after are
+ * old_string/new_string; for Write, before is the file's current on-disk
+ * contents (empty when the file doesn't exist yet). Fail-open (false) on any
+ * analysis error, consistent with the rest of this hook.
+ */
+function introducesToolsmithGrant(input, settingsFile) {
+  try {
+    const ti = input.tool_input || {};
+    let before;
+    let after;
+    if (input.tool_name === 'Write') {
+      after = ti.content;
+      before = existsSync(settingsFile) ? readFileSync(settingsFile, 'utf8') : '';
+    } else {
+      after = ti.new_string ?? ti.new_source;
+      before = ti.old_string ?? ti.old_source ?? '';
+    }
+    const existing = new Set(toolsmithGrants(before));
+    return toolsmithGrants(after).some((rule) => !existing.has(rule));
+  } catch {
+    return false; // fail-open
   }
 }
 
