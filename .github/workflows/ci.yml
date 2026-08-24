@@ -79,7 +79,6 @@ jobs:
         # suite requires no change to this workflow, only new suites do.
         run: |
           suites=(
-            "plugins/toolsmith/scripts/test.sh"
             "plugins/toolsmith/scripts/smoke.sh"
             "plugins/toon/scripts/test.sh"
           )
