@@ -7,9 +7,13 @@ Analyze this project's Bash usage and propose purpose-built toolsmith scripts.
 You **propose** — do not create scripts, edit the registry, or change
 permissions in this command.
 
-1. **Load the history.** Read `.claude/toolsmith/history.jsonl` (one JSON object
-   per line: `ts`, `cwd`, `command`, `exitCode`). If it is missing or empty,
-   say there is not yet enough signal and stop.
+1. **Load the history — through the redacting reader, never a raw Read.** The
+   log stores commands verbatim and can contain inline secrets, so the hook
+   denies direct reads. Run
+   `node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-history.mjs" [--grep <regex>] [--limit <N>]`
+   to get the JSONL lines (`ts`, `cwd`, `command`, `exitCode`) with
+   secret-like values already replaced by `[REDACTED]`. If it reports no
+   history or nothing prints, say there is not yet enough signal and stop.
 
 2. **Focus on watched, broad commands.** Consider the shipped watchlist
    (`skills/toolsmith/references/watchlist-defaults.json`) plus any project

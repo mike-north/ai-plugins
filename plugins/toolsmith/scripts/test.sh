@@ -647,6 +647,46 @@ assert_allow "Write to a path outside any protected dir is allowed" \
 assert_allow "escape hatch disables the write-denial hook too" \
   "$(CLAUDE_TOOLSMITH_HOOK=off pre_write Write file_path "$PROJ/scripts/agent-tools/x")"
 
+# --- history.jsonl: raw Read denied, redacting reader works ----------------
+mkdir -p "$PROJ/.claude/toolsmith"
+assert_deny "raw Read of history.jsonl is denied with a steer to the reader" \
+  "$(pre_write Read file_path "$PROJ/.claude/toolsmith/history.jsonl")" "toolsmith-history"
+assert_allow "Read of an ordinary file is allowed" \
+  "$(pre_write Read file_path "$PROJ/src/index.ts")"
+assert_deny "Write to history.jsonl is denied too" \
+  "$(pre_write Write file_path "$PROJ/.claude/toolsmith/history.jsonl")" "toolsmith-history"
+
+HISTORY_READER="$PWD/toolsmith-history.mjs"
+cat >"$PROJ/.claude/toolsmith/history.jsonl" <<'EOF'
+{"ts":"2024-01-15T10:30:00.000Z","cwd":"/p","command":"gh api repos/o/r -H 'Authorization: Bearer ghp_abcdefghijklmnopqrstuvwxyz0123456789'","exitCode":0}
+{"ts":"2024-01-15T10:31:00.000Z","cwd":"/p","command":"AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY aws s3 ls","exitCode":0}
+{"ts":"2024-01-15T10:32:00.000Z","cwd":"/p","command":"curl https://user:hunter2secret@example.com/api | jq .","exitCode":0}
+{"ts":"2024-01-15T10:33:00.000Z","cwd":"/p","command":"gh pr list --limit 5","exitCode":0}
+EOF
+HOUT=$(CLAUDE_PROJECT_DIR="$PROJ" node "$HISTORY_READER")
+if echo "$HOUT" | grep -q 'REDACTED' \
+  && ! echo "$HOUT" | grep -q 'ghp_abcdefghijklmnopqrstuvwxyz0123456789' \
+  && ! echo "$HOUT" | grep -q 'wJalrXUtnFEMI' \
+  && ! echo "$HOUT" | grep -q 'hunter2secret' \
+  && echo "$HOUT" | grep -q 'gh pr list --limit 5'; then
+  pass=$((pass + 1))
+else
+  fail=$((fail + 1)); echo "FAIL: history reader redacts secret-like values"; echo "  got: [$HOUT]"
+fi
+HGREP=$(CLAUDE_PROJECT_DIR="$PROJ" node "$HISTORY_READER" --grep 'gh pr list' | wc -l | tr -d ' ')
+if [ "$HGREP" = "1" ]; then
+  pass=$((pass + 1))
+else
+  fail=$((fail + 1)); echo "FAIL: history reader --grep filters on redacted text"; echo "  got: [$HGREP lines]"
+fi
+HLIMIT=$(CLAUDE_PROJECT_DIR="$PROJ" node "$HISTORY_READER" --limit 2 | wc -l | tr -d ' ')
+if [ "$HLIMIT" = "2" ]; then
+  pass=$((pass + 1))
+else
+  fail=$((fail + 1)); echo "FAIL: history reader --limit keeps most recent N"; echo "  got: [$HLIMIT lines]"
+fi
+rm -f "$PROJ/.claude/toolsmith/history.jsonl"
+
 # --- approve-guard: best-effort nudge in toolsmith-check.mjs against a
 # freehanded toolsmith-approve.mjs invocation (registry-independent — none of
 # these cases have a registry.json present, proving the gate.sh prefilter

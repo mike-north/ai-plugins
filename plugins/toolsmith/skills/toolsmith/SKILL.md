@@ -32,15 +32,15 @@ the user can read once, approve, and never be asked about again. The script
    tool if one covers it, but reach for the tool first rather than getting
    redirected.) A project tool shadows a same-named user tool.
 2. **If nothing covers it, dispatch the `tool-curator` agent — don't forge
-   inline.** Do not apply the rubric, probe native porcelain, or author a
-   staging draft yourself; that is the curator's job. Hand it a **capability
-   brief** — the capability you need, never a command design or tool sketch —
-   and go back to your own work in a clean context window. If you're blocked
-   right now on the result, ask the user to approve the raw command once
-   while the curator works in the background. The curator answering "use
-   this existing CLI command, invoked like so" is a **success outcome**, not
-   a failed forge — most capabilities are already one flag away from
-   something native.
+   inline.** Do not apply the rubric, hunt for safer alternatives, or author
+   a staging draft yourself; that is the curator's job. Hand it a
+   **capability brief** — the capability you need, never a command design or
+   tool sketch — and go back to your own work in a clean context window. If
+   you're blocked right now on the result, ask the user to approve the raw
+   command once while the curator works in the background. The curator
+   answering "use this existing mechanism, invoked like so" is a **success
+   outcome**, not a failed forge — many capabilities are already one flag
+   away from something that exists and is safe to allowlist.
 
    Dispatch prompt (~6 lines):
 
@@ -50,15 +50,15 @@ the user can read once, approve, and never be asked about again. The script
    > `<one-off / recurring — how often you expect to need this>`.
    >
    > Return one of: **use-existing-tool** (name the approved tool and the
-   > exact invocation), **no-tool-needed** (the exact native CLI porcelain
-   > command to use instead), or **curated** (a staging draft + draft
+   > exact invocation), **no-tool-needed** (the exact command for a safe,
+   > appropriately narrow existing mechanism), or **curated** (a staging draft + draft
    > registry entry — extend, refactor, or forge — or a report-only
    > retirement proposal). You never promote to live; `/toolsmith:approve`
    > stays a human step.
 
    If your harness cannot dispatch agents (e.g. Codex), perform the
-   curator's procedure yourself, in its order: native porcelain first, then
-   both registries, then the rubric, then a staging draft.
+   curator's procedure yourself, in its order: safer existing alternatives
+   first, then both registries, then the rubric, then a staging draft.
 
 ## Choosing project vs. user (global) scope
 

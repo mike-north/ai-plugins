@@ -4,7 +4,7 @@ hooks:
       hooks:
         - type: command
           command: ${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-gate.sh
-    - matcher: Write|Edit|NotebookEdit
+    - matcher: Write|Edit|NotebookEdit|Read
       hooks:
         - type: command
           command: ${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-write-gate.sh

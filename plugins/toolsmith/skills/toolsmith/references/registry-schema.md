@@ -254,6 +254,15 @@ local and gitignored, but plaintext — treat `.claude/toolsmith/` as sensitive
 and don't copy the log elsewhere. Recurring secret-bearing commands are exactly
 the kind of thing to replace with a narrow, reviewed script.
 
+**Agents never read the log raw.** The PreToolUse hook denies `Read` (and any
+write tool) targeting `history.jsonl` and steers to the redacting reader,
+`scripts/toolsmith-history.mjs [--grep <regex>] [--limit <N>]`, which replaces
+secret-like spans (provider token formats informed by
+[secrets-patterns-db](https://github.com/mazen160/secrets-patterns-db), plus
+auth headers, URL credentials, and secret-named env assignments) with
+`[REDACTED]` before printing — and applies `--grep` to the redacted text, so
+match/no-match can't be used as an oracle to reconstruct a secret.
+
 ## Malformed files
 
 Both the hook and `/toolsmith:list` treat an unparseable `registry.json` or

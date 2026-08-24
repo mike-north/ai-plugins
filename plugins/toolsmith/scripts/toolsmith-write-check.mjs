@@ -20,6 +20,11 @@
  * config) pass through untouched; toolsmith being installed must not make the
  * harness's main configuration files uneditable.
  *
+ * Read is also matched, for exactly one target: .claude/toolsmith/
+ * history.jsonl (either scope), which stores commands verbatim and can
+ * contain inline secrets. Raw reads are denied with a steer to the redacting
+ * reader, scripts/toolsmith-history.mjs. All other Read targets pass.
+ *
  * Staging directories (.claude/toolsmith/staging/ in either scope) are
  * deliberately never checked here — the agent is expected to write there
  * constantly; that write activity is exactly what the staged/live split is
@@ -56,7 +61,7 @@ function main() {
     return; // fail-open
   }
 
-  if (!['Write', 'Edit', 'NotebookEdit'].includes(input.tool_name)) return;
+  if (!['Write', 'Edit', 'NotebookEdit', 'Read'].includes(input.tool_name)) return;
   const evt = input.hook_event_name;
   if (evt && evt !== 'PreToolUse' && evt !== 'preToolUse') return;
   // Write/Edit/NotebookEdit are named identically on every host this plugin
@@ -74,6 +79,28 @@ function main() {
 
   const target = resolvePath(rawPath, root, home);
   if (!target) return; // fail-open: couldn't resolve, don't guess
+
+  // history.jsonl stores commands verbatim and can contain inline secrets;
+  // Read (and any write tool) on it is redirected to the redacting reader.
+  const historyPaths = [
+    join(root, '.claude', 'toolsmith', 'history.jsonl'),
+    ...(home ? [join(home, '.claude', 'toolsmith', 'history.jsonl')] : []),
+  ];
+  for (const historyPath of historyPaths) {
+    if (samePath(target, resolveExistingOrLexical(historyPath))) {
+      deny(
+        `history.jsonl stores commands verbatim and can contain inline ` +
+          `secrets — never read it raw. Use the redacting reader instead: ` +
+          `\`node <plugin>/scripts/toolsmith-history.mjs [--grep <regex>] ` +
+          `[--limit <N>]\` (it redacts secret-like values before printing ` +
+          `or matching).`,
+        isCursor,
+      );
+      return;
+    }
+  }
+
+  if (input.tool_name === 'Read') return; // Read is only guarded for history.jsonl
 
   const liveDirs = [
     { dir: join(root, 'scripts', 'agent-tools'), scope: 'project' },
