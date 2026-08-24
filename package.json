@@ -6,9 +6,11 @@
   "type": "module",
   "scripts": {
     "build": "aipm build",
+    "build:toolsmith": "pnpm --filter @mike-north/toolsmith build",
+    "typecheck": "pnpm --filter @mike-north/toolsmith typecheck",
     "validate": "aipm validate",
     "scaffold": "aipm scaffold",
-    "check": "aipm build && aipm validate",
+    "check": "aipm build && aipm validate && pnpm typecheck",
     "test": "vitest run",
     "lint": "remark plugins/ --ext md,mdc --frail --quiet"
   },

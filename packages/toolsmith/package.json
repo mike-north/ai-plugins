@@ -1,0 +1,34 @@
+{
+  "name": "@mike-north/toolsmith",
+  "version": "0.1.0",
+  "description": "Deterministic lifecycle CLI for toolsmith purpose-built agent tools: approve (staged→live promotion), verify (hash-pin integrity), lint (proposal gate), list, analyze",
+  "license": "MIT",
+  "author": "Mike North",
+  "type": "module",
+  "bin": {
+    "toolsmith": "./dist/toolsmith.mjs"
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p src",
+    "prepack": "node scripts/build.mjs",
+    "test": "vitest run --root ../.."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mike-north/ai-plugins.git",
+    "directory": "packages/toolsmith"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0"
+  }
+}
