@@ -34,12 +34,20 @@ install story.
    $ gh api repos/mike-north/ai-plugins/pulls/7/comments | jq '.[] | {user: .user.login, body}'
    ```
 
-2. **The pattern recurs**, so `/toolsmith:analyze` mines the logged history
-   and proposes a candidate — name, purpose, `covers` pattern, a script
-   sketch — against the authoring rubric.
+2. **The pattern recurs**, so the agent dispatches the `tool-curator` agent
+   with a capability brief (what it needs, the raw command, repo context, how
+   often) instead of hand-forging inline, and keeps working while the
+   curator answers. `/toolsmith:analyze` can also mine the logged history and
+   propose candidates to dispatch the curator on.
 
-3. **The agent forges the script** at `scripts/agent-tools/gh-pr-comments`
-   and a matching `draft` entry in `.claude/toolsmith/registry.json`.
+3. **The curator returns a verdict.** Here it's `curated`: nothing existing
+   covers this cleanly, and there's no native porcelain shortcut, so it
+   forges the draft at `.claude/toolsmith/staging/gh-pr-comments` — never the
+   live path directly — and a matching `draft` entry in
+   `.claude/toolsmith/registry.json` recording the eventual live path
+   `scripts/agent-tools/gh-pr-comments`. (A `use-existing-tool` or
+   `no-tool-needed` verdict is just as valid an outcome — the curator never
+   promotes either way; only a `curated` verdict produces a staging draft.)
 
 4. **The user runs `/toolsmith:approve scripts/agent-tools/gh-pr-comments`.**
    It previews first, read-only, via `toolsmith-approve.mjs --dry-run`:
@@ -96,10 +104,15 @@ install story.
 
 ## What it ships
 
-- **A skill** (`toolsmith`) — when a script is worth building, how to author it
-  narrowly (one operation, no arbitrary-API escape hatch, scope baked in),
-  choosing project vs. user scope, the registry/approval lifecycle, and
-  discovering tools already approved here.
+- **A skill** (`toolsmith`) — when to dispatch the `tool-curator` agent
+  instead of forging inline, how it authors a tool narrowly (one operation,
+  no arbitrary-API escape hatch, scope baked in), choosing project vs. user
+  scope, the registry/approval lifecycle, and discovering tools already
+  approved here.
+- **A sub-agent** (`tool-curator`, opus) — given a capability brief, answers
+  with an existing approved tool, a native CLI porcelain command, or a
+  curated staging draft (extend/refactor/forge, or a report-only retirement
+  proposal). It never promotes to live — `/toolsmith:approve` stays human.
 - **A PreToolUse hook** — on a watched Bash command it **redirects** to an
   already-approved tool (project or user scope) when one `covers` the command,
   and **hard-blocks** any registered tool that is unapproved or whose contents
@@ -166,13 +179,13 @@ from the same source.
 
 This README documents the shipped 0.3.x plugin: hash-pinned approvals plus a
 `settings.json` allowlist rule per tool, one human proofread per script
-version. The repo also carries the toolsmith **v2 design canon** under
+version, and the `tool-curator` sub-agent that proposes and evolves the
+toolbox. The repo also carries the toolsmith **v2 design canon** under
 [`docs/toolsmith/`](../../docs/toolsmith/architecture-steer.md) (start there),
-which describes the next generation: cryptographically signed admission (not
-just a hash pin), scoped/expiring usage grants, a curator sub-agent that
-proposes and evolves the toolbox, and a forge runtime SDK. None of that is
-implemented yet — this plugin is the current, shipped behavior; the canon is
-the direction.
+which describes the rest of the next generation: cryptographically signed
+admission (not just a hash pin), and scoped/expiring usage grants, plus a
+forge runtime SDK. Those are not implemented yet — this plugin is the
+current, shipped behavior; the remaining canon is the direction.
 
 ## Development
 

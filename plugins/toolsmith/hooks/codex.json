@@ -9,6 +9,15 @@
             "command": "${PLUGIN_ROOT}/scripts/toolsmith-gate.sh"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|NotebookEdit|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/scripts/toolsmith-write-gate.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
