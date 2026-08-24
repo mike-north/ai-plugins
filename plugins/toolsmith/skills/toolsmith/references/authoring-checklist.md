@@ -69,8 +69,8 @@ rules where configured, both assume every write lands in staging first.
    (user/global — this runs `--user` under the hood) — it shows the review
    surface (a diff against current live for a revision, full text for a new
    tool) and the precise permission rule (via a `--dry-run` preview of
-   `scripts/toolsmith-approve.mjs`), and on the user's confirmation runs the
-   bare `scripts/toolsmith-approve.mjs` command (add `--user` for a global
+   `scripts/toolsmith.mjs approve --dry-run`), then hands the human the
+   bare `scripts/toolsmith.mjs approve` command to run themselves (add `--user` for a global
    tool). This promotes the staged bytes to the live path (atomically), sets
    the live file to `0555` + the BSD immutable flag where available, pins the
    sha256 recomputed from the placed bytes, flips `status` to `approved`,

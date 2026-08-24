@@ -121,7 +121,7 @@ the entry is written `"gh(_\\w+)?\\s+api\\b"`.
 
 ## Project vs. user scope — the shared contract
 
-Both the PreToolUse hook and `toolsmith-approve.mjs` agree on this table:
+Both the PreToolUse hook and the `toolsmith` CLI agree on this table:
 
 | Concern | Project scope | User scope |
 |---|---|---|

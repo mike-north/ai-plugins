@@ -1,7 +1,7 @@
 #!/bin/bash
 # Latency benchmark for the toolsmith PreToolUse hot path (#38). Drives the
 # REAL toolsmith-gate.sh end-to-end via a piped PreToolUse JSON payload,
-# following the same jq-payload idiom as test.sh -- not a hand-built
+# following the same jq-payload idiom as smoke.sh -- not a hand-built
 # approximation of the gate's logic.
 #
 # Measures wall-clock latency (p50/p95) for three cases:
@@ -52,7 +52,7 @@ USERHOME=$(mktemp -d)
 SAMPLES_FILE=$(mktemp)
 trap 'rm -rf "$PROJ" "$USERHOME" "$SAMPLES_FILE"' EXIT
 export CLAUDE_PROJECT_DIR="$PROJ"
-# Mirrors test.sh: the gate resolves user-scope tools via os.homedir(), which
+# Mirrors the hook test suite: the gate resolves user-scope tools via os.homedir(), which
 # honors $HOME on unix -- isolate it so this never touches the real
 # ~/.claude/toolsmith on the machine running the benchmark.
 export HOME="$USERHOME"

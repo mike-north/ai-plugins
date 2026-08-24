@@ -198,7 +198,7 @@ function sameFile(a, b) {
   }
 }
 
-// Conservative safe character set — mirrors toolsmith-approve.mjs's
+// Conservative safe character set — mirrors the toolsmith CLI's
 // normalizePath so a registry's `path` field can't smuggle traversal or
 // shell-metacharacter noise into a resolved filesystem path.
 const SAFE_PATH_CHARS = /^[A-Za-z0-9._/-]+$/;

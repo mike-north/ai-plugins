@@ -42,7 +42,7 @@ install story.
    and a matching `draft` entry in `.claude/toolsmith/registry.json`.
 
 4. **The user runs `/toolsmith:approve scripts/agent-tools/gh-pr-comments`.**
-   It previews first, read-only, via `toolsmith-approve.mjs --dry-run`:
+   It previews first, read-only, via `toolsmith.mjs approve --dry-run`:
 
    ```
    Tool: gh-pr-comments
@@ -118,7 +118,7 @@ install story.
   scope), and `/toolsmith:list` (registry status + hash-drift check, both
   scopes). Both `approve` and `list` delegate their privileged, mechanical
   steps — hashing, pinning the registry entry, and granting the permission
-  rule — to the deterministic `scripts/toolsmith-approve.mjs` tool rather than
+  rule — to the deterministic `scripts/toolsmith.mjs` CLI (`toolsmith approve`) rather than
   doing them freehand.
 
 ## Files it uses
@@ -133,7 +133,7 @@ Under `<project>/.claude/toolsmith/` (see
 
 Purpose-built project scripts live at `scripts/agent-tools/<name>` and are
 approved via `/toolsmith:approve`, which runs the bare
-`scripts/toolsmith-approve.mjs <path>` command (add `--dry-run` to preview
+`scripts/toolsmith.mjs approve <path>` command (add `--dry-run` to preview
 first) to pin their sha256 and add `Bash(<path>:*)` to `.claude/settings.json`.
 
 Under `~/.claude/toolsmith/` (same registry schema):
@@ -146,7 +146,7 @@ Under `~/.claude/toolsmith/` (same registry schema):
 - `tools/<name>` — the global scripts themselves.
 
 Global scripts are approved via `/toolsmith:approve <name>` (which runs
-`scripts/toolsmith-approve.mjs --user`, or `--user --dry-run` to preview) to
+`scripts/toolsmith.mjs approve --user`, or `--user --dry-run` to preview) to
 pin their sha256 and add `Bash(<absolute-path>:*)` to `~/.claude/settings.json`.
 
 ## Escape hatch & posture
@@ -176,11 +176,18 @@ the direction.
 
 ## Development
 
-Run the hook regression tests:
+Regression tests are vitest suites at the repo root — `pnpm test` runs them
+all (`tests/toolsmith-hooks.test.ts` for the hook trio,
+`packages/toolsmith/tests/` for the `toolsmith` CLI). A thin bash smoke test
+exercises the real hook wiring end to end:
 
 ```bash
-bash scripts/test.sh
+bash scripts/smoke.sh
 ```
+
+The CLI itself is `@mike-north/toolsmith` (`packages/toolsmith/`); the copy at
+`scripts/toolsmith.mjs` is its committed build — edit the TypeScript source and
+run `pnpm --filter @mike-north/toolsmith build`, never the bundle directly.
 
 Benchmark the PreToolUse hot path (not wired into CI — perf numbers are
 machine-dependent; run it locally when evaluating a change to
