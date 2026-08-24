@@ -90,27 +90,22 @@ function main() {
   const command = input.tool_input?.command;
   if (typeof command !== 'string' || !command.trim()) return;
 
-  // Best-effort promotion guard: nudge an agent away from freehanding
-  // toolsmith-approve.mjs. The sanctioned form is the inline env prefix
-  // `CLAUDE_TOOLSMITH_APPROVE=1 node .../toolsmith-approve.mjs ...` (see
-  // commands/approve.md step 5), which marks that the human-confirmed
-  // /toolsmith:approve handshake is actually running; `--dry-run` is always
-  // allowed since it writes nothing. This is deliberately regex-dodgeable
-  // (a determined agent could still strip/rename its way around it) — it is
-  // NOT the security boundary. The durable gate is the attest-it seal (#76,
-  // docs/toolsmith/attest-it-admission.md) that toolsmith-approve.mjs itself
-  // will require once it lands; this check only makes the common accidental
-  // bare-invocation path fail earlier with a clear, actionable message.
+  // Promotion guard: agents never run a committing toolsmith-approve.mjs —
+  // there is no marker or escape. `--dry-run` (and `--verify`/`--help`) is
+  // always allowed since it writes nothing; a commit run is denied with a
+  // steer telling the agent to hand the exact command to the human, who runs
+  // it in their own terminal. This hook IS the agent-side boundary for
+  // promotion; the durable cryptographic gate is the attest-it seal (#76,
+  // docs/toolsmith/attest-it-admission.md).
   // Only actual invocations are guarded — read-only references to the file
   // (`cat`/`grep`/`rg ... toolsmith-approve.mjs`) pass through untouched.
   if (invokesApproveScript(command)) {
-    const hasDryRun = /--dry-run\b/.test(command);
-    const hasApproveMarker = /(^|[\s;&|])CLAUDE_TOOLSMITH_APPROVE=1(?=[\s;&|]|$)/.test(command);
-    if (!hasDryRun && !hasApproveMarker) {
+    const isReadOnly = /--dry-run\b|--verify\b|--help\b|(^|\s)-h(\s|$)/.test(command);
+    if (!isReadOnly) {
       deny(
-        'Promotion is human-initiated via `/toolsmith:approve`, not a freehanded ' +
-          '`toolsmith-approve.mjs` invocation. Run with `--dry-run` to preview, or ' +
-          'follow the `/toolsmith:approve` command end to end.',
+        'Promotion is a human act, run in the human\'s own terminal — never by an ' +
+          'agent. Preview with `--dry-run`, then print the exact promotion command ' +
+          'and ask the user to run it themselves. See `/toolsmith:approve`.',
         isCursor,
       );
       return;

@@ -657,8 +657,10 @@ assert_deny "bare toolsmith-approve.mjs invocation is denied" \
   "$(pre 'node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions')" "/toolsmith:approve"
 assert_allow "toolsmith-approve.mjs --dry-run is allowed" \
   "$(pre 'node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions --dry-run')"
-assert_allow "toolsmith-approve.mjs with the CLAUDE_TOOLSMITH_APPROVE=1 marker is allowed" \
-  "$(pre 'CLAUDE_TOOLSMITH_APPROVE=1 node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions')"
+assert_deny "an env marker does not exempt a commit run (no agent escape exists)" \
+  "$(pre 'CLAUDE_TOOLSMITH_APPROVE=1 node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions')" "human"
+assert_allow "toolsmith-approve.mjs --verify is allowed (read-only)" \
+  "$(pre 'node scripts/toolsmith-approve.mjs --verify')"
 assert_allow "escape hatch disables the approve-guard too" \
   "$(CLAUDE_TOOLSMITH_HOOK=off pre 'node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions')"
 # Regression (PR #137 review): the guard fires only on actual invocations,

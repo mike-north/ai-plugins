@@ -61,22 +61,24 @@ granting the permission rule — are performed by the deterministic
    changes, stop — the draft stays in staging, inert, and the previous live
    version (if any) keeps serving every invocation untouched.
 
-5. **On confirmation only, promote.** Prefix the invocation with
-   `CLAUDE_TOOLSMITH_APPROVE=1` — this is the toolsmith PreToolUse hook's
-   marker that the human-confirmed `/toolsmith:approve` flow (not a
-   freehanded promotion) is what's actually running:
+5. **On confirmation, hand the promotion command to the user — never run it
+   yourself.** The commit run is a human act: the toolsmith PreToolUse hook
+   denies any agent-run commit invocation (only `--dry-run`/`--verify` pass),
+   so promotion happens in the user's own terminal. Print the exact command
+   (with `${CLAUDE_PLUGIN_ROOT}` expanded to its real absolute path, so it is
+   copy-pasteable) and ask the user to run it:
 
    ```
-   CLAUDE_TOOLSMITH_APPROVE=1 node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>"
+   node "<absolute-plugin-root>/scripts/toolsmith-approve.mjs" "<path>"
    ```
 
-   or, for a user-scope tool, keep `--user` on the invocation as well:
+   or, for a user-scope tool, with `--user` on the invocation:
 
    ```
-   CLAUDE_TOOLSMITH_APPROVE=1 node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user
+   node "<absolute-plugin-root>/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user
    ```
 
-   This places the staged bytes at the live path (atomically), sets the live
+   The promotion places the staged bytes at the live path (atomically), sets the live
    file to `0555` (no write bit) plus the BSD immutable flag where available,
    recomputes the sha256 from the bytes actually placed and pins it as
    `approvedSha256`, flips `status` to `approved`, adds exactly one
@@ -88,8 +90,11 @@ granting the permission rule — are performed by the deterministic
    mid-promotion, live is left refused-closed (its pin won't match) until
    re-run, and re-running converges rather than double-applying.
 
-6. **Report** the tool's output (what was promoted, the pinned hash, and the
-   rule added). For a user-scope tool, remind the user it must be invoked by
+6. **Verify and report.** Once the user says they've run it, confirm the
+   promotion landed with the read-only check
+   `node "<absolute-plugin-root>/scripts/toolsmith-approve.mjs" --verify`
+   (add `--user` for user scope) and report what was promoted, the pinned
+   hash, and the rule added. For a user-scope tool, remind the user it must be invoked by
    its fully-expanded absolute path so the granted rule matches. Remind the
    user that any future change to this tool must go back through staging —
    author the revision there and repeat this handshake; the live version
