@@ -37,9 +37,11 @@ fi
 # The registry-absent fast exit below must not skip the approve-guard rule in
 # toolsmith-check.mjs (a best-effort nudge against freehanding
 # toolsmith-approve.mjs — see its own comment), which applies whether or not
-# this project has opted into a registry at all. A plain string check is
-# cheap enough to run unconditionally and keeps the common no-op path fast for
-# every command that isn't mentioning it.
+# this project has opted into a registry at all. This substring match is
+# deliberately broader than the precise invocation check in toolsmith-check.mjs
+# (which ignores mere references like `cat`/`grep` on the file): a prefilter
+# false-negative would silently disable the guard, while a false-positive only
+# costs one node spawn on a rare command shape.
 case "$input" in
   *toolsmith-approve.mjs*) ;; # always hand to node, regardless of registry state
   *)

@@ -637,6 +637,18 @@ assert_allow "toolsmith-approve.mjs with the CLAUDE_TOOLSMITH_APPROVE=1 marker i
   "$(pre 'CLAUDE_TOOLSMITH_APPROVE=1 node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions')"
 assert_allow "escape hatch disables the approve-guard too" \
   "$(CLAUDE_TOOLSMITH_HOOK=off pre 'node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions')"
+# Regression (PR #137 review): the guard fires only on actual invocations,
+# never on commands that merely mention the filename as a data argument.
+assert_allow "reading toolsmith-approve.mjs with cat is not an invocation" \
+  "$(pre 'cat plugins/toolsmith/scripts/toolsmith-approve.mjs')"
+assert_allow "grepping toolsmith-approve.mjs is not an invocation" \
+  "$(pre 'grep -n seal plugins/toolsmith/scripts/toolsmith-approve.mjs')"
+assert_allow "rg with the filename as a pattern is not an invocation" \
+  "$(pre 'rg toolsmith-approve.mjs plugins/')"
+assert_deny "direct execution of toolsmith-approve.mjs is still denied" \
+  "$(pre './plugins/toolsmith/scripts/toolsmith-approve.mjs scripts/agent-tools/x')" "/toolsmith:approve"
+assert_deny "node invocation in a later pipeline segment is still denied" \
+  "$(pre 'echo ok && node plugins/toolsmith/scripts/toolsmith-approve.mjs scripts/agent-tools/x')" "/toolsmith:approve"
 
 # --- summary -------------------------------------------------------------
 echo

@@ -101,7 +101,9 @@ function main() {
   // docs/toolsmith/attest-it-admission.md) that toolsmith-approve.mjs itself
   // will require once it lands; this check only makes the common accidental
   // bare-invocation path fail earlier with a clear, actionable message.
-  if (/toolsmith-approve\.mjs\b/.test(command)) {
+  // Only actual invocations are guarded — read-only references to the file
+  // (`cat`/`grep`/`rg ... toolsmith-approve.mjs`) pass through untouched.
+  if (invokesApproveScript(command)) {
     const hasDryRun = /--dry-run\b/.test(command);
     const hasApproveMarker = /(^|[\s;&|])CLAUDE_TOOLSMITH_APPROVE=1(?=[\s;&|]|$)/.test(command);
     if (!hasDryRun && !hasApproveMarker) {
@@ -302,6 +304,30 @@ const WRAPPER_ARG_FLAGS = {
   env: new Set(['-u', '-C', '-S', '--unset', '--chdir', '--split-string', '--block-signal', '--default-signal', '--ignore-signal']),
   time: new Set(['-o', '-f', '--output', '--format']),
 };
+// True only when some segment of the command actually *executes*
+// toolsmith-approve.mjs — either directly (the script path in executable
+// position) or via `node <path>` — never when the filename merely appears as
+// a data argument (`cat`, `grep`, `rg`, editors reading the file, etc.).
+function invokesApproveScript(command) {
+  const unquote = (t) => t.replace(/^['"]|['"]$/g, '');
+  const isApprovePath = (t) => /(^|\/)toolsmith-approve\.mjs$/.test(unquote(t));
+  for (const segment of commandSegments(command)) {
+    const exe = firstExecutable(segment);
+    if (!exe) continue;
+    if (isApprovePath(exe)) return true;
+    if (/^node(js)?$/.test(unquote(exe))) {
+      const tokens = segment.trim().split(/\s+/).filter(Boolean);
+      // The script node runs is its first non-flag argument after the exe.
+      for (let i = tokens.indexOf(exe) + 1; i < tokens.length; i++) {
+        if (unquote(tokens[i]).startsWith('-')) continue;
+        if (isApprovePath(tokens[i])) return true;
+        break;
+      }
+    }
+  }
+  return false;
+}
+
 const WRAPPERS = new Set(['bash', 'sh', 'env', 'command', 'exec', 'sudo', 'nohup', 'time']);
 
 // The executable token of a simple command: skip leading VAR=val assignments,
