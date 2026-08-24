@@ -32,7 +32,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const GATE = join(REPO_ROOT, "plugins", "toolsmith", "scripts", "toolsmith-gate.sh");
@@ -876,5 +876,63 @@ describe("staged/live split", () => {
         expectAllow(pre("scripts/agent-tools/hotpath-tool"));
       });
     }
+  });
+});
+
+// --- approve-guard: agents never run a committing promotion ----------------
+// Extends the guard shipped with the tool-curator write boundary (which
+// matched only the legacy toolsmith-approve.mjs) to the toolsmith CLI: the
+// `approve` verb without --dry-run is the commit run and is denied; every
+// other verb is read-only and passes. Registry-independent — the guard fires
+// even with no registry in either scope.
+
+describe("approve-guard: toolsmith CLI commit runs are human-only", () => {
+  beforeEach(() => {
+    rmIfExists(registryPath());
+  });
+
+  it("CLI approve commit run via node is denied (no registry needed)", () => {
+    expectDeny(pre("node plugins/toolsmith/scripts/toolsmith.mjs approve scripts/agent-tools/gh-x"), "human");
+  });
+
+  it("direct CLI approve commit run is denied", () => {
+    expectDeny(pre('"/abs/plugin/scripts/toolsmith.mjs" approve scripts/agent-tools/gh-x'), "human");
+  });
+
+  it("bare `toolsmith approve` (npm bin form) is denied", () => {
+    expectDeny(pre("toolsmith approve scripts/agent-tools/gh-x"), "human");
+  });
+
+  it("approve --dry-run is allowed (read-only preview)", () => {
+    expectAllow(pre("node plugins/toolsmith/scripts/toolsmith.mjs approve scripts/agent-tools/gh-x --dry-run"));
+  });
+
+  it("read-only verbs pass: verify / list / analyze / lint", () => {
+    expectAllow(pre("plugins/toolsmith/scripts/toolsmith.mjs verify"));
+    expectAllow(pre("plugins/toolsmith/scripts/toolsmith.mjs list"));
+    expectAllow(pre("plugins/toolsmith/scripts/toolsmith.mjs analyze"));
+    expectAllow(pre("plugins/toolsmith/scripts/toolsmith.mjs lint .claude/toolsmith/staging/gh-x"));
+  });
+
+  it("approve --help is allowed", () => {
+    expectAllow(pre("plugins/toolsmith/scripts/toolsmith.mjs approve --help"));
+  });
+
+  it("mentioning toolsmith.mjs as data is not an invocation", () => {
+    expectAllow(pre("cat plugins/toolsmith/scripts/toolsmith.mjs"));
+    expectAllow(pre("rg approve plugins/toolsmith/scripts/toolsmith.mjs"));
+  });
+
+  it("legacy toolsmith-approve.mjs commit shape is still denied; --dry-run still allowed", () => {
+    expectDeny(pre("node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-x"), "human");
+    expectAllow(pre("node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-x --dry-run"));
+  });
+
+  it("escape hatch disables the approve-guard too", () => {
+    expectAllow(
+      pre("node plugins/toolsmith/scripts/toolsmith.mjs approve scripts/agent-tools/gh-x", {
+        extraEnv: { CLAUDE_TOOLSMITH_HOOK: "off" },
+      }),
+    );
   });
 });

@@ -4,11 +4,12 @@
  *
  * Spawned by toolsmith-gate.sh only when a Bash command is a plausible
  * candidate (references a registered tool, hits a coarse watch token, a
- * project config exists, or the command mentions toolsmith-approve.mjs). It
- * makes the precise decision:
+ * project config exists, or the command mentions the toolsmith CLI or the
+ * legacy toolsmith-approve.mjs). It makes the precise decision:
  *
- *   0. Approve-guard — best-effort nudge against freehanding
- *      toolsmith-approve.mjs (promotion is human-initiated via
+ *   0. Approve-guard — best-effort nudge against an agent running a
+ *      committing promotion (`toolsmith approve` without --dry-run, or the
+ *      legacy toolsmith-approve.mjs; promotion is human-initiated via
  *      /toolsmith:approve). Registry-independent; runs before scope
  *      resolution. See its own comment below for the durable-gate note.
  *
@@ -90,26 +91,27 @@ function main() {
   const command = input.tool_input?.command;
   if (typeof command !== 'string' || !command.trim()) return;
 
-  // Promotion guard: agents never run a committing toolsmith-approve.mjs —
-  // there is no marker or escape. `--dry-run` (and `--verify`/`--help`) is
-  // always allowed since it writes nothing; a commit run is denied with a
-  // steer telling the agent to hand the exact command to the human, who runs
-  // it in their own terminal. This hook IS the agent-side boundary for
-  // promotion; the durable cryptographic gate is the attest-it seal (#76,
-  // docs/toolsmith/attest-it-admission.md).
-  // Only actual invocations are guarded — read-only references to the file
-  // (`cat`/`grep`/`rg ... toolsmith-approve.mjs`) pass through untouched.
-  if (invokesApproveScript(command)) {
-    const isReadOnly = /--dry-run\b|--verify\b|--help\b|(^|\s)-h(\s|$)/.test(command);
-    if (!isReadOnly) {
-      deny(
-        'Promotion is a human act, run in the human\'s own terminal — never by an ' +
-          'agent. Preview with `--dry-run`, then print the exact promotion command ' +
-          'and ask the user to run it themselves. See `/toolsmith:approve`.',
-        isCursor,
-      );
-      return;
-    }
+  // Promotion guard: agents never run a committing promotion — there is no
+  // marker or escape. Two invocation shapes are guarded: the `toolsmith` CLI
+  // (`toolsmith.mjs`/`toolsmith`) running its `approve` verb without
+  // `--dry-run`, and the legacy `toolsmith-approve.mjs` script (retired from
+  // this plugin, but older installs and muscle memory still produce the
+  // command shape). Read-only forms — `--dry-run`, `--help`, and every other
+  // CLI verb (verify/lint/list/analyze) — always pass since they write
+  // nothing; a commit run is denied with a steer telling the agent to hand
+  // the exact command to the human, who runs it in their own terminal. This
+  // hook IS the agent-side boundary for promotion; the durable cryptographic
+  // gate is the attest-it seal (#76, docs/toolsmith/attest-it-admission.md).
+  // Only actual invocations are guarded — read-only references to the files
+  // (`cat`/`grep`/`rg ... toolsmith.mjs`) pass through untouched.
+  if (invokesCommittingPromotion(command)) {
+    deny(
+      'Promotion is a human act, run in the human\'s own terminal — never by an ' +
+        'agent. Preview with `--dry-run`, then print the exact promotion command ' +
+        'and ask the user to run it themselves. See `/toolsmith:approve`.',
+      isCursor,
+    );
+    return;
   }
 
   const root = projectRoot(input);
@@ -299,25 +301,52 @@ const WRAPPER_ARG_FLAGS = {
   env: new Set(['-u', '-C', '-S', '--unset', '--chdir', '--split-string', '--block-signal', '--default-signal', '--ignore-signal']),
   time: new Set(['-o', '-f', '--output', '--format']),
 };
-// True only when some segment of the command actually *executes*
-// toolsmith-approve.mjs — either directly (the script path in executable
-// position) or via `node <path>` — never when the filename merely appears as
-// a data argument (`cat`, `grep`, `rg`, editors reading the file, etc.).
-function invokesApproveScript(command) {
+// True only when some segment of the command actually *executes* a committing
+// promotion — either directly (the script path in executable position) or via
+// `node <path>` — never when a filename merely appears as a data argument
+// (`cat`, `grep`, `rg`, editors reading the file, etc.).
+//
+// Two guarded shapes:
+//   - the `toolsmith` CLI (a path ending in `toolsmith.mjs`, or the bare
+//     `toolsmith` bin): committing iff its verb is `approve` AND the segment
+//     carries no `--dry-run`/`--help` — every other verb is read-only;
+//   - the legacy `toolsmith-approve.mjs` script: committing unless the
+//     segment carries `--dry-run`/`--verify`/`--help` (its old flag surface).
+function invokesCommittingPromotion(command) {
   const unquote = (t) => t.replace(/^['"]|['"]$/g, '');
-  const isApprovePath = (t) => /(^|\/)toolsmith-approve\.mjs$/.test(unquote(t));
+  const isLegacyPath = (t) => /(^|\/)toolsmith-approve\.mjs$/.test(unquote(t));
+  const isCliPath = (t) => /(^|\/)toolsmith(\.mjs)?$/.test(unquote(t));
   for (const segment of commandSegments(command)) {
     const exe = firstExecutable(segment);
     if (!exe) continue;
-    if (isApprovePath(exe)) return true;
+    const tokens = segment.trim().split(/\s+/).filter(Boolean).map(unquote);
+    // Resolve the script token: the executable itself, or — when the
+    // executable is node — its first non-flag argument.
+    let scriptIdx = tokens.indexOf(unquote(exe));
     if (/^node(js)?$/.test(unquote(exe))) {
-      const tokens = segment.trim().split(/\s+/).filter(Boolean);
-      // The script node runs is its first non-flag argument after the exe.
-      for (let i = tokens.indexOf(exe) + 1; i < tokens.length; i++) {
-        if (unquote(tokens[i]).startsWith('-')) continue;
-        if (isApprovePath(tokens[i])) return true;
+      let found = -1;
+      for (let i = scriptIdx + 1; i < tokens.length; i++) {
+        if (tokens[i].startsWith('-')) continue;
+        found = i;
         break;
       }
+      if (found === -1) continue;
+      scriptIdx = found;
+    }
+    const script = tokens[scriptIdx];
+    if (isLegacyPath(script)) {
+      if (!/--dry-run\b|--verify\b|--help\b|(^|\s)-h(\s|$)/.test(segment)) return true;
+      continue;
+    }
+    if (isCliPath(script)) {
+      // The CLI's verb is its first non-flag argument after the script.
+      let verb = null;
+      for (let i = scriptIdx + 1; i < tokens.length; i++) {
+        if (tokens[i].startsWith('-')) continue;
+        verb = tokens[i];
+        break;
+      }
+      if (verb === 'approve' && !/--dry-run\b|--help\b|(^|\s)-h(\s|$)/.test(segment)) return true;
     }
   }
   return false;
