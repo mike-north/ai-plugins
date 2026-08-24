@@ -34,8 +34,19 @@ if [ -z "$root" ] && command -v jq >/dev/null 2>&1; then
 fi
 [ -n "$root" ] || root="$PWD"
 
-if [ ! -f "$root/.claude/toolsmith/registry.json" ] && [ ! -f "$HOME/.claude/toolsmith/registry.json" ]; then
-  exit 0
-fi
+# The registry-absent fast exit below must not skip the approve-guard rule in
+# toolsmith-check.mjs (a best-effort nudge against freehanding
+# toolsmith-approve.mjs — see its own comment), which applies whether or not
+# this project has opted into a registry at all. A plain string check is
+# cheap enough to run unconditionally and keeps the common no-op path fast for
+# every command that isn't mentioning it.
+case "$input" in
+  *toolsmith-approve.mjs*) ;; # always hand to node, regardless of registry state
+  *)
+    if [ ! -f "$root/.claude/toolsmith/registry.json" ] && [ ! -f "$HOME/.claude/toolsmith/registry.json" ]; then
+      exit 0
+    fi
+    ;;
+esac
 
 printf '%s' "$input" | node "$dir/toolsmith-check.mjs"

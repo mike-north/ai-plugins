@@ -3,8 +3,14 @@
  * toolsmith-check: PreToolUse "brain" for the toolsmith plugin.
  *
  * Spawned by toolsmith-gate.sh only when a Bash command is a plausible
- * candidate (references a registered tool, or hits a coarse watch token, or a
- * project config exists). It makes the precise decision:
+ * candidate (references a registered tool, hits a coarse watch token, a
+ * project config exists, or the command mentions toolsmith-approve.mjs). It
+ * makes the precise decision:
+ *
+ *   0. Approve-guard — best-effort nudge against freehanding
+ *      toolsmith-approve.mjs (promotion is human-initiated via
+ *      /toolsmith:approve). Registry-independent; runs before scope
+ *      resolution. See its own comment below for the durable-gate note.
  *
  *   1. Hash-pin — if the command invokes a registered tool, the tool must be
  *      status:approved AND its on-disk sha256 must match approvedSha256.
@@ -83,6 +89,31 @@ function main() {
 
   const command = input.tool_input?.command;
   if (typeof command !== 'string' || !command.trim()) return;
+
+  // Best-effort promotion guard: nudge an agent away from freehanding
+  // toolsmith-approve.mjs. The sanctioned form is the inline env prefix
+  // `CLAUDE_TOOLSMITH_APPROVE=1 node .../toolsmith-approve.mjs ...` (see
+  // commands/approve.md step 5), which marks that the human-confirmed
+  // /toolsmith:approve handshake is actually running; `--dry-run` is always
+  // allowed since it writes nothing. This is deliberately regex-dodgeable
+  // (a determined agent could still strip/rename its way around it) — it is
+  // NOT the security boundary. The durable gate is the attest-it seal (#76,
+  // docs/toolsmith/attest-it-admission.md) that toolsmith-approve.mjs itself
+  // will require once it lands; this check only makes the common accidental
+  // bare-invocation path fail earlier with a clear, actionable message.
+  if (/toolsmith-approve\.mjs\b/.test(command)) {
+    const hasDryRun = /--dry-run\b/.test(command);
+    const hasApproveMarker = /(^|[\s;&|])CLAUDE_TOOLSMITH_APPROVE=1(?=[\s;&|]|$)/.test(command);
+    if (!hasDryRun && !hasApproveMarker) {
+      deny(
+        'Promotion is human-initiated via `/toolsmith:approve`, not a freehanded ' +
+          '`toolsmith-approve.mjs` invocation. Run with `--dry-run` to preview, or ' +
+          'follow the `/toolsmith:approve` command end to end.',
+        isCursor,
+      );
+      return;
+    }
+  }
 
   const root = projectRoot(input);
 

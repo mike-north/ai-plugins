@@ -61,16 +61,19 @@ granting the permission rule — are performed by the deterministic
    changes, stop — the draft stays in staging, inert, and the previous live
    version (if any) keeps serving every invocation untouched.
 
-5. **On confirmation only, promote (the bare command — no flag needed):**
+5. **On confirmation only, promote.** Prefix the invocation with
+   `CLAUDE_TOOLSMITH_APPROVE=1` — this is the toolsmith PreToolUse hook's
+   marker that the human-confirmed `/toolsmith:approve` flow (not a
+   freehanded promotion) is what's actually running:
 
    ```
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>"
+   CLAUDE_TOOLSMITH_APPROVE=1 node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<path>"
    ```
 
    or, for a user-scope tool, keep `--user` on the invocation as well:
 
    ```
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user
+   CLAUDE_TOOLSMITH_APPROVE=1 node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-approve.mjs" "<name-or-tools/path>" --user
    ```
 
    This places the staged bytes at the live path (atomically), sets the live

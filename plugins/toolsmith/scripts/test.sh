@@ -1,12 +1,14 @@
 #!/bin/bash
-# Regression tests for the toolsmith hook trio (toolsmith-gate.sh +
-# toolsmith-check.mjs + toolsmith-log.sh). Each case invokes a hook exactly as
-# Claude Code does: JSON on stdin. Drives the real gate (jq pre-filter + node
-# brain) so the integration path is exercised, not just the node logic.
+# Regression tests for the toolsmith hooks (toolsmith-gate.sh +
+# toolsmith-check.mjs + toolsmith-log.sh + toolsmith-write-gate.sh +
+# toolsmith-write-check.mjs). Each case invokes a hook exactly as Claude Code
+# does: JSON on stdin. Drives the real gates (jq pre-filter + node brain) so
+# the integration path is exercised, not just the node logic.
 set -u
 cd "$(dirname "$0")" || exit 1
 GATE="$PWD/toolsmith-gate.sh"
 LOG="$PWD/toolsmith-log.sh"
+WRITEGATE="$PWD/toolsmith-write-gate.sh"
 
 command -v jq >/dev/null 2>&1 || { echo "SKIP: jq not installed"; exit 0; }
 command -v node >/dev/null 2>&1 || { echo "SKIP: node not installed"; exit 0; }
@@ -95,6 +97,15 @@ pre_cursor() { # $1 = command
 assert_deny_cursor() { # $1=name $2=output $3=substring the message must contain
   if printf '%s' "$2" | jq -e '.permission == "deny"' >/dev/null 2>&1 \
      && printf '%s' "$2" | grep -qF "$3"; then ok; else bad "$1" "$2"; fi
+}
+
+# Drive the write-denial gate exactly as Claude Code invokes Write/Edit/
+# NotebookEdit PreToolUse hooks. $1 = tool_name, $2 = the path field's name
+# ("file_path" or "notebook_path"), $3 = the path value.
+pre_write() { # $1 = tool_name, $2 = path field name, $3 = path value
+  jq -cn --arg tool "$1" --arg field "$2" --arg path "$3" --arg cwd "$PROJ" \
+    '{hook_event_name:"PreToolUse",tool_name:$tool,cwd:$cwd,tool_input:{($field):$path}}' \
+    | "$WRITEGATE"
 }
 
 # --- PreToolUse: redirect ------------------------------------------------
@@ -584,6 +595,48 @@ rm -f "$PROJ/.claude/toolsmith/registry.json" "$HOTPATH_TOOL"
 # the existing "no registry => gate exits fast" case earlier in this suite
 # already covers it; this section only adds the "staged key present/malformed
 # doesn't perturb behavior" invariant above.
+
+# --- write-denial (layer 2): toolsmith-write-gate.sh + toolsmith-write-check.mjs
+# Per docs/toolsmith/staged-live-split.md §write denial. Unconditional: no
+# registry.json needed for any of these to fire.
+rm -f "$PROJ/.claude/toolsmith/registry.json" "$PROJ/.claude/toolsmith/config.json"
+
+mkdir -p "$PROJ/scripts/agent-tools" "$PROJ/.claude/toolsmith/staging" "$PROJ/.claude"
+assert_deny "Write to a project live path is denied" \
+  "$(pre_write Write file_path "$PROJ/scripts/agent-tools/x")" "write-protected"
+assert_allow "Write to the project staging dir is allowed" \
+  "$(pre_write Write file_path "$PROJ/.claude/toolsmith/staging/x")"
+assert_deny "Edit of the project settings.json is denied" \
+  "$(pre_write Edit file_path "$PROJ/.claude/settings.json")" "/toolsmith:approve"
+
+mkdir -p "$USERHOME/.claude"
+assert_deny "Edit of the user (~) settings.json is denied" \
+  "$(pre_write Edit file_path "$USERHOME/.claude/settings.json")" "/toolsmith:approve"
+
+mkdir -p "$USERHOME/.claude/toolsmith/tools"
+assert_deny "NotebookEdit of a user live path is denied" \
+  "$(pre_write NotebookEdit notebook_path "$USERHOME/.claude/toolsmith/tools/nb.ipynb")" "write-protected"
+
+assert_allow "Write to a path outside any protected dir is allowed" \
+  "$(pre_write Write file_path "$PROJ/src/index.ts")"
+
+assert_allow "escape hatch disables the write-denial hook too" \
+  "$(CLAUDE_TOOLSMITH_HOOK=off pre_write Write file_path "$PROJ/scripts/agent-tools/x")"
+
+# --- approve-guard: best-effort nudge in toolsmith-check.mjs against a
+# freehanded toolsmith-approve.mjs invocation (registry-independent — none of
+# these cases have a registry.json present, proving the gate.sh prefilter
+# adjustment lets them all reach the node brain).
+rm -f "$PROJ/.claude/toolsmith/registry.json" "$USERHOME/.claude/toolsmith/registry.json"
+
+assert_deny "bare toolsmith-approve.mjs invocation is denied" \
+  "$(pre 'node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions')" "/toolsmith:approve"
+assert_allow "toolsmith-approve.mjs --dry-run is allowed" \
+  "$(pre 'node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions --dry-run')"
+assert_allow "toolsmith-approve.mjs with the CLAUDE_TOOLSMITH_APPROVE=1 marker is allowed" \
+  "$(pre 'CLAUDE_TOOLSMITH_APPROVE=1 node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions')"
+assert_allow "escape hatch disables the approve-guard too" \
+  "$(CLAUDE_TOOLSMITH_HOOK=off pre 'node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-pr-reactions')"
 
 # --- summary -------------------------------------------------------------
 echo
