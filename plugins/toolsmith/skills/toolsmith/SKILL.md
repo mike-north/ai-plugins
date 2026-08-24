@@ -4,11 +4,13 @@ description: >-
   Use when about to run — or repeatedly running — a broad, hard-to-allowlist escape-hatch
   command (gh api, gh graphql, raw curl/wget to an API, aws/gcloud/kubectl, op read) to
   do something narrow. Instead of hand-assembling a one-off command that forces a manual
-  permission prompt, forge a small single-purpose script the user proofreads once and
-  allowlists forever. Covers when a script is worth building, how to author it narrowly,
-  the registry/approval lifecycle, and discovering tools already approved for this project.
-  Triggers on gh api pipelines, "just this once" broad commands, recurring jq-over-API
-  wrangling, and permission-prompt fatigue.
+  permission prompt, dispatch the tool-curator agent to answer with an existing tool, a
+  native CLI command, or a small single-purpose script staged for the user to proofread
+  once and allowlist forever. Covers when dispatch is warranted, the authoring standard
+  the curator (and the no-subagent fallback) follows, the registry/approval lifecycle,
+  and discovering tools already approved for this project. Triggers on gh api pipelines,
+  "just this once" broad commands, recurring jq-over-API wrangling, and permission-prompt
+  fatigue.
 ---
 
 # toolsmith
@@ -29,11 +31,34 @@ the user can read once, approve, and never be asked about again. The script
    exists. (The PreToolUse hook will block a watched command and name the
    tool if one covers it, but reach for the tool first rather than getting
    redirected.) A project tool shadows a same-named user tool.
-2. **If nothing covers it, decide whether to build one.** Apply the rubric in
-   `references/authoring-checklist.md`: build only if the operation is
-   Compound, Missing, Guarded, or Permission-scopable. A genuinely one-off
-   read you will never repeat can just be run (ask the user); recurring or
-   pipeline-heavy broad usage is the signal to forge a tool.
+2. **If nothing covers it, dispatch the `tool-curator` agent — don't forge
+   inline.** Do not apply the rubric, hunt for safer alternatives, or author
+   a staging draft yourself; that is the curator's job. Hand it a
+   **capability brief** — the capability you need, never a command design or
+   tool sketch — and go back to your own work in a clean context window. If
+   you're blocked right now on the result, ask the user to approve the raw
+   command once while the curator works in the background. The curator
+   answering "use this existing mechanism, invoked like so" is a **success
+   outcome**, not a failed forge — many capabilities are already one flag
+   away from something that exists and is safe to allowlist.
+
+   Dispatch prompt (~6 lines):
+
+   > Capability/goal: `<what you need to be able to do, in plain terms>`.
+   > Raw command you were about to run: `<the exact command>`. Repo/org
+   > context: `<repo, org, any scope constraints>`. Expected frequency:
+   > `<one-off / recurring — how often you expect to need this>`.
+   >
+   > Return one of: **use-existing-tool** (name the approved tool and the
+   > exact invocation), **no-tool-needed** (the exact command for a safe,
+   > appropriately narrow existing mechanism), or **curated** (a staging draft + draft
+   > registry entry — extend, refactor, or forge — or a report-only
+   > retirement proposal). You never promote to live; `/toolsmith:approve`
+   > stays a human step.
+
+   If your harness cannot dispatch agents (e.g. Codex), perform the
+   curator's procedure yourself, in its order: safer existing alternatives
+   first, then both registries, then the rubric, then a staging draft.
 
 ## Choosing project vs. user (global) scope
 
@@ -61,6 +86,10 @@ command), because the granted `Bash(<absolute-path>:*)` rule only matches that
 exact string. `/toolsmith:approve` prints the absolute path to use.
 
 ## Forging a tool
+
+Forging is normally the `tool-curator` agent's job, reached by dispatching it
+as above; this section is the shared reference both the curator and the
+no-subagent fallback follow.
 
 Follow `references/authoring-checklist.md`. In short: one operation, no
 arbitrary-API escape hatch, scope baked in (hardcode the repo/org/method),

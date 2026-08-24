@@ -10,6 +10,11 @@
         "command": "node \"${CLAUDE_PLUGIN_ROOT:-.}/hooks/cursor-shim.mjs\" preToolUse -- '${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-gate.sh'",
         "matcher": "Shell",
         "failClosed": true
+      },
+      {
+        "command": "node \"${CLAUDE_PLUGIN_ROOT:-.}/hooks/cursor-shim.mjs\" preToolUse -- '${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-write-gate.sh'",
+        "matcher": "Write|Edit|NotebookEdit|Read",
+        "failClosed": true
       }
     ],
     "postToolUse": [

@@ -3,8 +3,14 @@
  * toolsmith-check: PreToolUse "brain" for the toolsmith plugin.
  *
  * Spawned by toolsmith-gate.sh only when a Bash command is a plausible
- * candidate (references a registered tool, or hits a coarse watch token, or a
- * project config exists). It makes the precise decision:
+ * candidate (references a registered tool, hits a coarse watch token, a
+ * project config exists, or the command mentions toolsmith-approve.mjs). It
+ * makes the precise decision:
+ *
+ *   0. Approve-guard — best-effort nudge against freehanding
+ *      toolsmith-approve.mjs (promotion is human-initiated via
+ *      /toolsmith:approve). Registry-independent; runs before scope
+ *      resolution. See its own comment below for the durable-gate note.
  *
  *   1. Hash-pin — if the command invokes a registered tool, the tool must be
  *      status:approved AND its on-disk sha256 must match approvedSha256.
@@ -83,6 +89,28 @@ function main() {
 
   const command = input.tool_input?.command;
   if (typeof command !== 'string' || !command.trim()) return;
+
+  // Promotion guard: agents never run a committing toolsmith-approve.mjs —
+  // there is no marker or escape. `--dry-run` (and `--verify`/`--help`) is
+  // always allowed since it writes nothing; a commit run is denied with a
+  // steer telling the agent to hand the exact command to the human, who runs
+  // it in their own terminal. This hook IS the agent-side boundary for
+  // promotion; the durable cryptographic gate is the attest-it seal (#76,
+  // docs/toolsmith/attest-it-admission.md).
+  // Only actual invocations are guarded — read-only references to the file
+  // (`cat`/`grep`/`rg ... toolsmith-approve.mjs`) pass through untouched.
+  if (invokesApproveScript(command)) {
+    const isReadOnly = /--dry-run\b|--verify\b|--help\b|(^|\s)-h(\s|$)/.test(command);
+    if (!isReadOnly) {
+      deny(
+        'Promotion is a human act, run in the human\'s own terminal — never by an ' +
+          'agent. Preview with `--dry-run`, then print the exact promotion command ' +
+          'and ask the user to run it themselves. See `/toolsmith:approve`.',
+        isCursor,
+      );
+      return;
+    }
+  }
 
   const root = projectRoot(input);
 
@@ -271,6 +299,30 @@ const WRAPPER_ARG_FLAGS = {
   env: new Set(['-u', '-C', '-S', '--unset', '--chdir', '--split-string', '--block-signal', '--default-signal', '--ignore-signal']),
   time: new Set(['-o', '-f', '--output', '--format']),
 };
+// True only when some segment of the command actually *executes*
+// toolsmith-approve.mjs — either directly (the script path in executable
+// position) or via `node <path>` — never when the filename merely appears as
+// a data argument (`cat`, `grep`, `rg`, editors reading the file, etc.).
+function invokesApproveScript(command) {
+  const unquote = (t) => t.replace(/^['"]|['"]$/g, '');
+  const isApprovePath = (t) => /(^|\/)toolsmith-approve\.mjs$/.test(unquote(t));
+  for (const segment of commandSegments(command)) {
+    const exe = firstExecutable(segment);
+    if (!exe) continue;
+    if (isApprovePath(exe)) return true;
+    if (/^node(js)?$/.test(unquote(exe))) {
+      const tokens = segment.trim().split(/\s+/).filter(Boolean);
+      // The script node runs is its first non-flag argument after the exe.
+      for (let i = tokens.indexOf(exe) + 1; i < tokens.length; i++) {
+        if (unquote(tokens[i]).startsWith('-')) continue;
+        if (isApprovePath(tokens[i])) return true;
+        break;
+      }
+    }
+  }
+  return false;
+}
+
 const WRAPPERS = new Set(['bash', 'sh', 'env', 'command', 'exec', 'sudo', 'nohup', 'time']);
 
 // The executable token of a simple command: skip leading VAR=val assignments,

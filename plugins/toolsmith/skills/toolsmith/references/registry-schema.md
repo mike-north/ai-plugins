@@ -182,18 +182,39 @@ registry's same-file guard for issue #36).
 ## Write denial on live: the harness deny-rule layer
 
 Per docs/toolsmith/staged-live-split.md §Write denial, layer 2 (defense in
-depth alongside the live file's `0555` + `uchg` mode/flag, and the hook's
-integrity-pin backstop, layer 3): the harness's own native permission config
-should **deny** the agent's editing tools (Edit/Write/NotebookEdit — whatever
-the host calls its file-write tool) from targeting a scope's live tool
-directories, and should keep `Bash(chflags:*)`/`Bash(chmod:*)` **out** of the
-allowlist for those paths so flag-stripping falls to a manual ask rather than
-being silently allowed.
+depth alongside the live file's `0555` + `uchg` mode/flag, layer 1, and the
+hook's integrity-pin backstop, layer 3): this layer now **ships as a plugin
+hook** — `scripts/toolsmith-write-check.mjs`, wired via
+`scripts/toolsmith-write-gate.sh` on `PreToolUse` for
+`Write`/`Edit`/`NotebookEdit` (see `hooks/claude.yaml` and its per-host
+mirrors). It denies any of those tools when the resolved target path falls
+under a scope's live tool directory:
 
-This plugin does **not** write these rules into any user's `settings.json` —
-that would be an unreviewed, host-specific edit to a file this plugin doesn't
-own. The recommended rule shape (Claude Code's `permissions.deny`, adapted per
-host) is:
+- project live dir: `<project>/scripts/agent-tools/`
+- user live dir: `~/.claude/toolsmith/tools/`
+
+For either scope's settings file (`<project>/.claude/settings.json`,
+`~/.claude/settings.json`) the check is **content-targeted, not blanket**: an
+edit is denied only when it would *introduce* a `Bash(...)` rule pointing at
+a toolsmith live tool path — the self-grant reserved for `/toolsmith:approve`.
+All other settings edits (other permissions, hooks, env, plugin config) pass
+through untouched, so installing toolsmith never makes the harness's main
+configuration files uneditable.
+
+The live-dir rule is unconditional — it fires whether or not the project has
+a toolsmith registry at all, unlike the redirect/hash-pin logic in
+`toolsmith-check.mjs`. Staging directories (`.claude/toolsmith/staging/` and
+`~/.claude/toolsmith/staging/`) are deliberately never checked — the agent is
+expected to write there constantly; that write activity is exactly what the
+split is for. The settings guard does not break the promotion handshake
+either: `toolsmith-approve.mjs` writes settings via `node:fs`, not the
+Write/Edit tools, so it is unaffected by this hook.
+
+Keeping `Bash(chflags:*)`/`Bash(chmod:*)` **out** of the allowlist for live
+paths (so flag-stripping falls to a manual ask) remains a recommendation this
+plugin does not enforce — that is host-config the plugin doesn't own. As
+**optional defense in depth**, a project may additionally add its own
+`permissions.deny` rules (Claude Code shape shown, adapt per host):
 
 ```json
 {
@@ -211,16 +232,14 @@ host) is:
 ```
 
 Adjust the project-scope glob to match wherever `scripts/agent-tools/` (or
-this repo's chosen live directory) actually lives. Staging directories
-(`.claude/toolsmith/staging/` and `~/.claude/toolsmith/staging/`) are
-deliberately **not** denied here — the agent is expected to write there
-constantly; that write activity is exactly what the split is for.
+this repo's chosen live directory) actually lives.
 
-**Honest limit:** per-harness support for path-scoped write-deny rules
-varies. Where a harness can't express this, layer 1 (mode + `uchg`) and
-layer 3 (the hook's integrity pin) still hold — this layer only makes the
-*common* accidental edit fail earlier and more politely (a clear denial from
-the agent's own tool, before ever reaching the filesystem).
+**Honest limit:** the hook only runs where this plugin's hooks are wired for
+a given host and tool. Where it can't fire (an unsupported host, or a tool
+outside Write/Edit/NotebookEdit), layer 1 (mode + `uchg`) and layer 3 (the
+hook's integrity pin) still hold — this layer only makes the *common*
+accidental edit fail earlier and more politely (a clear denial from the
+agent's own tool, before ever reaching the filesystem).
 
 ## `history.jsonl` (generated, gitignored)
 
@@ -234,6 +253,15 @@ inline secrets (e.g. `curl -H "Authorization: Bearer …"`, `op read …`). It i
 local and gitignored, but plaintext — treat `.claude/toolsmith/` as sensitive
 and don't copy the log elsewhere. Recurring secret-bearing commands are exactly
 the kind of thing to replace with a narrow, reviewed script.
+
+**Agents never read the log raw.** The PreToolUse hook denies `Read` (and any
+write tool) targeting `history.jsonl` and steers to the redacting reader,
+`scripts/toolsmith-history.mjs [--grep <regex>] [--limit <N>]`, which replaces
+secret-like spans (provider token formats informed by
+[secrets-patterns-db](https://github.com/mazen160/secrets-patterns-db), plus
+auth headers, URL credentials, and secret-named env assignments) with
+`[REDACTED]` before printing — and applies `--grep` to the redacted text, so
+match/no-match can't be used as an oracle to reconstruct a secret.
 
 ## Malformed files
 
