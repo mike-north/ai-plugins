@@ -80,7 +80,7 @@ jobs:
         run: |
           suites=(
             "plugins/toolsmith/scripts/test.sh"
-            "plugins/toolsmith/scripts/test-approve.sh"
+            "plugins/toolsmith/scripts/smoke.sh"
             "plugins/toon/scripts/test.sh"
           )
           status=0
