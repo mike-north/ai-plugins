@@ -583,7 +583,9 @@ function runApprove({ rawPath, commit, userScope }) {
   }
   const rule = scope.ruleFor(path, liveAbs);
   const settingsFile = scope.settingsFile;
-  const existingSettings = existsSync3(settingsFile) ? readRegistrylike(settingsFile) : {};
+  const settingsExists = existsSync3(settingsFile);
+  const existingSettings = settingsExists ? readRegistrylike(settingsFile) : {};
+  const settingsMalformed = settingsExists && existingSettings === null;
   const allowList = existingSettings && Array.isArray(existingSettings.permissions?.allow) ? existingSettings.permissions.allow : null;
   const alreadyGranted = allowList !== null && allowList.includes(rule);
   if (!commit) {
@@ -596,7 +598,7 @@ function runApprove({ rawPath, commit, userScope }) {
         `Staged draft: ${staged.path}${staged.note ? ` \u2014 ${staged.note}` : ""}`,
         `Computed sha256 (staged): ${stagedSha}`,
         `Permission rule: ${rule}`,
-        `Already in settings.json: ${alreadyGranted ? "yes" : "no"}`,
+        `Already in settings.json: ${settingsMalformed ? "unknown (settings.json is not valid JSON \u2014 the commit run will refuse until it is fixed)" : alreadyGranted ? "yes" : "no"}`,
         ...lintNotes,
         "",
         "--- review surface ---",
@@ -837,7 +839,7 @@ function buildScopeReport(label, scope) {
   return { label, regPath, parseError: false, absent: false, tools, drafts };
 }
 function mdEscape(value) {
-  return String(value ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+  return String(value ?? "").replace(/`/g, "'").replace(/\|/g, "\\|").replace(/\n/g, " ");
 }
 function renderScope(report, shadowedNames) {
   const lines = [];

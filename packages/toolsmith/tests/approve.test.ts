@@ -704,3 +704,24 @@ describe("$HOME-rooted session (issue #36): approve without/with --user", () => 
     expect(statusAfter).toBe("approved");
   });
 });
+
+describe("dry-run preview with malformed settings.json (Copilot review: 'Already in settings.json: no' misled the reviewer)", () => {
+  const proj = newProj();
+  const home = newHome();
+  writeStaged(proj, "gh-x", "#!/bin/bash\necho v1\n");
+  writeProjectRegistry(proj, [newDraftTool("gh-x")]);
+  writeFileSync(join(proj, ".claude", "settings.json"), "{ not valid json !!!");
+  const out = runCli(["approve", "scripts/agent-tools/gh-x", "--dry-run"], { proj, home });
+
+  it("reports 'unknown' with the malformed-settings explanation, never a clean 'no'", () => {
+    expect(out.status).toBe(0);
+    expect(out.stdout).toContain("Already in settings.json: unknown (settings.json is not valid JSON");
+    expect(out.stdout).not.toContain("Already in settings.json: no");
+  });
+
+  it("the commit run still refuses fail-closed on the malformed settings.json", () => {
+    const commit = runCli(["approve", "scripts/agent-tools/gh-x"], { proj, home });
+    expect(commit.status).toBe(1);
+    expect(commit.stderr).toContain("not valid JSON");
+  });
+});

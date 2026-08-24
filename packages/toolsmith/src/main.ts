@@ -6,8 +6,9 @@
  * skill's skeleton; only re-approval after an edit is privileged.
  *
  * This file is bundled (esbuild) into the committed, dependency-free
- * executable at plugins/toolsmith/scripts/toolsmith so marketplace installs
- * need no build step. Source of truth: src/toolsmith-cli/.
+ * executable at plugins/toolsmith/scripts/toolsmith.mjs so marketplace
+ * installs need no build step, and into this package's dist/toolsmith.mjs bin.
+ * Source of truth: packages/toolsmith/src/.
  */
 import { runApprove } from "./commands/approve.js";
 import { runVerify } from "./commands/verify.js";

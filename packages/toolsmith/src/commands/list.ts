@@ -82,8 +82,16 @@ function buildScopeReport(label: string, scope: Scope): ScopeReport {
   return { label, regPath, parseError: false, absent: false, tools, drafts };
 }
 
+/** Neutralize characters that would break a markdown table cell or escape an
+ * inline-code span: pipes and newlines always; backticks are replaced with a
+ * straight quote because several cells are rendered inside `…` spans, where a
+ * backtick cannot be backslash-escaped and would terminate the span (letting
+ * registry-controlled text inject into the relay-markdown). */
 function mdEscape(value: unknown): string {
-  return String(value ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+  return String(value ?? "")
+    .replace(/`/g, "'")
+    .replace(/\|/g, "\\|")
+    .replace(/\n/g, " ");
 }
 
 function renderScope(report: ScopeReport, shadowedNames: Set<string>): string[] {

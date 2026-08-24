@@ -109,6 +109,24 @@ describe("toolsmith list", () => {
     expect(r.stdout).toContain("| new |");
   });
 
+  it("neutralizes backticks in registry fields so inline-code cells can't be broken (Copilot review: mdEscape did not escape backticks)", () => {
+    const proj = newProj();
+    const home = newHome();
+    const sha = writeLive(proj, "gh-x", "#!/bin/bash\necho x\n");
+    writeProjectRegistry(proj, [
+      {
+        name: "gh-x",
+        path: "scripts/agent-tools/gh-x",
+        status: "approved",
+        approvedSha256: sha,
+        purpose: "sneaky ` | injected` purpose",
+      },
+    ]);
+    const r = runCli(["list"], { proj, home });
+    expect(r.stdout).not.toContain("sneaky `");
+    expect(r.stdout).toContain("sneaky ' \\| injected'");
+  });
+
   it("notes project-shadows-user on a name collision", () => {
     const proj = newProj();
     const home = newHome();

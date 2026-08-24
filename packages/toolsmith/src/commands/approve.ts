@@ -200,9 +200,15 @@ export function runApprove({ rawPath, commit, userScope }: ApproveOptions): numb
 
   const rule = scope.ruleFor(path, liveAbs);
   const settingsFile = scope.settingsFile;
-  const existingSettings = existsSync(settingsFile)
+  // Tri-state for the preview: "yes"/"no" when settings.json is readable (or
+  // absent), "unknown" when it exists but is malformed — the commit run will
+  // refuse fail-closed on a malformed settings.json, so the preview must not
+  // present it as a clean "no".
+  const settingsExists = existsSync(settingsFile);
+  const existingSettings = settingsExists
     ? (readRegistrylike(settingsFile) as { permissions?: { allow?: unknown } } | null)
     : {};
+  const settingsMalformed = settingsExists && existingSettings === null;
   const allowList =
     existingSettings && Array.isArray(existingSettings.permissions?.allow)
       ? (existingSettings.permissions.allow as unknown[])
@@ -221,7 +227,13 @@ export function runApprove({ rawPath, commit, userScope }: ApproveOptions): numb
         `Staged draft: ${staged.path}${staged.note ? ` — ${staged.note}` : ""}`,
         `Computed sha256 (staged): ${stagedSha}`,
         `Permission rule: ${rule}`,
-        `Already in settings.json: ${alreadyGranted ? "yes" : "no"}`,
+        `Already in settings.json: ${
+          settingsMalformed
+            ? "unknown (settings.json is not valid JSON — the commit run will refuse until it is fixed)"
+            : alreadyGranted
+              ? "yes"
+              : "no"
+        }`,
         ...lintNotes,
         "",
         "--- review surface ---",
