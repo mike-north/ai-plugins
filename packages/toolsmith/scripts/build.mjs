@@ -42,6 +42,15 @@ if (typeof manifest.version !== 'string' || !manifest.version) {
   process.exit(1);
 }
 
+// Bundle the shipped watchlist defaults so a bare npm install (no plugin
+// directory anywhere nearby) still classifies against the real defaults —
+// the on-disk plugin copy, when reachable, takes precedence at runtime.
+const watchlistDefaults = readFileSync(
+  join(repoRoot, 'plugins', 'toolsmith', 'skills', 'toolsmith', 'references', 'watchlist-defaults.json'),
+  'utf8',
+);
+JSON.parse(watchlistDefaults); // fail the build on malformed defaults, not at runtime
+
 const outfiles = singleOut
   ? [singleOut]
   : [
@@ -62,7 +71,10 @@ for (const outfile of outfiles) {
     format: 'esm',
     target: 'node18',
     banner: { js: '#!/usr/bin/env node' },
-    define: { __TOOLSMITH_VERSION__: JSON.stringify(manifest.version) },
+    define: {
+      __TOOLSMITH_VERSION__: JSON.stringify(manifest.version),
+      __TOOLSMITH_WATCHLIST_DEFAULTS__: JSON.stringify(watchlistDefaults),
+    },
     legalComments: 'none',
     // No minification: the plugin copy is a committed, reviewable artifact.
     minify: false,

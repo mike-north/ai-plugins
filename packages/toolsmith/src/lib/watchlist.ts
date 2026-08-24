@@ -15,6 +15,23 @@ interface WatchlistConfigLayer {
   };
 }
 
+/** The shipped watchlist defaults, injected at build time from the plugin's
+ * watchlist-defaults.json (see packages/toolsmith/scripts/build.mjs). This is
+ * the fallback that keeps a bare npm install (`npm i -g @mike-north/toolsmith`,
+ * no plugin directory anywhere nearby) working with the real shipped
+ * defaults instead of silently starting from an empty watchlist. */
+declare const __TOOLSMITH_WATCHLIST_DEFAULTS__: string;
+
+function bundledDefaults(): unknown {
+  try {
+    return typeof __TOOLSMITH_WATCHLIST_DEFAULTS__ === "string"
+      ? (JSON.parse(__TOOLSMITH_WATCHLIST_DEFAULTS__) as unknown)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Locate the shipped watchlist defaults. The CLI bundle lives at
  * `<plugin>/scripts/toolsmith`, so the defaults sit at
@@ -47,10 +64,14 @@ function applyWatchlistLayer(patterns: string[], config: unknown): string[] {
   return [...new Set([...patterns.filter((p) => !remove.has(p)), ...add])];
 }
 
-/** The effective watchlist pattern strings, defaults ± user ± project config. */
+/** The effective watchlist pattern strings, defaults ± user ± project config.
+ * Defaults resolution: the plugin's on-disk watchlist-defaults.json when one
+ * is reachable (CLAUDE_PLUGIN_ROOT, or relative to the executable inside the
+ * plugin), falling back to the copy bundled at build time — so a bare npm
+ * install still classifies against the real shipped defaults. */
 export function effectiveWatchlistPatterns(userConfigPath: string | null, projectConfigPath: string): string[] {
   const defaultsPath = defaultWatchlistPath();
-  const defaults = defaultsPath ? readJsonOrNull(defaultsPath) : null;
+  const defaults = (defaultsPath ? readJsonOrNull(defaultsPath) : null) ?? bundledDefaults();
   const watchlist = isPlainObject(defaults) ? defaults["watchlist"] : null;
   const defaultPatterns = Array.isArray(watchlist)
     ? watchlist

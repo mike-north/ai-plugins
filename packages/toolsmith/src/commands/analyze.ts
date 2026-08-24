@@ -39,6 +39,14 @@ interface Cluster {
  * suspenders on top of normalization (which already masks values). */
 export function redactSecrets(text: string): string {
   return text
+    .replace(
+      // Environment-style assignments whose variable name smells like a
+      // credential (`AWS_SECRET_ACCESS_KEY=… aws s3 ls`): the unquoted value
+      // survives normalization (it is neither a quoted string nor a --flag
+      // value), so it must be masked by name here.
+      /\b([A-Za-z_]*(?:TOKEN|SECRET|PASSWORD|PASSWD|API_?KEY|ACCESS_KEY|PRIVATE_KEY|CREDENTIALS?|AUTH)[A-Za-z_]*=)[^\s|;&]+/gi,
+      "$1<redacted>",
+    )
     .replace(/\b(Bearer|token|Token)\s+[A-Za-z0-9._~+/=-]{8,}/g, "$1 <redacted>")
     .replace(/\b(gh[pousr]_[A-Za-z0-9]{8,})/g, "<redacted>")
     .replace(/\b(xox[a-z]-[A-Za-z0-9-]{8,})/g, "<redacted>")

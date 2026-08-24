@@ -4,10 +4,11 @@
  * rubric judgment). History contents are sensitive: raw commands must never be
  * reproduced — only normalized, secret-redacted shapes.
  */
-import { writeFileSync } from "node:fs";
+import { copyFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { cleanupTmpDirs, newHome, newProj, runCli, writeLive, writeProjectRegistry } from "./helpers.js";
+import { CLI, cleanupTmpDirs, makeTmpDir, newHome, newProj, runCli, writeLive, writeProjectRegistry } from "./helpers.js";
 
 afterAll(cleanupTmpDirs);
 
@@ -89,6 +90,37 @@ describe("toolsmith analyze", () => {
     expect(r.stdout).not.toContain("ghp_abcdef1234567890abcd");
     expect(r.stdout).not.toContain("supersecretvalue123");
     expect(r.stdout).not.toContain("xoxb-12345678");
+  });
+
+  it("masks secret-valued environment assignments (Codex P1: unquoted env secrets leaked into relay output)", () => {
+    const proj = newProj();
+    const cmd = "AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY aws s3 ls";
+    writeHistory(proj, [historyLine(cmd), historyLine(cmd), historyLine(cmd)]);
+    const r = runCli(["analyze"], { proj, home: newHome() });
+    expect(r.status).toBe(0);
+    expect(r.stdout).not.toContain("wJalrXUtnFEMI");
+    expect(r.stdout).toContain("AWS_SECRET_ACCESS_KEY=<redacted>");
+  });
+
+  it("classifies against the bundled shipped defaults when no plugin dir is reachable (Codex P2: npm install had an empty watchlist)", () => {
+    // Copy the bundle out of the repo entirely and run it with
+    // CLAUDE_PLUGIN_ROOT unset — the argv-relative plugin lookup fails, so
+    // only the build-time-bundled defaults can classify `gh api` as watched.
+    const bindir = makeTmpDir("toolsmith-npm-sim-");
+    const bin = join(bindir, "toolsmith.mjs");
+    copyFileSync(CLI, bin);
+    const proj = newProj();
+    writeHistory(proj, [historyLine("gh api repos/o/r/pulls/1/comments")]);
+    const env: Record<string, string | undefined> = {
+      ...process.env,
+      CLAUDE_PROJECT_DIR: proj,
+      HOME: newHome(),
+    };
+    delete env["CLAUDE_PLUGIN_ROOT"];
+    const r = spawnSync(process.execPath, [bin, "analyze"], { env, encoding: "utf8" });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain("| yes |");
+    expect(r.stdout).toContain("primary candidates for forging");
   });
 
   it("output is deterministic across runs (byte-identical)", () => {

@@ -961,6 +961,50 @@ import { join as join4 } from "node:path";
 // src/lib/watchlist.ts
 import { realpathSync as realpathSync2 } from "node:fs";
 import { dirname as dirname2, join as join3 } from "node:path";
+function bundledDefaults() {
+  try {
+    return true ? JSON.parse(`{
+  "_comment": "Default watchlist for the toolsmith PreToolUse redirect hook. Each 'pattern' is a JavaScript RegExp (tested against the raw Bash command string). A watched command is only ever DENIED when an approved registry tool's 'covers' pattern also matches it; a watched command with no covering tool passes through to the normal permission flow. This set is overridden via .claude/toolsmith/config.json ({\\"watchlist\\": {\\"add\\": [...], \\"remove\\": [...]}}), layered broad->specific: these shipped defaults, then the user-scope config (~/.claude/toolsmith/config.json), then the project-scope config (<projectRoot>/.claude/toolsmith/config.json) -- 'add' unions in and 'remove' subtracts at each layer, so a project can remove a pattern the user config added, and a user config can remove one of these shipped defaults globally. 'remove' entries must match verbatim a pattern string already present at that point in the merge (a default here, or a broader layer's 'add'), not only these shipped defaults.",
+  "watchlist": [
+    {
+      "pattern": "(^|[|&;( ])gh(_\\\\w+)?\\\\s+api\\\\b",
+      "rationale": "gh api makes arbitrary authenticated REST calls with the CLI's full credentials \u2014 the classic broad escape hatch. Narrow read operations belong in a purpose-built, allowlistable script. Also matches wrapper binaries such as gh_dotcom (a common wrapper pinning gh to github.com) so the redirect can't be bypassed by using the wrapper's name instead of gh."
+    },
+    {
+      "pattern": "(^|[|&;( ])gh(_\\\\w+)?\\\\s+graphql\\\\b",
+      "rationale": "gh graphql runs arbitrary authenticated GraphQL against GitHub \u2014 same broad-power concern as gh api, including wrapper binaries such as gh_dotcom."
+    },
+    {
+      "pattern": "(^|[|&;( ])curl\\\\b(?!.*(localhost|127\\\\.0\\\\.0\\\\.1))",
+      "rationale": "curl to a non-local host is an unbounded network fetch/post. Recurring API reads should become a scoped script rather than a hand-rolled request."
+    },
+    {
+      "pattern": "(^|[|&;( ])wget\\\\b(?!.*(localhost|127\\\\.0\\\\.0\\\\.1))",
+      "rationale": "wget to a non-local host is an unbounded network fetch \u2014 same concern as curl."
+    },
+    {
+      "pattern": "(^|[|&;( ])aws\\\\s+",
+      "rationale": "The raw aws CLI spans every AWS service and mutation. A specific recurring query should be a bounded script, not a broadly allowlisted aws command."
+    },
+    {
+      "pattern": "(^|[|&;( ])gcloud\\\\s+",
+      "rationale": "The raw gcloud CLI spans all of Google Cloud. Narrow recurring operations should be scripted and scoped."
+    },
+    {
+      "pattern": "(^|[|&;( ])kubectl\\\\s+",
+      "rationale": "kubectl can read and mutate any cluster resource. Recurring inspections should be captured as read-only scoped scripts."
+    },
+    {
+      "pattern": "(^|[|&;( ])op\\\\s+(read|item|document|get)\\\\b",
+      "rationale": "The 1Password CLI reads secrets. Any recurring secret access should be a single, reviewed, tightly-scoped script rather than an allowlisted op command."
+    }
+  ]
+}
+`) : null;
+  } catch {
+    return null;
+  }
+}
 function defaultWatchlistPath() {
   const pluginRoot = process.env["CLAUDE_PLUGIN_ROOT"];
   const rel = ["skills", "toolsmith", "references", "watchlist-defaults.json"];
@@ -983,7 +1027,7 @@ function applyWatchlistLayer(patterns, config) {
 }
 function effectiveWatchlistPatterns(userConfigPath, projectConfigPath) {
   const defaultsPath = defaultWatchlistPath();
-  const defaults = defaultsPath ? readJsonOrNull(defaultsPath) : null;
+  const defaults = (defaultsPath ? readJsonOrNull(defaultsPath) : null) ?? bundledDefaults();
   const watchlist = isPlainObject(defaults) ? defaults["watchlist"] : null;
   const defaultPatterns = Array.isArray(watchlist) ? watchlist.map((e) => isPlainObject(e) ? e["pattern"] : null).filter((p) => typeof p === "string") : [];
   let patterns = defaultPatterns;
@@ -1012,7 +1056,14 @@ function safeTest(re, s) {
 
 // src/commands/analyze.ts
 function redactSecrets(text) {
-  return text.replace(/\b(Bearer|token|Token)\s+[A-Za-z0-9._~+/=-]{8,}/g, "$1 <redacted>").replace(/\b(gh[pousr]_[A-Za-z0-9]{8,})/g, "<redacted>").replace(/\b(xox[a-z]-[A-Za-z0-9-]{8,})/g, "<redacted>").replace(/\b(sk-[A-Za-z0-9-]{16,})/g, "<redacted>").replace(/\b(AKIA[A-Z0-9]{12,})/g, "<redacted>").replace(/(--?(?:token|password|secret|api-key|apikey)[= ])\S+/gi, "$1<redacted>");
+  return text.replace(
+    // Environment-style assignments whose variable name smells like a
+    // credential (`AWS_SECRET_ACCESS_KEY=… aws s3 ls`): the unquoted value
+    // survives normalization (it is neither a quoted string nor a --flag
+    // value), so it must be masked by name here.
+    /\b([A-Za-z_]*(?:TOKEN|SECRET|PASSWORD|PASSWD|API_?KEY|ACCESS_KEY|PRIVATE_KEY|CREDENTIALS?|AUTH)[A-Za-z_]*=)[^\s|;&]+/gi,
+    "$1<redacted>"
+  ).replace(/\b(Bearer|token|Token)\s+[A-Za-z0-9._~+/=-]{8,}/g, "$1 <redacted>").replace(/\b(gh[pousr]_[A-Za-z0-9]{8,})/g, "<redacted>").replace(/\b(xox[a-z]-[A-Za-z0-9-]{8,})/g, "<redacted>").replace(/\b(sk-[A-Za-z0-9-]{16,})/g, "<redacted>").replace(/\b(AKIA[A-Z0-9]{12,})/g, "<redacted>").replace(/(--?(?:token|password|secret|api-key|apikey)[= ])\S+/gi, "$1<redacted>");
 }
 function normalizeCommand(command) {
   let s = command.replace(/\s+/g, " ").trim();
