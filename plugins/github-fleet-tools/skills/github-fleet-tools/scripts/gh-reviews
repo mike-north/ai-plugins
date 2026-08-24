@@ -94,7 +94,7 @@ cmd_status() {
     .data.repository.pullRequest.reviewThreads as $rt
     | ($rt.nodes | map(select(.isResolved == false))) as $u
     | (if ($u | length) == 0 then "  (none — all threads resolved)"
-       else ($u[] | "  • [\(.comments.nodes[0].author.login)] \(.path):\(.line // "?")\(if .isOutdated then " (outdated)" else "" end)  thread_comment_id=\(.comments.nodes[0].databaseId)\n      \(.comments.nodes[0].body | gsub("[\n\r]+"; " ") | .[0:140])")
+       else ($u[] | "  • [\(.comments.nodes[0].author.login)] \(.path):\(.line // "?")\(if .isOutdated then " (outdated)" else "" end)  thread_comment_id=\(.comments.nodes[0].databaseId)\n\(.comments.nodes[0].body | gsub("\r"; "") | rtrimstr("\n") | split("\n") | map("      " + .) | join("\n"))")
        end),
       (if $rt.pageInfo.hasNextPage then "  ⚠ this PR has >100 review threads; only the first 100 were checked — the list above may be incomplete." else empty end)
   '
@@ -154,7 +154,8 @@ cmd_threads() {
   local hasNext
   hasNext=$(printf '%s' "$raw" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage')
 
-  # Normalize each thread → JSON object: firstId, resolved, replies, author, loc, snippet.
+  # Normalize each thread → JSON object: firstId, resolved, replies, author, loc, snippet, body.
+  # snippet is a deliberately short one-line label; body is the full untruncated comment text.
   local threads
   threads=$(printf '%s' "$raw" | jq -c '
     .data.repository.pullRequest.reviewThreads.nodes[]
@@ -164,7 +165,8 @@ cmd_threads() {
         replies:   ((.comments.totalCount // 1) - 1),
         author:    (.comments.nodes[0].author.login // "?"),
         loc:       ((.path // "?") + ":" + ((.line // "?") | tostring)),
-        snippet:   ((.comments.nodes[0].body // "") | gsub("[\n\r]+"; " ") | .[0:80])
+        snippet:   ((.comments.nodes[0].body // "") | gsub("[\n\r]+"; " ") | .[0:80]),
+        body:      ((.comments.nodes[0].body // "") | gsub("\r"; ""))
       }')
 
   # Optionally filter to the requested comment ids, preserving "not found" detection.
@@ -190,14 +192,17 @@ cmd_threads() {
     fi
     printf '%s\n' "$selected" | while IFS= read -r t; do
       [[ -z "$t" ]] && continue
-      local fid res rep auth loc snip
+      local fid res rep auth loc body
       fid=$(printf '%s' "$t" | jq -r '.firstId')
       res=$(printf '%s' "$t" | jq -r 'if .resolved then "RESOLVED" else "UNRESOLVED" end')
       rep=$(printf '%s' "$t" | jq -r '.replies')
       auth=$(printf '%s' "$t" | jq -r '.author')
       loc=$(printf '%s' "$t" | jq -r '.loc')
-      snip=$(printf '%s' "$t" | jq -r '.snippet')
-      printf 'thread_comment_id=%s  %-10s  replies=%s  %s  %s  %s\n' "$fid" "$res" "$rep" "$auth" "$loc" "$snip"
+      # Full comment text, indented beneath the header line — never truncated, and the
+      # body's own line breaks are preserved so code blocks and lists stay readable.
+      body=$(printf '%s' "$t" | jq -r '(.body // "") | rtrimstr("\n") | split("\n") | map("      " + .) | join("\n")')
+      printf 'thread_comment_id=%s  %-10s  replies=%s  %s  %s\n' "$fid" "$res" "$rep" "$auth" "$loc"
+      [[ -n "$body" ]] && printf '%s\n' "$body"
     done
     for id in "${missing[@]:-}"; do
       [[ -z "$id" ]] && continue
@@ -424,7 +429,7 @@ cmd_resolve() {
     | [ .id,
         (.comments.nodes[0].author.login // "?"),
         ((.path // "?") + ":" + ((.line // "?") | tostring)),
-        ((.comments.nodes[0].body // "") | gsub("[\n\r]+"; " ") | .[0:100])
+        ((.comments.nodes[0].body // "") | gsub("[\n\r]+"; " "))
       ] | @tsv')
 
   if [[ -z "$rows" ]]; then
