@@ -7,33 +7,38 @@ Analyze this project's Bash usage and propose purpose-built toolsmith scripts.
 You **propose** — do not create scripts, edit the registry, or change
 permissions in this command.
 
-1. **Load the history — through the redacting reader, never a raw Read.** The
-   log stores commands verbatim and can contain inline secrets, so the hook
-   denies direct reads. Run
+The deterministic half is the `toolsmith` CLI's job
+(docs/toolsmith/cli-surface.md): it inventories the history log, clusters and
+counts, and classifies against the effective watchlist and existing tools'
+`covers`. Your job is the judgment layer on top.
+
+1. **Run the miner:**
+
+   ```
+   "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith.mjs" analyze
+   ```
+
+   **Relay its markdown verbatim** — cluster tables, watched-but-uncovered
+   candidates, counts. Do not read `history.jsonl` directly or re-derive
+   frequencies in prose: the log stores commands verbatim and can contain
+   inline secrets, so the hook denies raw reads; the CLI's output is already
+   normalized and secret-redacted. (If you need to inspect individual raw
+   lines beyond what the miner reports, the redacting reader
    `node "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith-history.mjs" [--grep <regex>] [--limit <N>]`
-   to get the JSONL lines (`ts`, `cwd`, `command`, `exitCode`) with
-   secret-like values already replaced by `[REDACTED]`. If it reports no
-   history or nothing prints, say there is not yet enough signal and stop.
+   is the only sanctioned path.) If the miner reports "not enough signal",
+   say so and stop.
 
-2. **Focus on watched, broad commands.** Consider the shipped watchlist
-   (`skills/toolsmith/references/watchlist-defaults.json`) plus any project
-   `.claude/toolsmith/config.json` overrides. Prioritize:
-   - commands matching a watchlist pattern,
-   - long pipelines (multiple `|` stages, especially `... | jq ... | grep`),
-   - the same broad operation repeated with only small argument changes.
+2. **Apply the rubric.** For each cluster the CLI surfaced (prioritizing
+   watched-but-uncovered, then high-frequency, then long pipelines), judge
+   against `skills/toolsmith/references/authoring-checklist.md` (Compound /
+   Missing / Guarded / Permission-scopable). Drop clusters that don't clear
+   it.
 
-3. **Cluster and rank.** Group similar commands (normalize away volatile args
-   like PR numbers, IDs, timestamps). Rank by frequency and by how awkward the
-   command is to allowlist as-is.
-
-4. **Apply the rubric.** For each cluster, judge against
-   `skills/toolsmith/references/authoring-checklist.md` (Compound / Missing /
-   Guarded / Permission-scopable). Drop clusters that don't clear it.
-
-5. **Propose candidates.** For each surviving cluster, output a concrete
+3. **Propose candidates.** For each surviving cluster, output a concrete
    candidate: suggested `name`, one-line `purpose`, bounded `args`, `scope`,
-   `covers` regex(es) that would match the observed commands, and a short script
-   sketch. Note which existing registry tools (if any) already cover it.
+   `covers` regex(es) that would match the observed commands, and a short
+   script sketch. Note which existing registry tools (if any) already cover
+   it.
 
 End by inviting the user to pick candidates to build. For each pick, dispatch
 one `tool-curator` agent, passing that candidate's block (name, purpose,

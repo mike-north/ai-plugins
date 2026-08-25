@@ -43,7 +43,7 @@ fi
 # false-negative would silently disable the guard, while a false-positive only
 # costs one node spawn on a rare command shape.
 case "$input" in
-  *toolsmith-approve.mjs*) ;; # always hand to node, regardless of registry state
+  *toolsmith-approve.mjs* | *toolsmith.mjs* | *"toolsmith approve"*) ;; # always hand to node, regardless of registry state
   *)
     if [ ! -f "$root/.claude/toolsmith/registry.json" ] && [ ! -f "$HOME/.claude/toolsmith/registry.json" ]; then
       exit 0

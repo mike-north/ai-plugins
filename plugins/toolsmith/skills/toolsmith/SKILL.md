@@ -113,14 +113,14 @@ or retired. See
 for the full design, including the write-denial mechanism's honest limits.
 
 `draft` (staged) → user proofreads the exact staged contents →
-`/toolsmith:approve <path>` → the deterministic `scripts/toolsmith-approve.mjs`
+`/toolsmith:approve <path>` → the deterministic `scripts/toolsmith.mjs` CLI
 tool **promotes** the staged draft to live as an atomic apply manifest: place
 the bytes → set `0555` + the BSD immutable flag (`uchg`, where available) →
 recompute the sha256 from the bytes actually placed (never trusted from the
 staging draft) → pin it as `approvedSha256` → flip `status` to `approved` →
 grant exactly one `Bash(<path>:*)` rule in `.claude/settings.json` → clear the
 entry's `staged` field → remove the staging file. For a user/global tool, the
-same command runs `toolsmith-approve.mjs --user`, reading/writing
+same command runs `toolsmith approve --user`, reading/writing
 `~/.claude/toolsmith/registry.json` and `~/.claude/settings.json` instead, and
 grants `Bash(<absolute-path>:*)`. From then on the tool runs without a prompt.
 The agent never freehands the hash computation, the registry pin, or the
