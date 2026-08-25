@@ -440,11 +440,22 @@ cmd_resolve() {
     exit 0
   fi
 
+  # Compose one preview line, omitting the snippet entirely when the body is
+  # empty — appending it unconditionally leaves a trailing space on the line.
+  print_thread_line() {
+    local prefix="$1" author="$2" loc="$3" snippet="$4"
+    if [[ -n "$snippet" ]]; then
+      printf '%s  %s  %s  %s\n' "$prefix" "$author" "$loc" "$snippet"
+    else
+      printf '%s  %s  %s\n' "$prefix" "$author" "$loc"
+    fi
+  }
+
   local count=0
   while IFS=$'\t' read -r tid author loc snippet; do
     [[ -z "$tid" ]] && continue
     if [[ "$dry" == "1" ]]; then
-      printf '[would resolve]  %s  %s  %s\n' "$author" "$loc" "$snippet"
+      print_thread_line '[would resolve]' "$author" "$loc" "$snippet"
     else
       local ok
       ok=$("$GH" api graphql -f tid="$tid" -f query='
@@ -455,7 +466,7 @@ cmd_resolve() {
         echo "ERROR: resolve mutation did not confirm isResolved=true for thread $tid" >&2
         exit 1
       fi
-      printf '[resolved]  %s  %s  %s\n' "$author" "$loc" "$snippet"
+      print_thread_line '[resolved]' "$author" "$loc" "$snippet"
     fi
     count=$((count + 1))
   done <<< "$rows"
