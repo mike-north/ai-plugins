@@ -1,9 +1,13 @@
 /**
- * Regression tests for the toolsmith PreToolUse/PostToolUse hook trio:
- * toolsmith-gate.sh + toolsmith-check.mjs (the "brain") + toolsmith-log.sh.
+ * Regression tests for the toolsmith PreToolUse/PostToolUse hooks:
+ * toolsmith-gate.sh + toolsmith-check.mjs (the "brain") + toolsmith-log.sh,
+ * plus the write-denial layer (toolsmith-write-gate.sh +
+ * toolsmith-write-check.mjs) and the redacting history reader
+ * (toolsmith-history.mjs).
  *
- * This is a vitest port of plugins/toolsmith/scripts/test.sh. It drives the
- * real, unmodified hook scripts exactly as Claude Code does: the hook JSON
+ * This is the vitest port of the retired plugins/toolsmith/scripts/test.sh
+ * suite. It drives the real, unmodified hook scripts exactly as Claude Code
+ * does: the hook JSON
  * payload on stdin, via `bash <script>`, with CLAUDE_PROJECT_DIR pointed at a
  * temp project fixture and HOME pointed at a temp home dir so the real
  * ~/.claude/toolsmith on the machine running these tests is never touched.
@@ -37,6 +41,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const GATE = join(REPO_ROOT, "plugins", "toolsmith", "scripts", "toolsmith-gate.sh");
 const LOG = join(REPO_ROOT, "plugins", "toolsmith", "scripts", "toolsmith-log.sh");
+const WRITEGATE = join(REPO_ROOT, "plugins", "toolsmith", "scripts", "toolsmith-write-gate.sh");
+const HISTORY_READER = join(REPO_ROOT, "plugins", "toolsmith", "scripts", "toolsmith-history.mjs");
 
 function hasCommand(cmd: string): boolean {
   return spawnSync("which", [cmd], { stdio: "ignore" }).status === 0;
@@ -123,6 +129,40 @@ function post(command: string, exitCode = 0, cwd = PROJ): void {
     env: hookEnv(PROJ, USERHOME),
     encoding: "utf8",
   });
+}
+
+/**
+ * Drive the write-denial gate exactly as Claude Code invokes Write/Edit/
+ * NotebookEdit/Read PreToolUse hooks: the tool's real input object goes
+ * through verbatim (file_path / notebook_path / old_string+new_string /
+ * content).
+ */
+function preWrite(
+  toolName: string,
+  toolInput: Record<string, string>,
+  extraEnv: Record<string, string> = {},
+): string {
+  const payload = JSON.stringify({
+    hook_event_name: "PreToolUse",
+    tool_name: toolName,
+    cwd: PROJ,
+    tool_input: toolInput,
+  });
+  const r = spawnSync("bash", [WRITEGATE], {
+    input: payload,
+    env: hookEnv(PROJ, USERHOME, extraEnv),
+    encoding: "utf8",
+  });
+  return r.stdout;
+}
+
+/** Run the redacting history reader with CLAUDE_PROJECT_DIR pointed at PROJ. */
+function runHistoryReader(...args: string[]): string {
+  const r = spawnSync("node", [HISTORY_READER, ...args], {
+    env: hookEnv(PROJ, USERHOME),
+    encoding: "utf8",
+  });
+  return r.stdout;
 }
 
 function postCursorShell(command: string, cwd = PROJ): void {
@@ -879,6 +919,211 @@ describe("staged/live split", () => {
   });
 });
 
+// --- write-denial (layer 2): toolsmith-write-gate.sh + toolsmith-write-check.mjs
+// Per docs/toolsmith/staged-live-split.md §write denial. Unconditional: no
+// registry.json needed for any of these to fire.
+
+describe("write-denial (layer 2): toolsmith-write-gate.sh", () => {
+  beforeAll(() => {
+    rmIfExists(registryPath());
+    rmIfExists(configPath());
+    mkdirSync(join(PROJ, "scripts", "agent-tools"), { recursive: true });
+    mkdirSync(join(PROJ, ".claude", "toolsmith", "staging"), { recursive: true });
+    mkdirSync(join(USERHOME, ".claude", "toolsmith", "tools"), { recursive: true });
+  });
+
+  it("Write to a project live path is denied", () => {
+    expectDeny(
+      preWrite("Write", { file_path: join(PROJ, "scripts", "agent-tools", "x") }),
+      "write-protected",
+    );
+  });
+
+  it("Write to the project staging dir is allowed", () => {
+    expectAllow(
+      preWrite("Write", { file_path: join(PROJ, ".claude", "toolsmith", "staging", "x") }),
+    );
+  });
+
+  // settings.json is content-targeted (PR #137 review): only edits that
+  // INTRODUCE a Bash rule for a toolsmith live tool path are denied; every
+  // other settings edit -- other permissions, hooks, env -- passes through.
+  describe("settings.json is content-targeted", () => {
+    const projSettings = () => join(PROJ, ".claude", "settings.json");
+    const userSettings = () => join(USERHOME, ".claude", "settings.json");
+
+    it("edit adding an unrelated permission is allowed", () => {
+      expectAllow(
+        preWrite("Edit", {
+          file_path: projSettings(),
+          old_string: '"allow": [',
+          new_string: '"allow": ["Bash(npm test:*)",',
+        }),
+      );
+    });
+
+    it("edit introducing a project live-tool grant is denied", () => {
+      expectDeny(
+        preWrite("Edit", {
+          file_path: projSettings(),
+          old_string: '"allow": [',
+          new_string: '"allow": ["Bash(scripts/agent-tools/x:*)",',
+        }),
+        "/toolsmith:approve",
+      );
+    });
+
+    it("edit that only carries an existing toolsmith rule as context is allowed", () => {
+      expectAllow(
+        preWrite("Edit", {
+          file_path: projSettings(),
+          old_string: '"Bash(scripts/agent-tools/x:*)", "a"',
+          new_string: '"Bash(scripts/agent-tools/x:*)", "b"',
+        }),
+      );
+    });
+
+    it("Write whose content adds a toolsmith grant is denied", () => {
+      expectDeny(
+        preWrite("Write", {
+          file_path: projSettings(),
+          content: '{"permissions":{"allow":["Bash(scripts/agent-tools/x:*)"]}}',
+        }),
+        "/toolsmith:approve",
+      );
+    });
+
+    it("Write without any toolsmith grant is allowed", () => {
+      expectAllow(
+        preWrite("Write", {
+          file_path: projSettings(),
+          content: '{"permissions":{"allow":["Bash(npm test:*)"]}}',
+        }),
+      );
+    });
+
+    it("user (~) settings.json edit introducing a user live-tool grant is denied", () => {
+      expectDeny(
+        preWrite("Edit", {
+          file_path: userSettings(),
+          old_string: '"allow": [',
+          new_string: `"allow": ["Bash(${USERHOME}/.claude/toolsmith/tools/y:*)",`,
+        }),
+        "/toolsmith:approve",
+      );
+    });
+
+    it("user (~) settings.json edit without a toolsmith grant is allowed", () => {
+      expectAllow(
+        preWrite("Edit", {
+          file_path: userSettings(),
+          old_string: '"model": "opus"',
+          new_string: '"model": "sonnet"',
+        }),
+      );
+    });
+  });
+
+  it("NotebookEdit of a user live path is denied", () => {
+    expectDeny(
+      preWrite("NotebookEdit", {
+        notebook_path: join(USERHOME, ".claude", "toolsmith", "tools", "nb.ipynb"),
+      }),
+      "write-protected",
+    );
+  });
+
+  it("Write to a path outside any protected dir is allowed", () => {
+    expectAllow(preWrite("Write", { file_path: join(PROJ, "src", "index.ts") }));
+  });
+
+  it("escape hatch disables the write-denial hook too", () => {
+    expectAllow(
+      preWrite(
+        "Write",
+        { file_path: join(PROJ, "scripts", "agent-tools", "x") },
+        { CLAUDE_TOOLSMITH_HOOK: "off" },
+      ),
+    );
+  });
+});
+
+// --- history.jsonl: raw Read denied, redacting reader works ----------------
+
+describe("history.jsonl: raw Read denied, redacting reader works", () => {
+  afterAll(() => {
+    rmIfExists(historyPath());
+  });
+
+  it("raw Read of history.jsonl is denied with a steer to the reader", () => {
+    expectDeny(preWrite("Read", { file_path: historyPath() }), "toolsmith-history");
+  });
+
+  it("Read of an ordinary file is allowed", () => {
+    expectAllow(preWrite("Read", { file_path: join(PROJ, "src", "index.ts") }));
+  });
+
+  it("Write to history.jsonl is denied too", () => {
+    expectDeny(preWrite("Write", { file_path: historyPath() }), "toolsmith-history");
+  });
+
+  describe("redacting reader (toolsmith-history.mjs)", () => {
+    beforeAll(() => {
+      const entries = [
+        {
+          ts: "2024-01-15T10:30:00.000Z",
+          cwd: "/p",
+          command:
+            "gh api repos/o/r -H 'Authorization: Bearer ghp_abcdefghijklmnopqrstuvwxyz0123456789'",
+          exitCode: 0,
+        },
+        {
+          ts: "2024-01-15T10:31:00.000Z",
+          cwd: "/p",
+          command: "AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY aws s3 ls",
+          exitCode: 0,
+        },
+        {
+          ts: "2024-01-15T10:32:00.000Z",
+          cwd: "/p",
+          command: "curl https://user:hunter2secret@example.com/api | jq .",
+          exitCode: 0,
+        },
+        {
+          ts: "2024-01-15T10:33:00.000Z",
+          cwd: "/p",
+          command: "gh pr list --limit 5",
+          exitCode: 0,
+        },
+      ];
+      writeFileSync(historyPath(), entries.map((e) => JSON.stringify(e)).join("\n") + "\n");
+    });
+
+    it("redacts secret-like values while keeping benign commands verbatim", () => {
+      const out = runHistoryReader();
+      expect(out).toContain("REDACTED");
+      expect(out).not.toContain("ghp_abcdefghijklmnopqrstuvwxyz0123456789");
+      expect(out).not.toContain("wJalrXUtnFEMI");
+      expect(out).not.toContain("hunter2secret");
+      expect(out).toContain("gh pr list --limit 5");
+    });
+
+    it("--grep filters on redacted text", () => {
+      const lines = runHistoryReader("--grep", "gh pr list")
+        .split("\n")
+        .filter((l) => l.length > 0);
+      expect(lines).toHaveLength(1);
+    });
+
+    it("--limit keeps most recent N", () => {
+      const lines = runHistoryReader("--limit", "2")
+        .split("\n")
+        .filter((l) => l.length > 0);
+      expect(lines).toHaveLength(2);
+    });
+  });
+});
+
 // --- approve-guard: agents never run a committing promotion ----------------
 // Extends the guard shipped with the tool-curator write boundary (which
 // matched only the legacy toolsmith-approve.mjs) to the toolsmith CLI: the
@@ -926,6 +1171,39 @@ describe("approve-guard: toolsmith CLI commit runs are human-only", () => {
   it("legacy toolsmith-approve.mjs commit shape is still denied; --dry-run still allowed", () => {
     expectDeny(pre("node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-x"), "human");
     expectAllow(pre("node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-x --dry-run"));
+  });
+
+  it("an env marker does not exempt a commit run (no agent escape exists)", () => {
+    expectDeny(
+      pre("CLAUDE_TOOLSMITH_APPROVE=1 node scripts/toolsmith-approve.mjs scripts/agent-tools/gh-x"),
+      "human",
+    );
+  });
+
+  it("legacy toolsmith-approve.mjs --verify is allowed (read-only)", () => {
+    expectAllow(pre("node scripts/toolsmith-approve.mjs --verify"));
+  });
+
+  // Regression (PR #137 review): the guard fires only on actual invocations,
+  // never on commands that merely mention the filename as a data argument.
+  it("mentioning toolsmith-approve.mjs as data is not an invocation", () => {
+    expectAllow(pre("cat plugins/toolsmith/scripts/toolsmith-approve.mjs"));
+    expectAllow(pre("grep -n seal plugins/toolsmith/scripts/toolsmith-approve.mjs"));
+    expectAllow(pre("rg toolsmith-approve.mjs plugins/"));
+  });
+
+  it("direct execution of toolsmith-approve.mjs is still denied", () => {
+    expectDeny(
+      pre("./plugins/toolsmith/scripts/toolsmith-approve.mjs scripts/agent-tools/x"),
+      "/toolsmith:approve",
+    );
+  });
+
+  it("node invocation in a later pipeline segment is still denied", () => {
+    expectDeny(
+      pre("echo ok && node plugins/toolsmith/scripts/toolsmith-approve.mjs scripts/agent-tools/x"),
+      "/toolsmith:approve",
+    );
   });
 
   it("escape hatch disables the approve-guard too", () => {

@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "aipm build",
+    "clean": "pnpm --filter @mike-north/toolsmith clean",
     "build:toolsmith": "pnpm --filter @mike-north/toolsmith build",
     "typecheck": "pnpm --filter @mike-north/toolsmith typecheck",
     "validate": "aipm validate",

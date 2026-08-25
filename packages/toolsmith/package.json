@@ -11,6 +11,7 @@
   "files": ["dist", "README.md"],
   "scripts": {
     "build": "node scripts/build.mjs",
+    "clean": "rm -rf dist",
     "typecheck": "tsc -p src",
     "prepack": "node scripts/build.mjs",
     "test": "vitest run --root ../.."
