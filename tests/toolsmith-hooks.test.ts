@@ -318,6 +318,79 @@ describe("PreToolUse: redirect", () => {
   });
 });
 
+// --- covers object migration (#142 / registration-emission.md) -------------
+// docs/toolsmith/registration-emission.md §"The registration record": `covers`
+// migrates from bare RegExp strings to `{pattern, matcherVersion}` objects; a
+// bare string is read as `{pattern: <string>, matcherVersion: "1.0.0"}` (the
+// extraction baseline). Prove bare-string (covered by the describe block
+// above), object-form, and a mixed-form array all redirect identically for
+// the same watched command.
+describe("covers object migration (#142)", () => {
+  function writeRegistryWithCovers(covers: unknown[]): void {
+    const registry = {
+      version: 1,
+      tools: [
+        {
+          name: TOOL_NAME,
+          path: "scripts/agent-tools/gh-pr-reactions",
+          purpose: "Read emoji reactions on a PR's review comments",
+          args: "<pr-number>",
+          scope: "repo (read-only)",
+          covers,
+          status: "approved",
+          approvedSha256: SHA,
+          permissionRule: "Bash(scripts/agent-tools/gh-pr-reactions:*)",
+        },
+      ],
+    };
+    writeFileSync(registryPath(), JSON.stringify(registry));
+  }
+
+  afterAll(() => {
+    // Restore the shared bare-string fixture other describe blocks rely on.
+    writeRegistry(SHA, "approved");
+  });
+
+  it("object-form covers ({pattern,matcherVersion}) redirects identically to bare-string", () => {
+    writeRegistryWithCovers([{ pattern: "gh(_\\w+)?\\s+api\\b.*comments", matcherVersion: "1.0.0" }]);
+    expectDeny(pre("gh api repos/o/r/pulls/1/comments"), "gh-pr-reactions");
+  });
+
+  it("object-form covers: watched but uncovered still passes through", () => {
+    writeRegistryWithCovers([{ pattern: "gh(_\\w+)?\\s+api\\b.*comments", matcherVersion: "1.0.0" }]);
+    expectAllow(pre("gh api repos/o/r/issues"));
+  });
+
+  it("mixed-form covers array matches on its bare-string entry", () => {
+    writeRegistryWithCovers([
+      "gh(_\\w+)?\\s+api\\b.*comments",
+      { pattern: "gh(_\\w+)?\\s+api\\b.*reactions", matcherVersion: "2.0.0" },
+    ]);
+    expectDeny(pre("gh api repos/o/r/pulls/1/comments"), "gh-pr-reactions");
+  });
+
+  it("mixed-form covers array matches on its object-form entry", () => {
+    writeRegistryWithCovers([
+      "gh(_\\w+)?\\s+api\\b.*comments",
+      { pattern: "gh(_\\w+)?\\s+api\\b.*reactions", matcherVersion: "2.0.0" },
+    ]);
+    expectDeny(pre("gh api repos/o/r/reactions"), "gh-pr-reactions");
+  });
+
+  it("mixed-form covers array: watched but uncovered still passes through", () => {
+    writeRegistryWithCovers([
+      "gh(_\\w+)?\\s+api\\b.*comments",
+      { pattern: "gh(_\\w+)?\\s+api\\b.*reactions", matcherVersion: "2.0.0" },
+    ]);
+    expectAllow(pre("gh api repos/o/r/issues"));
+  });
+
+  it("malformed covers entry (non-string pattern) doesn't block a valid sibling entry from matching", () => {
+    writeRegistryWithCovers([{ pattern: 123 }, "gh(_\\w+)?\\s+api\\b.*comments"]);
+    expectDeny(pre("gh api repos/o/r/pulls/1/comments"), "gh-pr-reactions");
+  });
+});
+
 // --- wrapper binaries (e.g. gh_dotcom) must be caught by the watchlist too -
 // gh_dotcom (a common wrapper that pins gh to github.com) sails straight
 // through the un-fixed `gh\s+api\b` / `gh\s+graphql\b` watchlist patterns,
