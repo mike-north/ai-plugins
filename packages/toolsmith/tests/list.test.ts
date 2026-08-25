@@ -100,6 +100,24 @@ describe("toolsmith list", () => {
     expect(r.stdout).toContain("| staged-missing |");
   });
 
+  it("shows 'retired' distinctly from 'draft' for a revoked tool, and does not fail the run", () => {
+    const proj = newProj();
+    const home = newHome();
+    writeProjectRegistry(proj, [
+      {
+        name: "gh-x",
+        path: "scripts/agent-tools/gh-x",
+        status: "retired",
+        approvedSha256: "deadbeef",
+        permissionRule: "Bash(scripts/agent-tools/gh-x:*)",
+      },
+    ]);
+    const r = runCli(["list"], { proj, home });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain("| retired |");
+    expect(r.stdout).toContain("1 tool(s) — 0 OK, 0 drifted, 0 missing, 0 draft, 1 retired");
+  });
+
   it("shows 'new' for a brand-new draft tool", () => {
     const proj = newProj();
     const home = newHome();

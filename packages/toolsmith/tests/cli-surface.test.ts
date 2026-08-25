@@ -2,7 +2,7 @@
  * UAT for the CLI's verb surface and help/error contract, driven through the
  * real bundle as a user would invoke it.
  *
- * Verb set is canon: approve / lint / list / analyze (+ verify) —
+ * Verb set is canon: approve / revoke / lint / list / analyze (+ verify) —
  * docs/toolsmith/cli-surface.md §Verbs; `new`/`modify` are deliberately not
  * verbs.
  */
@@ -16,6 +16,7 @@ describe("toolsmith --help", () => {
     const r = runCli(["--help"], { proj: newProj(), home: newHome() });
     expect(r.status).toBe(0);
     expect(r.stdout).toContain("toolsmith approve <path>");
+    expect(r.stdout).toContain("toolsmith revoke <path>");
     expect(r.stdout).toContain("toolsmith lint");
     expect(r.stdout).toContain("toolsmith list");
     expect(r.stdout).toContain("toolsmith analyze");
@@ -51,6 +52,20 @@ describe("toolsmith --help", () => {
 
   it("approve without a path fails with help", () => {
     const r = runCli(["approve"], { proj: newProj(), home: newHome() });
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain("expected exactly one <path> argument");
+  });
+
+  it("revoke --help is written for the human running the commit", () => {
+    const r = runCli(["revoke", "--help"], { proj: newProj(), home: newHome() });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain("You are the human in this handshake");
+    expect(r.stdout).toContain("--dry-run");
+    expect(r.stdout).toContain("symmetric inverse of approve");
+  });
+
+  it("revoke without a path fails with help", () => {
+    const r = runCli(["revoke"], { proj: newProj(), home: newHome() });
     expect(r.status).toBe(1);
     expect(r.stderr).toContain("expected exactly one <path> argument");
   });

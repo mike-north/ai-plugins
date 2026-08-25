@@ -141,6 +141,15 @@ widen the allowlist — `/toolsmith:approve` is the only sanctioned path into
 live, because it couples the allowlist grant to a specific reviewed,
 content-addressed script version, in either scope.
 
+**Retiring a tool that's no longer wanted** is `toolsmith revoke <path>` (via
+the `/toolsmith:approve` command's revoke ceremony) — the symmetric inverse
+of promotion. It removes the permission rule first, then de-registers and
+marks the entry `retired`, then removes the live file, so there is never a
+moment where a standing grant names a path that no longer exists. Same
+human-confirmed ceremony as promotion; same fail-closed, idempotent
+apply-manifest discipline. The registry entry is kept, not deleted — a
+retired tool's history stays auditable.
+
 ## Discovering what to build
 
 The PostToolUse hook logs Bash usage to `.claude/toolsmith/history.jsonl`. Run

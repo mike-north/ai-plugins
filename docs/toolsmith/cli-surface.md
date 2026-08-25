@@ -59,6 +59,12 @@ physical action gates existence, not drafting.
   `toolsmith-approve.mjs --dry-run` then a bare invocation on confirmation; the CLI verb is that same
   mechanism made directly callable. A headless or background agent **structurally cannot** satisfy
   presence — that is the feature the design relies on, not a limitation to work around.
+- **`revoke`** — `approve`'s symmetric demotion/retirement counterpart (`staged-live-split.md`
+  §Promotion, "Demotion/retirement"; `attest-it-admission.md` §"Promotion integration"). Same
+  human-gated ceremony, run in the opposite safety order: remove the standing `settings.json` grant
+  first, then mark the registry entry `retired` (which is also the steering de-registration — steering
+  only ever honors `status: "approved"`), then remove the live file. The registry entry is kept, not
+  deleted, so a retired tool's history stays auditable.
 - **`lint`** — the proposal gate: shellcheck plus the forge rule pack, plus header-body-hash agreement
   checks. This is cheap and non-privileged, requires no presence, so the authoring agent can iterate
   its freehand draft to green without ever spending a human tap to discover a lint error. `approve`

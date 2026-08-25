@@ -17,10 +17,14 @@ check, and the pending-drafts report; you relay its markdown verbatim.
 
 2. **Relay the output verbatim into chat as the completed result** — it is
    relay-markdown: registry tables for both scopes with per-tool
-   OK/DRIFTED/MISSING/draft integrity status, pending staged drafts with
-   their three-way drift state (pending / live-drifted-too / staged-missing /
-   new), shadowing notes, and summary counts. Do not re-derive hashes,
-   re-render tables, or add reasoning on top.
+   OK/DRIFTED/MISSING/draft/retired integrity status, pending staged drafts
+   with their three-way drift state (pending / live-drifted-too /
+   staged-missing / new), shadowing notes, and summary counts. A `retired`
+   tool was revoked via the `/toolsmith:approve` command's revoke ceremony
+   (`toolsmith revoke <path>` at the CLI): no live file, no grant — distinct
+   from `draft` (never approved), since this one *was* live and was
+   deliberately retired. Do not re-derive hashes, re-render tables, or add
+   reasoning on top.
 
 3. Only add commentary after the relayed output, and only when it is
    actionable: a **PARSE ERROR** for a scope means the hook is failing open
