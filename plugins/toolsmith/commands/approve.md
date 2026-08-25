@@ -85,3 +85,58 @@ read-only preview.
    matches. Remind the user that any future change to this tool must go back
    through staging — author the revision there and repeat this handshake; the
    live version never accepts a direct edit.
+
+## Revoking (retiring) a tool
+
+`toolsmith revoke` is the symmetric inverse: it retires a tool that is no
+longer wanted, per
+[`docs/toolsmith/staged-live-split.md`](../../../docs/toolsmith/staged-live-split.md)
+§Promotion, "Demotion/retirement". It goes through the same proofread-then-
+confirm ceremony as promotion — **never** run it without the user's explicit
+confirmation in this turn.
+
+1. **Decide the scope**, same as promotion (step 1 above): `--user` for a
+   bare name or `tools/<name>` path resolving under
+   `~/.claude/toolsmith/tools/`, otherwise project scope.
+
+2. **Preview.** Run:
+
+   ```
+   "${CLAUDE_PLUGIN_ROOT}/scripts/toolsmith.mjs" revoke "<path>" --dry-run
+   ```
+
+   (add `--user` for a user-scope tool). Read-only — writes nothing. Show
+   the user the tool's name, current status, the exact permission rule that
+   would be removed, and whether the live file would be removed. If the
+   entry is already retired (or doesn't exist), this reports that revoking
+   it is already a no-op — nothing to confirm.
+
+3. **Confirm.** Ask the user to confirm they want this tool retired: the
+   permission rule removed and the live file deleted. If they decline, stop
+   — nothing changes.
+
+4. **On confirmation only, hand the revoke command to the user — never run
+   it yourself.** Same human-act discipline as promotion (the toolsmith
+   hooks deny agent-run commit invocations; only read-only verbs pass).
+   Print the exact command with `${CLAUDE_PLUGIN_ROOT}` expanded to its real
+   absolute path:
+
+   ```
+   "<absolute-plugin-root>/scripts/toolsmith.mjs" revoke "<path>"
+   ```
+
+   (with `--user` for a user-scope tool). This removes the `Bash(...:*)`
+   rule from the scope's `settings.json` **first** (so there is never a
+   moment where a rule grants a path that's about to stop existing), then
+   marks the registry entry `status: "retired"` (this is also the steering
+   de-registration — steering only honors `"approved"` entries), then clears
+   the BSD immutable flag where available and removes the live file. The
+   entry itself is kept (not deleted) so its history — what it was, its
+   pinned hash, the rule it once held — stays auditable. Fail-closed and
+   idempotent, same discipline as promotion: revoking an already-retired or
+   unknown tool is a clean no-op, not an error; a kill mid-revoke never
+   leaves a stale grant, and re-running converges.
+
+5. **Report** what was removed (rule / registry status / live file), or that
+   it was already fully retired. Confirm with `toolsmith verify` (add
+   `--user` for user scope) that the tool now reports `retired`.

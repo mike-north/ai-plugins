@@ -165,7 +165,7 @@ function d3(drafts: ScopeReport["drafts"], state: DriftState): boolean {
 }
 
 function countByStatus(report: ScopeReport): Record<VerifyStatus, number> {
-  const counts: Record<VerifyStatus, number> = { OK: 0, DRIFTED: 0, MISSING: 0, draft: 0 };
+  const counts: Record<VerifyStatus, number> = { OK: 0, DRIFTED: 0, MISSING: 0, draft: 0, retired: 0 };
   for (const t of report.tools) counts[t.verify] += 1;
   return counts;
 }
@@ -175,7 +175,7 @@ function summaryLine(label: string, report: ScopeReport): string {
   return (
     `- **${label}**: ${String(report.tools.length)} tool(s) — ` +
     `${String(c.OK)} OK, ${String(c.DRIFTED)} drifted, ${String(c.MISSING)} missing, ` +
-    `${String(c.draft)} draft; ${String(report.drafts.length)} pending draft(s).`
+    `${String(c.draft)} draft, ${String(c.retired)} retired; ${String(report.drafts.length)} pending draft(s).`
   );
 }
 

@@ -27,7 +27,8 @@ promotion apply manifest, rollout):
   through `/toolsmith:approve`'s promotion; otherwise `0555` (r-x, no write)
   and (on macOS/BSD) the `uchg` immutable flag.
 - **Retired** — removed from live; the registry entry's `status` becomes
-  `retired`.
+  `retired` (via `toolsmith revoke <path>`, the symmetric demotion/
+  retirement counterpart to promotion — see below).
 
 **An edit to a live tool never touches live.** The agent always authors into
 staging; `/toolsmith:approve <path>` is the only path that moves bytes from
@@ -35,6 +36,43 @@ staging to live (the promotion apply manifest: place → mode+flag → recompute
 + pin the hash from the placed bytes → grant the rule → clear `staged` →
 remove the staging file). The last-approved live version keeps running the
 whole time a revision is pending, so there is no re-sign lockout.
+
+### Revoke: demotion/retirement
+
+`toolsmith revoke <path>` (`--user` for a user-scope tool) is the symmetric
+inverse of promotion (docs/toolsmith/staged-live-split.md §Promotion,
+"Demotion/retirement"): it retires a tool that is no longer wanted. It runs
+as its own safety-ordered apply manifest — deliberately in the opposite
+order from promotion, so the capability is always gone before the artifact:
+
+1. **Remove the `permissionRule` from the scope's `settings.json` first.**
+   The standing grant disappears before anything else changes, so there is
+   never a window where an `allow` rule names a path that's about to stop
+   being live.
+2. **De-register.** Steering only ever treats a `status: "approved"` entry as
+   registered (per the [steering ↔ toolsmith
+   contract](../../../../docs/harness-program/contracts/steering-toolsmith.md)
+   §1) — there is no separate registration artifact today, so flipping
+   `status` away from `"approved"` *is* the de-registration.
+3. Clear the BSD immutable flag where available (`chflags nouchg` — its
+   absence is the same honest platform degradation as promotion's, not an
+   error) and remove the live file.
+4. Mark the registry entry `status: "retired"`.
+
+**Retired entries are kept, not deleted.** Revoke keeps the entry (with its
+`approvedSha256` and `permissionRule` intact) so a tool's history stays
+auditable — matching
+[`docs/toolsmith/attest-it-admission.md`](../../../../docs/toolsmith/attest-it-admission.md)
+§"Promotion integration": "Revocation stays human-gated through the same
+ceremony; a revoked tool's seal is not deleted... the registry state and
+live placement are what change." Only its live placement and standing grant
+are removed.
+
+Each step is independently idempotent: it inspects the current state and
+only acts if something remains to do. Revoking an already-retired or
+never-registered tool is a clean no-op (exit 0, nothing written), not an
+error — and a revoke killed partway through converges to the fully-retired
+state on re-run rather than leaving a stale grant or a partial write.
 
 ### Staging namespace
 
@@ -94,7 +132,7 @@ Field reference:
 | `args` | Human-readable argument summary (e.g. `<pr-number>`), shown in the suggested call. |
 | `scope` | What the tool is bounded to (repo/org/read-only). Documentation for the reviewer. |
 | `covers` | Array of matcher-contract entries tested against the raw Bash command. Each entry is either an object `{pattern, matcherVersion}` (`pattern` a JavaScript RegExp string; `matcherVersion` syntactic semver) or, for back-compat, a bare RegExp string — read as `{pattern: <string>, matcherVersion: "1.0.0"}` (the extraction baseline). Only `.pattern` is tested against the command today; see [`registration-emission.md`](../../../../../docs/toolsmith/registration-emission.md) for the object shape and the bare-string migration rule. If a **watched** command matches any of an **approved** tool's `covers`, the hook denies it and points here. |
-| `status` | `draft` (registered, not yet approved), `approved`, or `retired` (removed from live; see the design doc's Rollout/Demotion notes). Only `approved` tools redirect; invoking a `draft`/`retired`/unapproved tool is denied. |
+| `status` | `draft` (registered, not yet approved), `approved`, or `retired` (revoked via `toolsmith revoke <path>` — see "Revoke: demotion/retirement" above and the design doc's Rollout/Demotion notes). Only `approved` tools redirect; invoking a `draft`/`retired`/unapproved tool is denied. |
 | `approvedSha256` | sha256 of the **live** script's bytes, recomputed from the bytes actually placed at promotion time (never trusted from `staged.sha256`) and pinned by `/toolsmith:approve`. The hook denies execution if the on-disk live file no longer matches. |
 | `permissionRule` | The exact allowlist rule added to the scope's `settings.json` at promotion — see the shared-contract table for the exact form per scope. |
 | `staged` (optional) | Present iff a draft is pending promotion. `path` — the staging draft's location (see "Staging namespace" above). `sha256` — advisory only, shown by `/toolsmith:list`; promotion always recomputes from the placed bytes. `note` — one-line agent-authored summary of the change. `since` — ISO 8601 timestamp the draft was authored/updated. |

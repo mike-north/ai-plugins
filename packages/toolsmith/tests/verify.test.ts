@@ -126,6 +126,32 @@ describe("verify: draft entries report without failing", () => {
 });
 
 // ============================================================================
+// verify: a revoked (retired) entry reports "retired", distinct from
+// "draft" — this one was live once and no longer is — and does not fail the
+// run even though its live file is gone.
+// ============================================================================
+describe("verify: retired entries report distinctly from draft, without failing", () => {
+  const proj = newProj();
+  writeProjectRegistry(proj, [
+    {
+      name: "mytool",
+      path: "scripts/agent-tools/mytool",
+      status: "retired",
+      approvedSha256: "deadbeef",
+      permissionRule: "Bash(scripts/agent-tools/mytool:*)",
+    },
+  ]);
+  const out = runCli(["verify"], { proj });
+
+  it("verify reports retired (not draft, not MISSING) without failing", () => {
+    expect(out.status).toBe(0);
+    expect(out.stdout).toMatch(/^retired\s/m);
+    expect(out.stdout).not.toMatch(/^draft\s/m);
+    expect(out.stdout).not.toMatch(/^MISSING\s/m);
+  });
+});
+
+// ============================================================================
 // verify: a tampered registry entry with an absolute path or ".." must NOT be
 // read/hashed outside the project root — report MISSING and fail the run,
 // while a valid sibling entry in the same registry still verifies normally.

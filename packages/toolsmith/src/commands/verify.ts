@@ -1,16 +1,17 @@
 /**
  * `toolsmith verify` — read-only integrity check of LIVE pins (contract §2's
  * producer side): one line per registry tool, prefixed OK / DRIFTED / MISSING
- * / draft. Exit 0 when everything checks out, 1 when anything drifted or is
- * missing. Ported from `toolsmith-approve.mjs --verify`, byte-compatible
- * output so callers (and the /toolsmith:list wrapper) keep working.
+ * / draft / retired. Exit 0 when everything checks out, 1 when anything
+ * drifted or is missing. Ported from `toolsmith-approve.mjs --verify`,
+ * byte-compatible output so callers (and the /toolsmith:list wrapper) keep
+ * working.
  */
 import { existsSync } from "node:fs";
 import { sha256OfFile } from "../lib/fsutil.js";
 import { readRegistry, type ToolEntry } from "../lib/registry.js";
 import { resolveScope, type Scope } from "../lib/scope.js";
 
-export type VerifyStatus = "OK" | "DRIFTED" | "MISSING" | "draft";
+export type VerifyStatus = "OK" | "DRIFTED" | "MISSING" | "draft" | "retired";
 
 export interface VerifyLine {
   status: VerifyStatus;
@@ -22,6 +23,12 @@ export interface VerifyLine {
 export function verifyTool(tool: ToolEntry | null | undefined, scope: Scope): VerifyLine {
   const name = tool?.name ?? "(unnamed)";
   const rawToolPath = tool?.path ?? "(no path)";
+  // A revoked tool is reported as its own status, distinct from "draft" — it
+  // was live once and no longer is, which reads very differently from "not
+  // yet approved". Neither state redirects or grants anything.
+  if (tool?.status === "retired") {
+    return { status: "retired", name, path: rawToolPath };
+  }
   if (tool?.status !== "approved") {
     return { status: "draft", name, path: rawToolPath };
   }
@@ -52,6 +59,7 @@ const STATUS_PAD: Record<VerifyStatus, string> = {
   DRIFTED: "DRIFTED  ",
   MISSING: "MISSING  ",
   draft: "draft    ",
+  retired: "retired  ",
 };
 
 export interface VerifyOptions {

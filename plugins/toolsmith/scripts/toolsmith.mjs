@@ -730,11 +730,159 @@ function readRegistrylike(path) {
   }
 }
 
+// src/commands/revoke.ts
+import { existsSync as existsSync4, unlinkSync as unlinkSync2 } from "node:fs";
+function killAfter2(step) {
+  if (process.env["TOOLSMITH_REVOKE_KILL_AFTER"] === step) {
+    process.stderr.write(`[toolsmith-revoke test fault injection] killed after step "${step}"
+`);
+    process.exit(9);
+  }
+}
+function runRevoke({ rawPath, commit, userScope }) {
+  const resolution = resolveScope(userScope);
+  if (!resolution.ok) {
+    process.stderr.write(resolution.error);
+    return 1;
+  }
+  const scope = resolution.scope;
+  const path = scope.normalize(rawPath);
+  if (!path) {
+    process.stderr.write(scope.invalidPathMessage(rawPath));
+    return 1;
+  }
+  const regPath = scope.regPath;
+  if (!existsSync4(regPath)) {
+    process.stdout.write(`No registry found at ${regPath} \u2014 nothing to revoke (already absent).
+`);
+    return 0;
+  }
+  const registry = readRegistry(regPath);
+  if (!registry) {
+    process.stderr.write(
+      `Error: ${regPath} is not a valid registry (malformed JSON or missing "tools" array). Nothing written.
+`
+    );
+    return 1;
+  }
+  const idx = registry.tools.findIndex((t) => t && t.path === path);
+  if (idx === -1) {
+    process.stdout.write(`No registry entry found for "${path}" \u2014 nothing to revoke (already absent).
+`);
+    return 0;
+  }
+  const entry = registry.tools[idx];
+  const liveAbs = scope.scriptAbs(path);
+  const liveExistsNow = existsSync4(liveAbs);
+  const rule = typeof entry.permissionRule === "string" && entry.permissionRule ? entry.permissionRule : scope.ruleFor(path, liveAbs);
+  const settingsFile = scope.settingsFile;
+  const alreadyRetired = entry.status === "retired";
+  if (!commit) {
+    const existingSettings = existsSync4(settingsFile) ? readJsonOrNull(settingsFile) : {};
+    const permissions = isPlainObject(existingSettings) ? existingSettings["permissions"] : void 0;
+    const allowList = isPlainObject(permissions) && Array.isArray(permissions["allow"]) ? permissions["allow"] : null;
+    const ruleGranted = allowList !== null && allowList.includes(rule);
+    process.stdout.write(
+      [
+        `Tool: ${entry.name ?? "(unnamed)"}`,
+        `Live path: ${scope.displayPath(path, liveAbs)}`,
+        `Current status: ${entry.status ?? "(none)"}`,
+        `Permission rule: ${rule}`,
+        `Rule currently granted: ${ruleGranted ? "yes (would be removed)" : "no (already absent)"}`,
+        `Live file present: ${liveExistsNow ? "yes (would be removed)" : "no (already absent)"}`,
+        alreadyRetired && !ruleGranted && !liveExistsNow ? "Already fully retired \u2014 revoke would be a clean no-op." : "DRY RUN \u2014 nothing written; re-run without --dry-run to apply."
+      ].join("\n") + "\n"
+    );
+    return 0;
+  }
+  const settingsCheck = readSettingsStrict(settingsFile);
+  if (!settingsCheck.ok) {
+    process.stderr.write(`Error: ${settingsCheck.reason} Nothing written.
+`);
+    return 1;
+  }
+  const settingsBefore = settingsCheck.value;
+  const permissionsBefore = settingsBefore["permissions"] && typeof settingsBefore["permissions"] === "object" ? settingsBefore["permissions"] : {};
+  const allowBefore = Array.isArray(permissionsBefore["allow"]) ? permissionsBefore["allow"] : [];
+  const ruleRemoved = allowBefore.includes(rule);
+  if (ruleRemoved) {
+    const allowAfter = allowBefore.filter((r) => r !== rule);
+    atomicWrite(
+      settingsFile,
+      toJsonFile({
+        ...settingsBefore,
+        permissions: { ...permissionsBefore, allow: allowAfter }
+      })
+    );
+  }
+  killAfter2("revoke-rule");
+  const statusChanged = !alreadyRetired;
+  if (statusChanged) {
+    const retiredEntry = { ...entry, status: "retired" };
+    const toolsRetired = registry.tools.slice();
+    toolsRetired[idx] = retiredEntry;
+    atomicWrite(regPath, toJsonFile({ ...registry, tools: toolsRetired }));
+  }
+  killAfter2("revoke-registry");
+  let liveRemoved = false;
+  if (liveExistsNow) {
+    if (chflagsAvailable()) {
+      const nouchgResult = tryChflags("nouchg", liveAbs);
+      if (!nouchgResult.ok) {
+        process.stderr.write(
+          [
+            `Error: could not clear the immutable flag before removing the live file.`,
+            `  path: ${liveAbs}`,
+            `  flag: uchg (chflags nouchg failed: ${nouchgResult.reason})`,
+            `  State so far: the permission rule and registry registration are already removed \u2014`,
+            `  this tool cannot be invoked via the standing grant regardless. Only the on-disk file remains.`,
+            `  Remedy: run \`chflags nouchg ${liveAbs}\` by hand to diagnose (permissions, ownership), then re-run revoke.`
+          ].join("\n") + "\n"
+        );
+        return 1;
+      }
+    }
+    try {
+      unlinkSync2(liveAbs);
+      liveRemoved = true;
+    } catch (err) {
+      process.stderr.write(
+        [
+          `Error: could not remove the live file: ${err.message}`,
+          `  path: ${liveAbs}`,
+          `  State so far: the permission rule and registry registration are already removed \u2014`,
+          `  this tool cannot be invoked via the standing grant regardless. Only the on-disk file remains.`,
+          `  Remedy: remove ${liveAbs} by hand, then re-run revoke to confirm convergence.`
+        ].join("\n") + "\n"
+      );
+      return 1;
+    }
+  }
+  killAfter2("revoke-live");
+  if (!ruleRemoved && !statusChanged && !liveRemoved) {
+    process.stdout.write(`Already retired: ${entry.name ?? path} \u2014 nothing to do.
+`);
+    return 0;
+  }
+  process.stdout.write(
+    [
+      `Revoked ${entry.name ?? "(unnamed)"} (${scope.displayPath(path, liveAbs)}):`,
+      ruleRemoved ? `Removed rule from ${settingsFile} permissions.allow.` : `Rule already absent from ${settingsFile} (no-op).`,
+      statusChanged ? `Registry entry marked status: retired.` : `Registry entry already status: retired (no-op).`,
+      liveRemoved ? `Live file removed.` : `Live file already absent (no-op).`
+    ].join("\n") + "\n"
+  );
+  return 0;
+}
+
 // src/commands/verify.ts
-import { existsSync as existsSync4 } from "node:fs";
+import { existsSync as existsSync5 } from "node:fs";
 function verifyTool(tool, scope) {
   const name = tool?.name ?? "(unnamed)";
   const rawToolPath = tool?.path ?? "(no path)";
+  if (tool?.status === "retired") {
+    return { status: "retired", name, path: rawToolPath };
+  }
   if (tool?.status !== "approved") {
     return { status: "draft", name, path: rawToolPath };
   }
@@ -743,7 +891,7 @@ function verifyTool(tool, scope) {
     return { status: "MISSING", name, path: rawToolPath };
   }
   const abs = scope.scriptAbs(path);
-  if (!existsSync4(abs)) {
+  if (!existsSync5(abs)) {
     return { status: "MISSING", name, path };
   }
   let sha;
@@ -758,7 +906,8 @@ var STATUS_PAD = {
   OK: "OK       ",
   DRIFTED: "DRIFTED  ",
   MISSING: "MISSING  ",
-  draft: "draft    "
+  draft: "draft    ",
+  retired: "retired  "
 };
 function runVerify({ rawPath, userScope }) {
   const resolution = resolveScope(userScope);
@@ -768,7 +917,7 @@ function runVerify({ rawPath, userScope }) {
   }
   const scope = resolution.scope;
   const regPath = scope.regPath;
-  if (!existsSync4(regPath)) {
+  if (!existsSync5(regPath)) {
     process.stderr.write(`Error: no registry found at ${regPath}.
 `);
     return 1;
@@ -805,10 +954,10 @@ function runVerify({ rawPath, userScope }) {
 }
 
 // src/commands/list.ts
-import { existsSync as existsSync5 } from "node:fs";
+import { existsSync as existsSync6 } from "node:fs";
 function buildScopeReport(label, scope) {
   const regPath = scope.regPath;
-  if (!existsSync5(regPath)) {
+  if (!existsSync6(regPath)) {
     return { label, regPath, parseError: false, absent: true, tools: [], drafts: [] };
   }
   const registry = readRegistry(regPath);
@@ -826,7 +975,7 @@ function buildScopeReport(label, scope) {
     const stagedRel = scope.normalizeStaged(staged.path);
     const stagedAbs = stagedRel ? scope.stagedAbs(stagedRel) : null;
     let state;
-    if (!stagedAbs || !existsSync5(stagedAbs)) {
+    if (!stagedAbs || !existsSync6(stagedAbs)) {
       state = "staged-missing";
     } else if (entry.status !== "approved") {
       state = "new";
@@ -901,13 +1050,13 @@ function d3(drafts, state) {
   return drafts.some((d) => d.state === state);
 }
 function countByStatus(report) {
-  const counts = { OK: 0, DRIFTED: 0, MISSING: 0, draft: 0 };
+  const counts = { OK: 0, DRIFTED: 0, MISSING: 0, draft: 0, retired: 0 };
   for (const t of report.tools) counts[t.verify] += 1;
   return counts;
 }
 function summaryLine(label, report) {
   const c = countByStatus(report);
-  return `- **${label}**: ${String(report.tools.length)} tool(s) \u2014 ${String(c.OK)} OK, ${String(c.DRIFTED)} drifted, ${String(c.MISSING)} missing, ${String(c.draft)} draft; ${String(report.drafts.length)} pending draft(s).`;
+  return `- **${label}**: ${String(report.tools.length)} tool(s) \u2014 ${String(c.OK)} OK, ${String(c.DRIFTED)} drifted, ${String(c.MISSING)} missing, ${String(c.draft)} draft, ${String(c.retired)} retired; ${String(report.drafts.length)} pending draft(s).`;
 }
 function runList() {
   const root = projectRoot();
@@ -955,7 +1104,7 @@ function runList() {
 }
 
 // src/commands/analyze.ts
-import { existsSync as existsSync6, readFileSync as readFileSync5 } from "node:fs";
+import { existsSync as existsSync7, readFileSync as readFileSync5 } from "node:fs";
 import { join as join4 } from "node:path";
 
 // src/lib/watchlist.ts
@@ -1123,7 +1272,7 @@ var TOP_CLUSTERS = 20;
 function runAnalyze() {
   const root = projectRoot();
   const historyPath = join4(root, ".claude", "toolsmith", "history.jsonl");
-  if (!existsSync6(historyPath)) {
+  if (!existsSync7(historyPath)) {
     process.stdout.write(
       `# Toolsmith usage analysis
 
@@ -1230,6 +1379,7 @@ var HELP = `toolsmith ${VERSION} \u2014 purpose-built-tool lifecycle for the too
 
 Usage:
   toolsmith approve <path> [--user] [--dry-run]   Promote a staged draft to live (see below)
+  toolsmith revoke <path> [--user] [--dry-run]    Retire a live tool \u2014 the symmetric inverse of approve
   toolsmith verify [<path>] [--user]              Read-only integrity check of live pins
   toolsmith lint <file>                           Proposal gate: lint a staged draft
   toolsmith list                                  Registry inventory + drift, both scopes (markdown)
@@ -1237,8 +1387,9 @@ Usage:
   toolsmith --help | --version
 
 approve is the one trust boundary and its commit run is a HUMAN act: run it
-in your own terminal after reading the --dry-run review surface. Agents may
-only run --dry-run / verify / lint / list / analyze.
+in your own terminal after reading the --dry-run review surface. revoke's
+commit run is the same human act, in reverse. Agents may only run --dry-run /
+verify / lint / list / analyze.
 
 Run \`toolsmith <verb> --help\` for verb details.
 `;
@@ -1278,6 +1429,35 @@ interrupted mid-apply, live is refused-closed (its pin won't match) until you
 re-run; re-running converges. Every future edit to a promoted tool goes back
 through staging \u2014 live never accepts a direct edit.
 `;
+var REVOKE_HELP = `toolsmith revoke \u2014 retire a live tool (the symmetric inverse of approve)
+
+You are the human in this handshake, same as approve. Agents are denied the
+commit run by the toolsmith PreToolUse hook \u2014 only --dry-run passes for them.
+
+Usage:
+  toolsmith revoke <path>                 Retire: remove the rule, mark retired, remove the live file
+  toolsmith revoke <path> --dry-run       Preview the revoke \u2014 no writes
+  toolsmith revoke <name-or-path> --user [--dry-run]
+                                          Same, for a user-scope (global) tool
+
+What the commit run does (deterministic, idempotent, in this order \u2014 the
+capability is always removed before the artifact):
+  1. removes the tool's Bash(...) rule from the scope's settings.json
+  2. marks the registry entry status: "retired" (this is also the
+     de-registration \u2014 steering only honors "approved" entries)
+  3. clears the BSD immutable flag where available and removes the live file
+
+The registry entry itself is KEPT, not deleted, so its history (name, pinned
+hash, the rule it held) stays auditable.
+
+<path> is a project-relative path naming a registry entry in
+.claude/toolsmith/registry.json. With --user, pass a bare tool name or
+"tools/<name>", resolved against ~/.claude/toolsmith/.
+
+Fail-closed and idempotent: revoking an already-retired or unknown tool is a
+clean no-op, not an error; a kill mid-revoke never leaves a stale grant, and
+re-running converges.
+`;
 var VERIFY_HELP = `toolsmith verify \u2014 read-only integrity check of LIVE pins
 
 Usage:
@@ -1288,8 +1468,9 @@ Prints one line per registry tool, prefixed with its status:
   DRIFTED  hash differs from the pinned value (the hook blocks invocation)
   MISSING  the file no longer exists (or its registry path is invalid)
   draft    not yet approved
+  retired  revoked via \`toolsmith revoke\` \u2014 no live file, no grant
 
-Exit 0 when everything is OK/draft; exit 1 if anything DRIFTED or MISSING.
+Exit 0 when everything is OK/draft/retired; exit 1 if anything DRIFTED or MISSING.
 `;
 var LINT_HELP = `toolsmith lint \u2014 the proposal gate for staged drafts
 
@@ -1313,9 +1494,11 @@ Usage:
 Reads both registries (.claude/toolsmith/registry.json and
 ~/.claude/toolsmith/registry.json), verifies every live pin, and renders
 per-scope tables plus pending staged drafts with a three-way drift state
-(pending / live-drifted-too / staged-missing / new). A registry that exists
-but won't parse is reported as a PARSE ERROR for that scope \u2014 the hook fails
-open on malformed JSON, so the redirect/tamper block is disarmed until fixed.
+(pending / live-drifted-too / staged-missing / new). A retired tool (revoked
+via \`toolsmith revoke\`) is reported distinctly from draft \u2014 it was live once
+and no longer is. A registry that exists but won't parse is reported as a
+PARSE ERROR for that scope \u2014 the hook fails open on malformed JSON, so the
+redirect/tamper block is disarmed until fixed.
 
 Exit 0 when clean; exit 1 if anything is DRIFTED/MISSING or a registry
 fails to parse.
@@ -1344,7 +1527,7 @@ function main() {
   const verb = argv[0];
   const rest = argv.slice(1);
   const wantsHelp = argv.includes("--help") || argv.includes("-h");
-  if (!verb || wantsHelp && !verb.match(/^(approve|verify|lint|list|analyze)$/)) {
+  if (!verb || wantsHelp && !verb.match(/^(approve|revoke|verify|lint|list|analyze)$/)) {
     process.stdout.write(HELP);
     process.exit(verb ? 0 : 1);
   }
@@ -1362,6 +1545,21 @@ function main() {
         process.exit(1);
       }
       process.exit(runApprove({ rawPath: pathArgs[0], commit: !dryRun, userScope }));
+      break;
+    }
+    case "revoke": {
+      if (wantsHelp) {
+        process.stdout.write(REVOKE_HELP);
+        process.exit(0);
+      }
+      const userScope = rest.includes("--user");
+      const dryRun = rest.includes("--dry-run");
+      const pathArgs = rest.filter((a) => a !== "--user" && a !== "--dry-run");
+      if (pathArgs.length !== 1 || !pathArgs[0]) {
+        process.stderr.write("Error: expected exactly one <path> argument.\n\n" + REVOKE_HELP);
+        process.exit(1);
+      }
+      process.exit(runRevoke({ rawPath: pathArgs[0], commit: !dryRun, userScope }));
       break;
     }
     case "verify": {
