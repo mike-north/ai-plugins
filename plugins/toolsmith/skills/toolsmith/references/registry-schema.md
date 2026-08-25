@@ -62,7 +62,7 @@ with `staging` required as the first segment instead of `tools`.
       "args": "<pr-number>",
       "scope": "repo:mike-north/ai-plugins (read-only)",
       "covers": [
-        "gh\\s+api\\b.*/pulls/\\d+/comments",
+        { "pattern": "gh\\s+api\\b.*/pulls/\\d+/comments", "matcherVersion": "1.0.0" },
         "gh\\s+api\\b.*/reactions"
       ],
       "status": "approved",
@@ -93,7 +93,7 @@ Field reference:
 | `purpose` | One sentence: what the tool does. Shown to the agent in redirect messages. |
 | `args` | Human-readable argument summary (e.g. `<pr-number>`), shown in the suggested call. |
 | `scope` | What the tool is bounded to (repo/org/read-only). Documentation for the reviewer. |
-| `covers` | Array of JavaScript RegExp strings tested against the raw Bash command. If a **watched** command matches any of an **approved** tool's `covers`, the hook denies it and points here. |
+| `covers` | Array of matcher-contract entries tested against the raw Bash command. Each entry is either an object `{pattern, matcherVersion}` (`pattern` a JavaScript RegExp string; `matcherVersion` syntactic semver) or, for back-compat, a bare RegExp string — read as `{pattern: <string>, matcherVersion: "1.0.0"}` (the extraction baseline). Only `.pattern` is tested against the command today; see [`registration-emission.md`](../../../../../docs/toolsmith/registration-emission.md) for the object shape and the bare-string migration rule. If a **watched** command matches any of an **approved** tool's `covers`, the hook denies it and points here. |
 | `status` | `draft` (registered, not yet approved), `approved`, or `retired` (removed from live; see the design doc's Rollout/Demotion notes). Only `approved` tools redirect; invoking a `draft`/`retired`/unapproved tool is denied. |
 | `approvedSha256` | sha256 of the **live** script's bytes, recomputed from the bytes actually placed at promotion time (never trusted from `staged.sha256`) and pinned by `/toolsmith:approve`. The hook denies execution if the on-disk live file no longer matches. |
 | `permissionRule` | The exact allowlist rule added to the scope's `settings.json` at promotion — see the shared-contract table for the exact form per scope. |

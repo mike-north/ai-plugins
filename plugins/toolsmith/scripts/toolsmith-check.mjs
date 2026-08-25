@@ -181,7 +181,10 @@ function main() {
   for (const tool of tools) {
     if (tool?.status !== 'approved') continue;
     const covers = Array.isArray(tool.covers) ? tool.covers : [];
-    const hit = covers.some((pat) => safeTest(toRegExp(pat), command));
+    const hit = covers.some((entry) => {
+      const pattern = coverPattern(entry);
+      return typeof pattern === 'string' && safeTest(toRegExp(pattern), command);
+    });
     if (!hit) continue;
     // The runnable command MUST be the path form (relative for a project
     // tool, fully-expanded absolute for a user tool) because that is what
@@ -464,6 +467,22 @@ function readJson(path) {
   } catch {
     return null;
   }
+}
+
+// Normalize a `covers` entry to its matcher pattern, per
+// docs/toolsmith/registration-emission.md §"The registration record" ("`covers`
+// migrates from bare strings to `{pattern, matcherVersion}` objects"): a bare
+// string `S` is read as `{pattern: S, matcherVersion: "1.0.0"}` (the
+// extraction baseline); an object entry is used as-is, matched on `.pattern`.
+// The reader never consumes `matcherVersion` itself (stamping/enforcing it is
+// #74-gated, out of scope here) — only `.pattern` feeds the match below.
+// Anything else (a malformed entry) yields no usable pattern, which the
+// caller treats as "doesn't match" — fail-closed toward the normal
+// permission flow, never toward a silent match.
+function coverPattern(entry) {
+  if (typeof entry === 'string') return entry;
+  if (entry && typeof entry === 'object' && typeof entry.pattern === 'string') return entry.pattern;
+  return null;
 }
 
 function toRegExp(pattern, flags) {
