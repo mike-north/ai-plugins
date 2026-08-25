@@ -11,7 +11,9 @@
  *   2. status -> retired (the de-registration)         -> "AC2:" cases
  *   3. live file removed (chflags nouchg where avail.)  -> "AC3:" cases
  *   4. registry entry kept, not deleted                -> "AC2:" cases (asserted alongside status)
- *   5. idempotent / fail-closed / clean no-op            -> "AC4:" and "AC5:" cases
+ *   5. idempotent / fail-closed / clean no-op / tears     -> "AC4:" and "AC5:" cases
+ *      down orphaned grants+files even with no registry
+ *      entry to retire
  *   6. --dry-run writes nothing, reports accurately     -> "AC6:" cases
  *
  * @see docs/toolsmith/staged-live-split.md
@@ -200,23 +202,58 @@ describe("AC4: revoking an already-retired tool is a clean no-op", () => {
 });
 
 // ============================================================================
-// AC4 (continued): revoking a tool with no registry entry at all, or no
-// registry file at all, is a clean no-op, not an error.
+// AC4 (continued): a missing registry, or a registry with no entry for the
+// path, is NOT assumed to imply "nothing granted" — a stale settings.json
+// rule or a lingering live file can outlive the registry entry that once
+// governed them (manual edit, corruption, a reset registry). revoke must
+// still tear those down, in the same safety order, even with no entry to
+// flip to "retired". Only when the registry state is absent AND no rule AND
+// no live file exist is it a genuine clean no-op.
 // ============================================================================
-describe("AC4 (continued): revoking an unknown tool / missing registry is a clean no-op", () => {
-  it("AC4: no registry entry for the path -> clean no-op", () => {
+describe("AC4 (continued): revoke tears down orphaned grants/files even with no registry entry", () => {
+  it("AC4(a): missing registry file but a stale rule + live file present -> both removed", () => {
+    const proj = newProj();
+    // Deliberately no registry.json at all.
+    writeFileSync(liveAbsOf(proj, "orphan"), LIVE);
+    writeGrantedSettings(proj, RULE("orphan"));
+
+    const out = runCli(["revoke", "scripts/agent-tools/orphan"], { proj });
+
+    expect(out.status).toBe(0);
+    expect(out.stdout).toContain("Removed rule from");
+    expect(out.stdout).toContain("Live file removed.");
+    expect(ruleCount(settingsPathOf(proj), RULE("orphan"))).toBe(0);
+    expect(existsSync(liveAbsOf(proj, "orphan"))).toBe(false);
+  });
+
+  it("AC4(b): entry not found in an existing registry but a stale rule is present -> rule removed", () => {
+    const proj = newProj();
+    writeProjectRegistry(proj, [{ name: "other", path: "scripts/agent-tools/other", status: "draft" }]);
+    writeGrantedSettings(proj, RULE("orphan-b"));
+
+    const out = runCli(["revoke", "scripts/agent-tools/orphan-b"], { proj });
+
+    expect(out.status).toBe(0);
+    expect(out.stdout).toContain("Removed rule from");
+    expect(ruleCount(settingsPathOf(proj), RULE("orphan-b"))).toBe(0);
+    // The unrelated entry is untouched.
+    expect(readRegistryFile(regPathOf(proj)).tools).toHaveLength(1);
+    expect(readRegistryFile(regPathOf(proj)).tools[0]!["name"]).toBe("other");
+  });
+
+  it("AC4(c): no registry entry, no rule, no live file -> genuine clean no-op", () => {
     const proj = newProj();
     writeProjectRegistry(proj, []);
     const out = runCli(["revoke", "scripts/agent-tools/nope"], { proj });
     expect(out.status).toBe(0);
-    expect(out.stdout.toLowerCase()).toContain("nothing to revoke");
+    expect(out.stdout.toLowerCase()).toContain("nothing to do");
   });
 
-  it("AC4: no registry file at all -> clean no-op", () => {
+  it("AC4(c continued): no registry file at all, no rule, no live file -> genuine clean no-op", () => {
     const proj = newProj();
     const out = runCli(["revoke", "scripts/agent-tools/nope"], { proj });
     expect(out.status).toBe(0);
-    expect(out.stdout.toLowerCase()).toContain("nothing to revoke");
+    expect(out.stdout.toLowerCase()).toContain("nothing to do");
   });
 });
 
@@ -339,6 +376,31 @@ describe("AC6 (continued): --dry-run on an already-retired tool reports no-op", 
   it("AC6: dry-run on a retired tool reports it's already a clean no-op", () => {
     expect(out.status).toBe(0);
     expect(out.stdout.toLowerCase()).toContain("already fully retired");
+  });
+});
+
+// ============================================================================
+// AC6 (continued): --dry-run against a malformed settings.json must not
+// claim the rule is "already absent" — it genuinely cannot be determined
+// without a successful parse, and the commit run fails closed on exactly
+// this condition. The preview must say so, not overclaim a clean state.
+// ============================================================================
+describe("AC6 (continued): --dry-run reports the fail-closed condition on malformed settings.json, never 'already absent'", () => {
+  const proj = newProj();
+  seedLiveTool(proj);
+  writeFileSync(settingsPathOf(proj), "not valid json {{{");
+
+  const out = runCli(["revoke", "scripts/agent-tools/mytool", "--dry-run"], { proj });
+
+  it("AC6: dry-run on malformed settings.json reports 'cannot determine', not 'already absent'", () => {
+    expect(out.status).toBe(0);
+    expect(out.stdout.toLowerCase()).toContain("cannot determine");
+    expect(out.stdout.toLowerCase()).toContain("fail closed");
+    expect(out.stdout).not.toContain("already absent");
+  });
+
+  it("AC6: dry-run on malformed settings.json still writes nothing", () => {
+    expect(readFileSync(settingsPathOf(proj), "utf8")).toBe("not valid json {{{");
   });
 });
 

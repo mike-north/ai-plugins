@@ -49,15 +49,23 @@ order from promotion, so the capability is always gone before the artifact:
    The standing grant disappears before anything else changes, so there is
    never a window where an `allow` rule names a path that's about to stop
    being live.
-2. **De-register.** Steering only ever treats a `status: "approved"` entry as
-   registered (per the [steering ↔ toolsmith
+2. **De-register by marking the registry entry `status: "retired"`.**
+   Steering only ever treats a `status: "approved"` entry as registered (per
+   the [steering ↔ toolsmith
    contract](../../../../docs/harness-program/contracts/steering-toolsmith.md)
    §1) — there is no separate registration artifact today, so flipping
-   `status` away from `"approved"` *is* the de-registration.
+   `status` away from `"approved"` to `"retired"` *is* the de-registration:
+   one write, not two.
 3. Clear the BSD immutable flag where available (`chflags nouchg` — its
    absence is the same honest platform degradation as promotion's, not an
    error) and remove the live file.
-4. Mark the registry entry `status: "retired"`.
+
+If there is no registry entry for the path at all (a stale grant or
+lingering file outlived its entry — manual edit, corruption, a reset
+registry), step 2 has nothing to flip; steps 1 and 3 still tear down
+whatever standing grant or live file remains, so an explicit `revoke` never
+leaves a stale capability behind just because the registry doesn't know
+about it.
 
 **Retired entries are kept, not deleted.** Revoke keeps the entry (with its
 `approvedSha256` and `permissionRule` intact) so a tool's history stays
@@ -69,10 +77,14 @@ live placement are what change." Only its live placement and standing grant
 are removed.
 
 Each step is independently idempotent: it inspects the current state and
-only acts if something remains to do. Revoking an already-retired or
-never-registered tool is a clean no-op (exit 0, nothing written), not an
-error — and a revoke killed partway through converges to the fully-retired
-state on re-run rather than leaving a stale grant or a partial write.
+only acts if something remains to do. Revoking an already-retired tool, or a
+path with no registry entry and no orphaned grant/live file, is a clean
+no-op (exit 0, nothing written), not an error — but a never-registered path
+that still has a stale `settings.json` rule or a lingering live file is
+*not* treated as a no-op; those are torn down per steps 1 and 3 above. A
+revoke killed partway through converges to the fully-retired (or
+fully-torn-down) state on re-run rather than leaving a stale grant or a
+partial write.
 
 ### Staging namespace
 

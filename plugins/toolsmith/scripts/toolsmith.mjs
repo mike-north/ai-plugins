@@ -752,45 +752,45 @@ function runRevoke({ rawPath, commit, userScope }) {
     return 1;
   }
   const regPath = scope.regPath;
-  if (!existsSync4(regPath)) {
-    process.stdout.write(`No registry found at ${regPath} \u2014 nothing to revoke (already absent).
-`);
-    return 0;
-  }
-  const registry = readRegistry(regPath);
-  if (!registry) {
-    process.stderr.write(
-      `Error: ${regPath} is not a valid registry (malformed JSON or missing "tools" array). Nothing written.
+  let registry = null;
+  if (existsSync4(regPath)) {
+    registry = readRegistry(regPath);
+    if (!registry) {
+      process.stderr.write(
+        `Error: ${regPath} is not a valid registry (malformed JSON or missing "tools" array). Nothing written.
 `
-    );
-    return 1;
+      );
+      return 1;
+    }
   }
-  const idx = registry.tools.findIndex((t) => t && t.path === path);
-  if (idx === -1) {
-    process.stdout.write(`No registry entry found for "${path}" \u2014 nothing to revoke (already absent).
-`);
-    return 0;
-  }
-  const entry = registry.tools[idx];
+  const idx = registry ? registry.tools.findIndex((t) => t && t.path === path) : -1;
+  const entry = idx !== -1 ? registry.tools[idx] : null;
+  const noRegistryEntryNote = registry ? `No registry entry found for "${path}"` : `No registry found at ${regPath}`;
   const liveAbs = scope.scriptAbs(path);
   const liveExistsNow = existsSync4(liveAbs);
-  const rule = typeof entry.permissionRule === "string" && entry.permissionRule ? entry.permissionRule : scope.ruleFor(path, liveAbs);
+  const rule = typeof entry?.permissionRule === "string" && entry.permissionRule ? entry.permissionRule : scope.ruleFor(path, liveAbs);
   const settingsFile = scope.settingsFile;
-  const alreadyRetired = entry.status === "retired";
+  const alreadyRetired = entry?.status === "retired";
   if (!commit) {
-    const existingSettings = existsSync4(settingsFile) ? readJsonOrNull(settingsFile) : {};
-    const permissions = isPlainObject(existingSettings) ? existingSettings["permissions"] : void 0;
-    const allowList = isPlainObject(permissions) && Array.isArray(permissions["allow"]) ? permissions["allow"] : null;
-    const ruleGranted = allowList !== null && allowList.includes(rule);
+    const settingsPreview = readSettingsStrict(settingsFile);
+    let ruleGranted;
+    if (!settingsPreview.ok) {
+      ruleGranted = null;
+    } else {
+      const permissions = settingsPreview.value["permissions"] && typeof settingsPreview.value["permissions"] === "object" ? settingsPreview.value["permissions"] : {};
+      const allowList = Array.isArray(permissions["allow"]) ? permissions["allow"] : null;
+      ruleGranted = allowList !== null && allowList.includes(rule);
+    }
+    const ruleLine = !settingsPreview.ok ? `Permission rule: cannot determine (settings.json is malformed; revoke would fail closed and write nothing)` : `Permission rule: ${rule}
+Rule currently granted: ${ruleGranted ? "yes (would be removed)" : "no (already absent)"}`;
     process.stdout.write(
       [
-        `Tool: ${entry.name ?? "(unnamed)"}`,
+        entry ? `Tool: ${entry.name ?? "(unnamed)"}` : `${noRegistryEntryNote} \u2014 checking for an orphaned grant/live file.`,
         `Live path: ${scope.displayPath(path, liveAbs)}`,
-        `Current status: ${entry.status ?? "(none)"}`,
-        `Permission rule: ${rule}`,
-        `Rule currently granted: ${ruleGranted ? "yes (would be removed)" : "no (already absent)"}`,
+        `Current status: ${entry?.status ?? "(no registry entry)"}`,
+        ruleLine,
         `Live file present: ${liveExistsNow ? "yes (would be removed)" : "no (already absent)"}`,
-        alreadyRetired && !ruleGranted && !liveExistsNow ? "Already fully retired \u2014 revoke would be a clean no-op." : "DRY RUN \u2014 nothing written; re-run without --dry-run to apply."
+        !settingsPreview.ok ? "DRY RUN \u2014 nothing written; the commit run would fail closed until settings.json is fixed." : (entry ? alreadyRetired : true) && ruleGranted === false && !liveExistsNow ? "Already fully retired \u2014 revoke would be a clean no-op." : "DRY RUN \u2014 nothing written; re-run without --dry-run to apply."
       ].join("\n") + "\n"
     );
     return 0;
@@ -816,8 +816,8 @@ function runRevoke({ rawPath, commit, userScope }) {
     );
   }
   killAfter2("revoke-rule");
-  const statusChanged = !alreadyRetired;
-  if (statusChanged) {
+  const statusChanged = entry !== null && !alreadyRetired;
+  if (statusChanged && registry) {
     const retiredEntry = { ...entry, status: "retired" };
     const toolsRetired = registry.tools.slice();
     toolsRetired[idx] = retiredEntry;
@@ -860,15 +860,18 @@ function runRevoke({ rawPath, commit, userScope }) {
   }
   killAfter2("revoke-live");
   if (!ruleRemoved && !statusChanged && !liveRemoved) {
-    process.stdout.write(`Already retired: ${entry.name ?? path} \u2014 nothing to do.
-`);
+    process.stdout.write(
+      entry ? `Already retired: ${entry.name ?? path} \u2014 nothing to do.
+` : `${noRegistryEntryNote} \u2014 no stale grant or live file either. Nothing to do.
+`
+    );
     return 0;
   }
   process.stdout.write(
     [
-      `Revoked ${entry.name ?? "(unnamed)"} (${scope.displayPath(path, liveAbs)}):`,
+      entry ? `Revoked ${entry.name ?? "(unnamed)"} (${scope.displayPath(path, liveAbs)}):` : `Tore down orphaned capability at ${scope.displayPath(path, liveAbs)} (no registry entry for this path):`,
       ruleRemoved ? `Removed rule from ${settingsFile} permissions.allow.` : `Rule already absent from ${settingsFile} (no-op).`,
-      statusChanged ? `Registry entry marked status: retired.` : `Registry entry already status: retired (no-op).`,
+      entry ? statusChanged ? `Registry entry marked status: retired.` : `Registry entry already status: retired (no-op).` : `No registry entry to update.`,
       liveRemoved ? `Live file removed.` : `Live file already absent (no-op).`
     ].join("\n") + "\n"
   );
