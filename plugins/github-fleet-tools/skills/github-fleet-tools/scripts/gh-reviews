@@ -94,7 +94,7 @@ cmd_status() {
     .data.repository.pullRequest.reviewThreads as $rt
     | ($rt.nodes | map(select(.isResolved == false))) as $u
     | (if ($u | length) == 0 then "  (none — all threads resolved)"
-       else ($u[] | "  • [\(.comments.nodes[0].author.login)] \(.path):\(.line // "?")\(if .isOutdated then " (outdated)" else "" end)  thread_comment_id=\(.comments.nodes[0].databaseId)\n\(.comments.nodes[0].body | gsub("\r"; "") | rtrimstr("\n") | split("\n") | map("      " + .) | join("\n"))")
+       else ($u[] | "  • [\(.comments.nodes[0].author.login)] \(.path):\(.line // "?")\(if .isOutdated then " (outdated)" else "" end)  thread_comment_id=\(.comments.nodes[0].databaseId)\((.comments.nodes[0].body // "") | gsub("\r"; "") | rtrimstr("\n") | if . == "" then "" else "\n" + (split("\n") | map("      " + .) | join("\n")) end)")
        end),
       (if $rt.pageInfo.hasNextPage then "  ⚠ this PR has >100 review threads; only the first 100 were checked — the list above may be incomplete." else empty end)
   '
@@ -200,9 +200,11 @@ cmd_threads() {
       loc=$(printf '%s' "$t" | jq -r '.loc')
       # Full comment text, indented beneath the header line — never truncated, and the
       # body's own line breaks are preserved so code blocks and lists stay readable.
-      body=$(printf '%s' "$t" | jq -r '(.body // "") | rtrimstr("\n") | split("\n") | map("      " + .) | join("\n")')
+      body=$(printf '%s' "$t" | jq -r '(.body // "") | rtrimstr("\n") | if . == "" then "" else (split("\n") | map("      " + .) | join("\n")) end')
       printf 'thread_comment_id=%s  %-10s  replies=%s  %s  %s\n' "$fid" "$res" "$rep" "$auth" "$loc"
-      [[ -n "$body" ]] && printf '%s\n' "$body"
+      # A plain `[[ ... ]] &&` would return 1 on an empty body and, as the last
+      # command in this loop, trip `set -e`.
+      if [[ -n "$body" ]]; then printf '%s\n' "$body"; fi
     done
     for id in "${missing[@]:-}"; do
       [[ -z "$id" ]] && continue

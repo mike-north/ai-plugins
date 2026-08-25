@@ -33,7 +33,7 @@ const BODY = [
   TAIL,
 ].join("\n");
 
-let dir, stub;
+let dir, stub, emptyStub;
 
 beforeAll(() => {
   dir = mkdtempSync(join(tmpdir(), "gh-reviews-test-"));
@@ -68,25 +68,51 @@ beforeAll(() => {
     },
   };
   // Stub `gh`: `repo view` yields owner/repo, `api graphql` yields the payload.
-  stub = join(dir, "gh-stub");
+  stub = makeStub("gh-stub", payload);
+
+  // Same shape, but with an empty comment body — the degenerate case that a
+  // naive indent step renders as a whitespace-only line.
+  const emptyPayload = JSON.parse(JSON.stringify(payload));
+  emptyPayload.data.repository.pullRequest.reviewThreads.nodes[0].comments.nodes[0].body = "";
+  emptyStub = makeStub("gh-stub-empty", emptyPayload);
+});
+
+/** Write an executable `gh` stub answering the calls each subcommand makes. */
+function makeStub(name, payload) {
+  const p = join(dir, name);
   writeFileSync(
-    stub,
+    p,
     [
       "#!/usr/bin/env bash",
       'if [[ "$1" == "repo" ]]; then echo "mike-north/fixture"; exit 0; fi',
-      `cat <<'JSON'\n${JSON.stringify(payload)}\nJSON`,
+      // `status` shells out to `gh pr view` for the CI/merge-state block.
+      'if [[ "$1" == "pr" ]]; then echo "{}"; exit 0; fi',
+      // Real `gh api --jq F` applies F to the response before printing, and
+      // `status` depends on that. Emulate it so the stub exercises the same
+      // filter the tool ships rather than bypassing it.
+      "filter=''",
+      'while [[ $# -gt 0 ]]; do',
+      '  if [[ "$1" == "--jq" ]]; then filter="$2"; shift; fi',
+      "  shift",
+      "done",
+      `payload=$(cat <<'JSON'\n${JSON.stringify(payload)}\nJSON`,
+      ")",
+      'if [[ -n "$filter" ]]; then printf \'%s\' "$payload" | jq -r "$filter"; else printf \'%s\\n\' "$payload"; fi',
       "",
     ].join("\n"),
   );
-  chmodSync(stub, 0o755);
-});
+  chmodSync(p, 0o755);
+  return p;
+}
 
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
-const run = (...args) =>
+const run = (...args) => runWith(stub, ...args);
+
+const runWith = (gh, ...args) =>
   execFileSync("bash", [SCRIPT, ...args], {
     encoding: "utf8",
-    env: { ...process.env, GH: stub },
+    env: { ...process.env, GH: gh },
   });
 
 describe("gh-reviews renders full comment bodies", () => {
@@ -114,5 +140,50 @@ describe("gh-reviews renders full comment bodies", () => {
     // snippet stays a compact scannable label; body is the full-fidelity field.
     expect(threads[0].snippet).not.toContain("\n");
     expect(threads[0].snippet.length).toBeLessThanOrEqual(80);
+  });
+});
+
+describe("gh-reviews status renders full comment bodies", () => {
+  it("emits the whole body, not a 140-char prefix", () => {
+    const out = run("status", "1");
+    expect(out).toContain(TAIL);
+  });
+
+  it("preserves the body's own line breaks", () => {
+    const out = run("status", "1");
+    expect(out).toMatch(/- Backward at EOF.*\n.*next lint pass/);
+  });
+});
+
+describe("gh-reviews resolve --dry-run does not cap the preview text", () => {
+  it("shows the full body on the preview line", () => {
+    const out = run("resolve", "1", "--dry-run");
+    expect(out).toContain("[would resolve]");
+    expect(out).toContain(TAIL);
+  });
+});
+
+describe("gh-reviews handles an empty comment body", () => {
+  // Guards the degenerate case: jq's split("\n") on "" yields [""], which a
+  // naive indent step turns into a spaces-only line under the header.
+  const hasBlankLine = (out) =>
+    out.split("\n").some((l) => l.length > 0 && l.trim() === "");
+
+  it("threads: emits no whitespace-only line", () => {
+    expect(hasBlankLine(runWith(emptyStub, "threads", "1"))).toBe(false);
+  });
+
+  it("status: an empty body contributes no line of its own", () => {
+    const out = runWith(emptyStub, "status", "1");
+    // The threads block should hold exactly the bullet line plus the single
+    // blank that `status` prints as a section separator before "=== END".
+    // The pre-fix output added a second, body-derived blank line here.
+    const block = out
+      .slice(out.indexOf("--- Unresolved review threads ---"))
+      .split("\n")
+      .slice(1);
+    const upToEnd = block.slice(0, block.findIndex((l) => l.startsWith("=== END")));
+    expect(upToEnd.filter((l) => l.trim() === "")).toHaveLength(1);
+    expect(upToEnd[0]).toContain("thread_comment_id=1");
   });
 });
