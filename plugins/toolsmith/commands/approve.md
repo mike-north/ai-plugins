@@ -74,14 +74,24 @@ read-only preview.
 
    **If this project has run `toolsmith approve --setup`** (project scope
    only — see "Setting up the attest-it admission gate" below), the commit
-   run additionally SEALs and VERIFIes an
+   run additionally SEALS and VERIFIES an
    [`attest-it`](../../../docs/toolsmith/attest-it-admission.md) admission
-   before it places anything: it prints the exact
-   `attest-it run --suite toolsmith-admission` command and polls for the
-   resulting seal — never running it for the user, since the presence
-   prompt must happen in the user's own terminal, never an agent-driven one
-   (the agent-never-intermediary rule). Tell the user to run that command in
-   a separate terminal of their own, THEN re-run the promotion command below.
+   before it places anything. What that looks like depends on where the
+   promotion command is actually run:
+   - **In the user's own interactive terminal** (the normal case — the
+     toolsmith hooks deny an agent-run commit invocation entirely, so this is
+     how the commit run reaches this step today): it runs
+     `attest-it run --suite toolsmith-admission` right there, inline — the
+     presence prompt is already in the user's own TTY, so there is nothing
+     further to hand off.
+   - **Non-interactively** (no TTY — a defense-in-depth path, not one an
+     agent can reach today): it never runs the seal command itself. It
+     prints the exact `attest-it run --suite toolsmith-admission` command and
+     polls for a seal produced in a SEPARATE terminal of the user's own,
+     never hosting the presence prompt itself (the agent-never-intermediary
+     rule). If you (the agent) ever see this message, tell the user to run
+     that command in their own terminal, then re-run the promotion command.
+
    A missing, stale (edited-since-sealed), or wrong-signer seal refuses the
    whole promotion with a distinct message; nothing is written.
 

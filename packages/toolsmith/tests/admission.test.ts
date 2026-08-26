@@ -174,6 +174,49 @@ maybeDescribe("attest-it admission gate", () => {
     expect(existsSync(join(proj, "scripts", "agent-tools", "foo.sh"))).toBe(false);
   });
 
+  it("AC1/AC5: an uncommitted edit to the signer PIN file refuses promotion (trust anchor, not just the sealed surface)", () => {
+    const proj = newProj();
+    writeStaged(proj, "foo.sh", DRAFT);
+    writeProjectRegistry(proj, [newDraftTool("foo.sh")]);
+    gitCommitAll(proj);
+    const fixture = writeAdmissionFixture(proj);
+    gitCommitAll(proj, "admission config");
+    sealAdmission(proj, fixture);
+
+    // An agent edits the PIN file in place (e.g. to point at a key it
+    // controls) WITHOUT committing — this must refuse before SEAL/VERIFY
+    // ever runs, not merely happen to be caught by the pin mismatch check.
+    writeFileSync(
+      join(proj, ".attest-it", "toolsmith-admission-signer.json"),
+      JSON.stringify({ slug: "agent-evil", publicKey: "not-a-real-key", pinnedAt: "2024-01-15T10:30:00.000Z" }, null, 2),
+    );
+
+    const r = runCli(["approve", "scripts/agent-tools/foo.sh"], { proj });
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/trust anchor/);
+    expect(existsSync(join(proj, "scripts", "agent-tools", "foo.sh"))).toBe(false);
+  });
+
+  it("AC1/AC5: an uncommitted edit to .attest-it/config.yaml refuses promotion", () => {
+    const proj = newProj();
+    writeStaged(proj, "foo.sh", DRAFT);
+    writeProjectRegistry(proj, [newDraftTool("foo.sh")]);
+    gitCommitAll(proj);
+    const fixture = writeAdmissionFixture(proj);
+    gitCommitAll(proj, "admission config");
+    sealAdmission(proj, fixture);
+
+    // An agent widens authorizedSigners / enrolls its own key in config.yaml
+    // WITHOUT committing.
+    const configPath = join(proj, ".attest-it", "config.yaml");
+    writeFileSync(configPath, readFileSync(configPath, "utf8") + "\n# tampered\n");
+
+    const r = runCli(["approve", "scripts/agent-tools/foo.sh"], { proj });
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/trust anchor/);
+    expect(existsSync(join(proj, "scripts", "agent-tools", "foo.sh"))).toBe(false);
+  });
+
   it("AC6: a missing seal refuses with a distinct message naming the seal command", () => {
     const proj = newProj();
     writeStaged(proj, "foo.sh", DRAFT);

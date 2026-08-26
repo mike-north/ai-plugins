@@ -69,7 +69,7 @@ for (const outfile of outfiles) {
     bundle: true,
     platform: 'node',
     format: 'esm',
-    target: 'node18',
+    target: 'node20',
     // `attest-it` (approve --setup only, a rare human-run one-time command)
     // is dynamically imported rather than inlined: its @attest-it/core
     // dependency ships a `yaml` build with a dynamic `require('process')`

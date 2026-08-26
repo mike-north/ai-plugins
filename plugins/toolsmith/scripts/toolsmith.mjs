@@ -532,8 +532,9 @@ function loadAdmissionState(root) {
   }
   return { ok: true, pin };
 }
+var CLEAN_TREE_PATHSPECS = [".claude/toolsmith", ".attest-it/config.yaml", ".attest-it/toolsmith-admission-signer.json"];
 function checkCleanTree(root) {
-  const result = spawnSync3("git", ["status", "--porcelain", "--", ".claude/toolsmith"], {
+  const result = spawnSync3("git", ["status", "--porcelain", "--", ...CLEAN_TREE_PATHSPECS], {
     cwd: root,
     encoding: "utf8"
   });
@@ -546,7 +547,7 @@ function checkCleanTree(root) {
   if (result.stdout.trim().length > 0) {
     return {
       ok: false,
-      reason: "the sealed surface (.claude/toolsmith/) has uncommitted changes \u2014 attest-it seals committed content in a clean git tree; commit the staged draft and registry entry, then re-seal"
+      reason: "the sealed surface (.claude/toolsmith/) and/or the admission trust anchor (.attest-it/config.yaml, .attest-it/toolsmith-admission-signer.json) has uncommitted changes \u2014 attest-it seals committed content in a clean git tree, and the trust anchor must be just as tamper-evident; commit everything, then re-seal"
     };
   }
   return { ok: true };

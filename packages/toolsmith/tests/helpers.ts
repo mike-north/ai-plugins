@@ -26,6 +26,30 @@ export const PLUGIN_ROOT = join(REPO_ROOT, "plugins", "toolsmith");
  * identically from either build. */
 export const DIST_CLI = join(REPO_ROOT, "packages", "toolsmith", "dist", "toolsmith.mjs");
 
+let distCliBuilt = false;
+
+/**
+ * Build `DIST_CLI` fresh via the package's own `scripts/build.mjs --out`
+ * (single-target, so this never touches the committed plugin copy
+ * `dist-sync.test.ts` guards). `packages/toolsmith/dist/` is gitignored and
+ * NOT produced by the repo-level `pnpm check`/`aipm build` (that only builds
+ * plugin bundles) — CI runs `pnpm test` without ever having run
+ * `pnpm --filter @mike-north/toolsmith build`, so any suite that spawns
+ * `DIST_CLI` (only `approve --setup`, which needs `attest-it` resolvable
+ * from a real node_modules — see DIST_CLI's own doc comment) must build it
+ * itself. Idempotent per test-process run (a `beforeAll` may call this from
+ * more than one file).
+ */
+export function ensureDistCliBuilt(): void {
+  if (distCliBuilt) return;
+  execFileSync(
+    process.execPath,
+    [join(REPO_ROOT, "packages", "toolsmith", "scripts", "build.mjs"), "--out", DIST_CLI],
+    { stdio: "pipe" },
+  );
+  distCliBuilt = true;
+}
+
 /** Deterministic timestamp used across fixtures (never `new Date()`). */
 export const SINCE = "2024-01-15T10:30:00.000Z";
 

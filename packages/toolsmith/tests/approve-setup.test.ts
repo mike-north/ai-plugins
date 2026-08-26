@@ -9,14 +9,33 @@
  */
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { generateEd25519KeyPair, saveLocalConfigSync } from "attest-it";
-import { attestItAvailableInTests, cleanupTmpDirs, gitCommitAll, makeTmpDir, newProj, runCli, runDistCli } from "./helpers.js";
+import {
+  attestItAvailableInTests,
+  cleanupTmpDirs,
+  ensureDistCliBuilt,
+  gitCommitAll,
+  makeTmpDir,
+  newProj,
+  runCli,
+  runDistCli,
+} from "./helpers.js";
 
 afterAll(cleanupTmpDirs);
 
 const HAS_ATTEST_IT = attestItAvailableInTests();
 const maybeDescribe = HAS_ATTEST_IT ? describe : describe.skip;
+
+// CI runs `pnpm test` without ever having run `pnpm --filter @mike-north/toolsmith
+// build` first, so packages/toolsmith/dist/toolsmith.mjs (gitignored, not
+// produced by the repo-level `aipm build`) does not exist yet — build it here
+// so this suite is self-sufficient. See ensureDistCliBuilt's doc comment.
+if (HAS_ATTEST_IT) {
+  beforeAll(() => {
+    ensureDistCliBuilt();
+  });
+}
 
 /** An isolated `ATTEST_IT_HOME` with a single local identity of the given
  * `privateKey.type`, so setup's presence check can be exercised without a

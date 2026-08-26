@@ -169,15 +169,31 @@ export function loadAdmissionState(root: string): AdmissionLoadResult {
   return { ok: true, pin };
 }
 
+/** Relative pathspecs the dirty-tree check covers: the sealed surface AND
+ * the trust anchor (config + signer pin) — deliberately NOT the whole
+ * `.attest-it/` directory, which also holds `attest-it run`'s transient seal
+ * output (seals.yaml/seals.json). That file is normally uncommitted at the
+ * exact moment SEAL runs (you just ran `attest-it run` a moment before
+ * promoting) — including it here would trip a false refusal on every
+ * ordinary promotion. */
+const CLEAN_TREE_PATHSPECS = [".claude/toolsmith", ".attest-it/config.yaml", ".attest-it/toolsmith-admission-signer.json"];
+
 /**
  * Fail-closed working-tree check (canon §Scope split: "attest-it seals
  * committed content in a clean git tree — it is git-shaped by design"; AC5).
  * Runs BEFORE attest-it is invoked at all, so a dirty tree gets a legible
  * toolsmith-authored message rather than depending on attest-it's own
  * (CLI-only, not exposed by the programmatic surface) dirty-tree refusal.
+ *
+ * Covers the trust anchor as well as the sealed surface (security finding on
+ * PR #147): `checkCleanTree` originally only watched `.claude/toolsmith`,
+ * which let an agent edit the signer pin AND `.attest-it/config.yaml`
+ * in-place (both uncommitted, so VERIFY's pin check would see them agreeing
+ * with each other and pass) — an AC1/AC5 bypass. Both files must now be
+ * clean/committed too before SEAL/VERIFY runs at all.
  */
 export function checkCleanTree(root: string): { ok: true } | { ok: false; reason: string } {
-  const result = spawnSync("git", ["status", "--porcelain", "--", ".claude/toolsmith"], {
+  const result = spawnSync("git", ["status", "--porcelain", "--", ...CLEAN_TREE_PATHSPECS], {
     cwd: root,
     encoding: "utf8",
   });
@@ -191,8 +207,10 @@ export function checkCleanTree(root: string): { ok: true } | { ok: false; reason
     return {
       ok: false,
       reason:
-        "the sealed surface (.claude/toolsmith/) has uncommitted changes — attest-it seals committed " +
-        "content in a clean git tree; commit the staged draft and registry entry, then re-seal",
+        "the sealed surface (.claude/toolsmith/) and/or the admission trust anchor " +
+        "(.attest-it/config.yaml, .attest-it/toolsmith-admission-signer.json) has uncommitted " +
+        "changes — attest-it seals committed content in a clean git tree, and the trust anchor must " +
+        "be just as tamper-evident; commit everything, then re-seal",
     };
   }
   return { ok: true };
