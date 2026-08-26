@@ -27,6 +27,14 @@ import { unifiedLineDiff } from "../lib/diff.js";
 import { readRegistry, type Registry, type ToolEntry } from "../lib/registry.js";
 import { resolveScope, type Scope } from "../lib/scope.js";
 import { lintGate, renderLintReport } from "./lint.js";
+import {
+  ADMISSION_SUITE_NAME,
+  checkCleanTree,
+  isAdmissionConfigured,
+  loadAdmissionState,
+  verifyAdmissionSeal,
+} from "../lib/attestation.js";
+import { spawnSync } from "node:child_process";
 
 /**
  * Test-only fault injection: exits immediately after the named apply step,
@@ -34,6 +42,13 @@ import { lintGate, renderLintReport } from "./lint.js";
  * assert the apply is idempotent (staged-live-split.md AC4). Never engages
  * unless TOOLSMITH_APPROVE_KILL_AFTER is set to that exact step name.
  */
+/** Synchronous sleep for the poll loop's between-attempts wait — no event
+ * loop, no subprocess; a shared `SharedArrayBuffer` with `Atomics.wait` on a
+ * value that never changes always times out after exactly `ms`. */
+function sleepSync(ms: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
 function killAfter(step: string): void {
   if (process.env["TOOLSMITH_APPROVE_KILL_AFTER"] === step) {
     process.stderr.write(`[toolsmith-approve test fault injection] killed after step "${step}"\n`);
@@ -256,6 +271,96 @@ export function runApprove({ rawPath, commit, userScope }: ApproveOptions): numb
     return 1;
   }
 
+  // SEAL + VERIFY (docs/toolsmith/attest-it-admission.md §Promotion
+  // integration, steps 3-4) — project scope only (D-018); runs BEFORE any
+  // write. Lazy migration: a project that has never run `approve --setup`
+  // is not opted in, and promotion behaves exactly as it did before this
+  // feature (today's pin-only ceremony) — see docs/toolsmith/
+  // attest-it-admission.md §Migration and rollout.
+  const admissionNotes: string[] = [];
+  if (scope.kind === "project" && isAdmissionConfigured(scope.root)) {
+    const dirty = checkCleanTree(scope.root);
+    if (!dirty.ok) {
+      process.stderr.write(`Error: admission refused — ${dirty.reason}. Nothing written.\n`);
+      return 1;
+    }
+
+    const admission = loadAdmissionState(scope.root);
+    if (!admission.ok) {
+      process.stderr.write(`Error: admission refused — ${admission.reason}. Nothing written.\n`);
+      return 1;
+    }
+
+    // Human-driven vs agent-driven hosting (canon's crux distinction): the
+    // attest-it prompt may ONLY ever run in a human's own TTY. When this
+    // process itself has an interactive terminal, that IS the human's own
+    // terminal (the toolsmith PreToolUse hook already denies the agent-run
+    // commit invocation entirely, so a commit-mode `approve` reaching this
+    // line is, today, always human-driven) — seal inline. Otherwise, this
+    // process facilitates only: it prints the exact seal command and polls
+    // for the seal a human produced in a separate terminal; it never hosts
+    // the prompt (AC3b).
+    const interactive = process.stdin.isTTY === true && process.stdout.isTTY === true;
+    const sealCommand = `attest-it run --suite ${ADMISSION_SUITE_NAME}`;
+    if (interactive && process.env["TOOLSMITH_ATTEST_IT_SKIP_RUN"] !== "1") {
+      process.stdout.write(`\nSealing admission — running \`${sealCommand}\` in this terminal:\n\n`);
+      const sealResult = spawnSync("attest-it", ["run", "--suite", ADMISSION_SUITE_NAME], {
+        cwd: scope.root,
+        stdio: "inherit",
+      });
+      if (sealResult.error || sealResult.status !== 0) {
+        process.stderr.write(
+          `\nError: admission sealing did not complete successfully. Nothing written.\n`,
+        );
+        return 1;
+      }
+    } else {
+      const pollMs = Number(process.env["TOOLSMITH_ATTEST_IT_POLL_MS"] ?? "2000");
+      const pollAttempts = Number(process.env["TOOLSMITH_ATTEST_IT_POLL_ATTEMPTS"] ?? "3");
+      process.stdout.write(
+        [
+          "",
+          "This tool is not the human sealing this admission (no interactive terminal here).",
+          `Run this yourself, in your OWN terminal, then re-run approve:`,
+          "",
+          `  ${sealCommand}`,
+          "",
+          `Polling for the resulting seal (${String(pollAttempts)} attempt(s), ` +
+            `${String(pollMs)}ms apart)...`,
+        ].join("\n") + "\n",
+      );
+      let found = false;
+      let lastReason = "no seal check ran";
+      for (let attempt = 0; attempt < pollAttempts; attempt++) {
+        const check = verifyAdmissionSeal(scope.root, admission.pin);
+        if (check.ok) {
+          found = true;
+          break;
+        }
+        lastReason = check.reason;
+        if (attempt < pollAttempts - 1) {
+          sleepSync(pollMs);
+        }
+      }
+      if (!found) {
+        process.stderr.write(
+          `\nError: no valid admission seal appeared (${lastReason}). Run \`${sealCommand}\` in your ` +
+            `own terminal, then re-run approve. Nothing written.\n`,
+        );
+        return 1;
+      }
+    }
+
+    const verifyResult = verifyAdmissionSeal(scope.root, admission.pin);
+    if (!verifyResult.ok) {
+      process.stderr.write(`Error: admission refused — ${verifyResult.reason}. Nothing written.\n`);
+      return 1;
+    }
+    admissionNotes.push(
+      `Admission sealed and verified (attest-it gate "${ADMISSION_SUITE_NAME}", fingerprint ${verifyResult.fingerprint}).`,
+    );
+  }
+
   // Rollout migration (§Rollout): protect any pre-existing approved live
   // tools in this scope that predate the split. Never aborts this promotion
   // on a per-file failure.
@@ -388,6 +493,7 @@ export function runApprove({ rawPath, commit, userScope }: ApproveOptions): numb
 
   process.stdout.write(
     [
+      ...admissionNotes,
       ...migrationNotes,
       ...(staleRegistryNote ? [staleRegistryNote] : []),
       ...lintNotes,

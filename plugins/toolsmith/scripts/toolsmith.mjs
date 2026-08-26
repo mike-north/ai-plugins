@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // src/commands/approve.ts
-import { chmodSync, existsSync as existsSync3, readFileSync as readFileSync4, statSync, unlinkSync, writeFileSync as writeFileSync2 } from "node:fs";
+import { chmodSync, existsSync as existsSync4, readFileSync as readFileSync5, statSync, unlinkSync, writeFileSync as writeFileSync3 } from "node:fs";
 
 // src/lib/fsutil.ts
 import {
@@ -258,6 +258,7 @@ function resolveScope(userScope) {
       ok: true,
       scope: {
         kind: "project",
+        root,
         normalize: normalizePath,
         normalizeStaged: normalizeStagedProjectPath,
         regPath,
@@ -282,6 +283,7 @@ function resolveScope(userScope) {
     ok: true,
     scope: {
       kind: "user",
+      root: home,
       normalize: normalizeUserPath,
       normalizeStaged: normalizeUserStagedPath,
       regPath: userRegistryPath(home),
@@ -455,7 +457,174 @@ function runLint({ file }) {
   return result.errors.length ? 1 : 0;
 }
 
+// src/lib/attestation.ts
+import { existsSync as existsSync3, mkdirSync as mkdirSync2, readFileSync as readFileSync4, writeFileSync as writeFileSync2 } from "node:fs";
+import { dirname as dirname2, join as join3 } from "node:path";
+import { spawnSync as spawnSync3 } from "node:child_process";
+var ADMISSION_GATE_ID = "toolsmith-admission";
+var ADMISSION_SUITE_NAME = "toolsmith-admission";
+function attestItConfigPath(root) {
+  return join3(root, ".attest-it", "config.yaml");
+}
+function signerPinPath(root) {
+  return join3(root, ".attest-it", "toolsmith-admission-signer.json");
+}
+function readSignerPin(root) {
+  const path = signerPinPath(root);
+  if (!existsSync3(path)) return null;
+  try {
+    const parsed = JSON.parse(readFileSync4(path, "utf8"));
+    if (parsed && typeof parsed === "object" && typeof parsed["slug"] === "string" && typeof parsed["publicKey"] === "string" && typeof parsed["pinnedAt"] === "string") {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+function writeSignerPin(root, pin) {
+  const path = signerPinPath(root);
+  mkdirSync2(dirname2(path), { recursive: true });
+  writeFileSync2(path, JSON.stringify(pin, null, 2) + "\n", "utf8");
+}
+function extractTeamPublicKey(yamlText, slug) {
+  const teamMatch = /^team:\s*$/m.exec(yamlText);
+  if (!teamMatch) return null;
+  const afterTeam = yamlText.slice(teamMatch.index + teamMatch[0].length);
+  const lines = afterTeam.split("\n");
+  let inEntry = false;
+  for (const line of lines) {
+    if (line.length > 0 && /^\S/.test(line)) break;
+    if (new RegExp(`^ {2}${slug}:\\s*$`).test(line)) {
+      inEntry = true;
+      continue;
+    }
+    if (inEntry) {
+      if (/^ {2}\S/.test(line)) break;
+      const m = /^\s*publicKey:\s*(\S+)\s*$/.exec(line);
+      if (m?.[1]) return m[1];
+    }
+  }
+  return null;
+}
+function isAdmissionConfigured(root) {
+  const configPath = attestItConfigPath(root);
+  if (!existsSync3(configPath)) return false;
+  if (!existsSync3(signerPinPath(root))) return false;
+  let text;
+  try {
+    text = readFileSync4(configPath, "utf8");
+  } catch {
+    return false;
+  }
+  return new RegExp(`^gates:\\n(?:.*\\n)*? {2}${ADMISSION_GATE_ID}:\\s*$`, "m").test(text) && new RegExp(`^suites:\\n(?:.*\\n)*? {2}${ADMISSION_SUITE_NAME}:\\s*$`, "m").test(text);
+}
+function loadAdmissionState(root) {
+  if (!isAdmissionConfigured(root)) {
+    return {
+      ok: false,
+      reason: `attest-it admission is not fully configured for this project \u2014 run \`toolsmith approve --setup\``
+    };
+  }
+  const pin = readSignerPin(root);
+  if (!pin) {
+    return { ok: false, reason: `no signer pin recorded at ${signerPinPath(root)} \u2014 run \`toolsmith approve --setup\`` };
+  }
+  return { ok: true, pin };
+}
+function checkCleanTree(root) {
+  const result = spawnSync3("git", ["status", "--porcelain", "--", ".claude/toolsmith"], {
+    cwd: root,
+    encoding: "utf8"
+  });
+  if (result.error) {
+    return { ok: false, reason: `could not check git status: ${result.error.message}` };
+  }
+  if (result.status !== 0) {
+    return { ok: false, reason: `\`git status\` exited ${String(result.status)}: ${result.stderr.trim()}` };
+  }
+  if (result.stdout.trim().length > 0) {
+    return {
+      ok: false,
+      reason: "the sealed surface (.claude/toolsmith/) has uncommitted changes \u2014 attest-it seals committed content in a clean git tree; commit the staged draft and registry entry, then re-seal"
+    };
+  }
+  return { ok: true };
+}
+function verifyAdmissionSeal(root, pin) {
+  let spawned;
+  try {
+    spawned = spawnSync3("attest-it", ["verify", ADMISSION_GATE_ID, "--json"], {
+      cwd: root,
+      encoding: "utf8"
+    });
+  } catch (err) {
+    return { ok: false, reason: `could not run attest-it: ${err.message}` };
+  }
+  if (spawned.error) {
+    const code = spawned.error.code;
+    return {
+      ok: false,
+      reason: code === "ENOENT" ? "attest-it is not installed / not on PATH \u2014 install it (npm install -g attest-it) to use the admission gate" : `could not run attest-it: ${spawned.error.message}`
+    };
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(spawned.stdout);
+  } catch (err) {
+    return {
+      ok: false,
+      reason: `\`attest-it verify --json\` produced unparseable output: ${err.message}. stderr: ${spawned.stderr.trim()}`
+    };
+  }
+  const result = parsed.find((r) => r.gateId === ADMISSION_GATE_ID);
+  if (!result) {
+    return { ok: false, reason: `attest-it verify returned no result for gate "${ADMISSION_GATE_ID}"` };
+  }
+  if (result.state === "MISSING") {
+    return {
+      ok: false,
+      reason: `no admission seal found for gate "${ADMISSION_GATE_ID}" \u2014 a human must run \`attest-it run --suite ${ADMISSION_SUITE_NAME}\` in their own terminal before promotion`
+    };
+  }
+  if (result.state !== "VALID" || !result.seal) {
+    return {
+      ok: false,
+      reason: `admission seal is ${result.state}${result.message ? `: ${result.message}` : ""} (AC2/AC6)`
+    };
+  }
+  const seal = result.seal;
+  if (seal.sealedBy !== pin.slug) {
+    return {
+      ok: false,
+      reason: `admission seal was signed by "${seal.sealedBy}", which does not match the signer pinned at setup ("${pin.slug}") \u2014 promotion refuses rather than trust a working-tree-editable enrollment`
+    };
+  }
+  let configText;
+  try {
+    configText = readFileSync4(attestItConfigPath(root), "utf8");
+  } catch (err) {
+    return { ok: false, reason: `could not re-read attest-it config to verify the pinned signer's key: ${err.message}` };
+  }
+  const currentKey = extractTeamPublicKey(configText, pin.slug);
+  if (currentKey !== pin.publicKey) {
+    return {
+      ok: false,
+      reason: `the "${pin.slug}" team member's public key in .attest-it/config.yaml no longer matches the key pinned at setup \u2014 promotion refuses rather than trust a working-tree-editable key swap`
+    };
+  }
+  return { ok: true, fingerprint: seal.fingerprint, seal };
+}
+var PRESENCE_BACKED_KEY_TYPES = /* @__PURE__ */ new Set(["1password", "yubikey"]);
+function isPresenceBackedKeyType(type) {
+  return PRESENCE_BACKED_KEY_TYPES.has(type);
+}
+
 // src/commands/approve.ts
+import { spawnSync as spawnSync4 } from "node:child_process";
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
 function killAfter(step) {
   if (process.env["TOOLSMITH_APPROVE_KILL_AFTER"] === step) {
     process.stderr.write(`[toolsmith-approve test fault injection] killed after step "${step}"
@@ -465,7 +634,7 @@ function killAfter(step) {
 }
 function maybeCorruptRegistryForTest(regPath) {
   if (process.env["TOOLSMITH_APPROVE_CORRUPT_REGISTRY_STEP6"] === "1") {
-    writeFileSync2(regPath, "not valid json {{{ this simulates corruption", "utf8");
+    writeFileSync3(regPath, "not valid json {{{ this simulates corruption", "utf8");
   }
 }
 function migrateProtection(registry, scope) {
@@ -475,7 +644,7 @@ function migrateProtection(registry, scope) {
     const normalized = scope.normalize(tool.path);
     if (!normalized) continue;
     const abs = scope.scriptAbs(normalized);
-    if (!existsSync3(abs)) continue;
+    if (!existsSync4(abs)) continue;
     let mode;
     try {
       mode = statSync(abs).mode & 511;
@@ -509,7 +678,7 @@ function runApprove({ rawPath, commit, userScope }) {
     return 1;
   }
   const regPath = scope.regPath;
-  if (!existsSync3(regPath)) {
+  if (!existsSync4(regPath)) {
     process.stderr.write(
       `Error: no registry found at ${regPath}. Create a draft entry first \u2014 see skills/toolsmith/references/registry-schema.md. Nothing written.
 `
@@ -547,14 +716,14 @@ function runApprove({ rawPath, commit, userScope }) {
     return 1;
   }
   const stagedAbs = scope.stagedAbs(stagedRelPath);
-  if (!existsSync3(stagedAbs)) {
+  if (!existsSync4(stagedAbs)) {
     process.stderr.write(`Error: staged draft not found at ${stagedAbs}. Nothing written.
 `);
     return 1;
   }
   let stagedBytes;
   try {
-    stagedBytes = readFileSync4(stagedAbs);
+    stagedBytes = readFileSync5(stagedAbs);
   } catch (err) {
     process.stderr.write(`Error: could not read ${stagedAbs}: ${err.message}. Nothing written.
 `);
@@ -572,18 +741,18 @@ function runApprove({ rawPath, commit, userScope }) {
   }
   const lintNotes = lint.warnings.map((w) => `Lint warning: ${w.rule}: ${w.message}`);
   const liveAbs = scope.scriptAbs(path);
-  const isRevision = existsSync3(liveAbs);
+  const isRevision = existsSync4(liveAbs);
   let liveTextBefore = "";
   if (isRevision) {
     try {
-      liveTextBefore = readFileSync4(liveAbs, "utf8");
+      liveTextBefore = readFileSync5(liveAbs, "utf8");
     } catch {
       liveTextBefore = "";
     }
   }
   const rule = scope.ruleFor(path, liveAbs);
   const settingsFile = scope.settingsFile;
-  const settingsExists = existsSync3(settingsFile);
+  const settingsExists = existsSync4(settingsFile);
   const existingSettings = settingsExists ? readRegistrylike(settingsFile) : {};
   const settingsMalformed = settingsExists && existingSettings === null;
   const allowList = existingSettings && Array.isArray(existingSettings.permissions?.allow) ? existingSettings.permissions.allow : null;
@@ -615,6 +784,85 @@ function runApprove({ rawPath, commit, userScope }) {
     process.stderr.write(`Error: ${settingsCheck.reason} Nothing written.
 `);
     return 1;
+  }
+  const admissionNotes = [];
+  if (scope.kind === "project" && isAdmissionConfigured(scope.root)) {
+    const dirty = checkCleanTree(scope.root);
+    if (!dirty.ok) {
+      process.stderr.write(`Error: admission refused \u2014 ${dirty.reason}. Nothing written.
+`);
+      return 1;
+    }
+    const admission = loadAdmissionState(scope.root);
+    if (!admission.ok) {
+      process.stderr.write(`Error: admission refused \u2014 ${admission.reason}. Nothing written.
+`);
+      return 1;
+    }
+    const interactive = process.stdin.isTTY === true && process.stdout.isTTY === true;
+    const sealCommand = `attest-it run --suite ${ADMISSION_SUITE_NAME}`;
+    if (interactive && process.env["TOOLSMITH_ATTEST_IT_SKIP_RUN"] !== "1") {
+      process.stdout.write(`
+Sealing admission \u2014 running \`${sealCommand}\` in this terminal:
+
+`);
+      const sealResult = spawnSync4("attest-it", ["run", "--suite", ADMISSION_SUITE_NAME], {
+        cwd: scope.root,
+        stdio: "inherit"
+      });
+      if (sealResult.error || sealResult.status !== 0) {
+        process.stderr.write(
+          `
+Error: admission sealing did not complete successfully. Nothing written.
+`
+        );
+        return 1;
+      }
+    } else {
+      const pollMs = Number(process.env["TOOLSMITH_ATTEST_IT_POLL_MS"] ?? "2000");
+      const pollAttempts = Number(process.env["TOOLSMITH_ATTEST_IT_POLL_ATTEMPTS"] ?? "3");
+      process.stdout.write(
+        [
+          "",
+          "This tool is not the human sealing this admission (no interactive terminal here).",
+          `Run this yourself, in your OWN terminal, then re-run approve:`,
+          "",
+          `  ${sealCommand}`,
+          "",
+          `Polling for the resulting seal (${String(pollAttempts)} attempt(s), ${String(pollMs)}ms apart)...`
+        ].join("\n") + "\n"
+      );
+      let found = false;
+      let lastReason = "no seal check ran";
+      for (let attempt = 0; attempt < pollAttempts; attempt++) {
+        const check = verifyAdmissionSeal(scope.root, admission.pin);
+        if (check.ok) {
+          found = true;
+          break;
+        }
+        lastReason = check.reason;
+        if (attempt < pollAttempts - 1) {
+          sleepSync(pollMs);
+        }
+      }
+      if (!found) {
+        process.stderr.write(
+          `
+Error: no valid admission seal appeared (${lastReason}). Run \`${sealCommand}\` in your own terminal, then re-run approve. Nothing written.
+`
+        );
+        return 1;
+      }
+    }
+    const verifyResult = verifyAdmissionSeal(scope.root, admission.pin);
+    if (!verifyResult.ok) {
+      process.stderr.write(`Error: admission refused \u2014 ${verifyResult.reason}. Nothing written.
+`);
+      return 1;
+    }
+    admissionNotes.push(
+      `Admission sealed and verified (attest-it gate "${ADMISSION_SUITE_NAME}", fingerprint ${verifyResult.fingerprint}).`
+    );
   }
   const migrationNotes = migrateProtection(registry, scope);
   if (isRevision && chflagsAvailable()) {
@@ -656,7 +904,7 @@ function runApprove({ rawPath, commit, userScope }) {
   killAfter("mode");
   let placedBytes;
   try {
-    placedBytes = readFileSync4(liveAbs);
+    placedBytes = readFileSync5(liveAbs);
   } catch (err) {
     process.stderr.write(
       `Error: promotion placed ${liveAbs} but it could not be re-read to pin the hash: ${err.message}. Live is now in an unpinned state \u2014 re-run approve to converge.
@@ -702,13 +950,14 @@ function runApprove({ rawPath, commit, userScope }) {
   }
   atomicWrite(regPath, toJsonFile({ ...registryAfterRule, tools: finalTools }));
   try {
-    if (existsSync3(stagedAbs)) unlinkSync(stagedAbs);
+    if (existsSync4(stagedAbs)) unlinkSync(stagedAbs);
   } catch (err) {
     process.stderr.write(`Warning: could not remove staged draft ${stagedAbs}: ${err.message}
 `);
   }
   process.stdout.write(
     [
+      ...admissionNotes,
       ...migrationNotes,
       ...staleRegistryNote ? [staleRegistryNote] : [],
       ...lintNotes,
@@ -724,14 +973,196 @@ function runApprove({ rawPath, commit, userScope }) {
 }
 function readRegistrylike(path) {
   try {
-    return JSON.parse(readFileSync4(path, "utf8"));
+    return JSON.parse(readFileSync5(path, "utf8"));
   } catch {
     return null;
   }
 }
 
+// src/commands/approve-setup.ts
+import { existsSync as existsSync5, mkdirSync as mkdirSync3, readFileSync as readFileSync6, writeFileSync as writeFileSync4 } from "node:fs";
+import { dirname as dirname3 } from "node:path";
+function defaultConfigYaml() {
+  return `version: 1
+settings:
+  maxAgeDays: 365
+  publicKeyPath: .attest-it/pubkey.pem
+  attestationsPath: .attest-it/attestations.json
+  sealsPath: .attest-it/seals.yaml
+team: {}
+gates: {}
+suites: {}
+`;
+}
+function yamlSectionHasEntry(yamlText, key, slug) {
+  const keyMatch = new RegExp(`^${key}:.*$`, "m").exec(yamlText);
+  if (!keyMatch) return false;
+  const after = yamlText.slice(keyMatch.index + keyMatch[0].length);
+  for (const line of after.split("\n")) {
+    if (line.length > 0 && /^\S/.test(line)) break;
+    if (new RegExp(`^ {2}${slug}:\\s*$`).test(line)) return true;
+  }
+  return false;
+}
+function upsertYamlBlock(yamlText, key, slug, block) {
+  const lines = yamlText.split("\n");
+  const keyLineIdx = lines.findIndex((l) => l === `${key}:` || l.startsWith(`${key}: {}`));
+  const indented = block.split("\n").map((l) => l.length > 0 ? `    ${l}` : l).join("\n");
+  const entry = `  ${slug}:
+${indented}`;
+  if (keyLineIdx === -1) {
+    return yamlText.trimEnd() + `
+${key}:
+${entry}
+`;
+  }
+  if (lines[keyLineIdx] === `${key}: {}`) {
+    lines[keyLineIdx] = `${key}:`;
+    lines.splice(keyLineIdx + 1, 0, entry);
+    return lines.join("\n");
+  }
+  let end = keyLineIdx + 1;
+  while (end < lines.length && (lines[end] === "" || /^\s/.test(lines[end] ?? ""))) end++;
+  lines.splice(end, 0, entry);
+  return lines.join("\n");
+}
+async function runApproveSetup({ root }) {
+  let attestIt;
+  try {
+    attestIt = await import("attest-it");
+  } catch (err) {
+    process.stderr.write(
+      `Error: could not load the \`attest-it\` library (${err.message}). This installation of toolsmith cannot resolve it from node_modules. Either run \`toolsmith approve --setup\` from an npm-installed @mike-north/toolsmith (which declares attest-it as a dependency), or hand-author .attest-it/config.yaml per docs/toolsmith/attest-it-admission.md and plugins/toolsmith/skills/toolsmith/references/registry-schema.md. Nothing written.
+`
+    );
+    return 1;
+  }
+  const { getActiveIdentity, loadLocalConfigSync } = attestIt;
+  let local;
+  try {
+    local = loadLocalConfigSync();
+  } catch (err) {
+    process.stderr.write(
+      `Error: could not read the local attest-it identity config: ${err.message}. Run \`attest-it identity create\` first. Nothing written.
+`
+    );
+    return 1;
+  }
+  if (!local) {
+    process.stderr.write(
+      `Error: no attest-it identity found. Run \`attest-it identity create\` (as the human who will seal admissions), then re-run \`toolsmith approve --setup\`. Nothing written.
+`
+    );
+    return 1;
+  }
+  const identity = getActiveIdentity(local);
+  if (!identity) {
+    process.stderr.write(
+      `Error: attest-it has no ACTIVE identity (local config's activeIdentity does not resolve). Run \`attest-it identity use <slug>\`. Nothing written.
+`
+    );
+    return 1;
+  }
+  if (!isPresenceBackedKeyType(identity.privateKey.type)) {
+    process.stderr.write(
+      `Error: the active attest-it identity "${identity.name}" is backed by a "${identity.privateKey.type}" key, which does not demand a per-signature human-presence action (hardware touch / biometric) on every use. Admission requires 1Password or YubiKey identities (attest-it's own docs: 1Password re-authenticates via a fresh PTY on every retrieval; YubiKey requires the physical device on every decrypt). Create a presence-backed identity and re-run \`toolsmith approve --setup\`. Nothing written.
+`
+    );
+    return 1;
+  }
+  const existingPin = readSignerPin(root);
+  if (existingPin && (existingPin.slug !== identity.name || existingPin.publicKey !== identity.publicKey)) {
+    process.stderr.write(
+      `Error: this project already has a signer pinned ("${existingPin.slug}"), which differs from the active attest-it identity ("${identity.name}"). Rotating the admission signer is a human decision: remove ${signerPinPath(root)} explicitly first if this rotation is intended. Nothing written.
+`
+    );
+    return 1;
+  }
+  const configPath = attestItConfigPath(root);
+  mkdirSync3(dirname3(configPath), { recursive: true });
+  let yamlText = existsSync5(configPath) ? readFileSync6(configPath, "utf8") : defaultConfigYaml();
+  const notes = [];
+  if (!yamlSectionHasEntry(yamlText, "team", identity.name)) {
+    yamlText = upsertYamlBlock(
+      yamlText,
+      "team",
+      identity.name,
+      [
+        `name: ${identity.name}`,
+        ...identity.email ? [`email: ${identity.email}`] : [],
+        ...identity.github ? [`github: ${identity.github}`] : [],
+        `publicKey: ${identity.publicKey}`,
+        `publicKeyAlgorithm: ed25519`
+      ].join("\n")
+    );
+    notes.push(`Added team member "${identity.name}" to ${configPath}.`);
+  }
+  if (!yamlSectionHasEntry(yamlText, "gates", ADMISSION_GATE_ID)) {
+    yamlText = upsertYamlBlock(
+      yamlText,
+      "gates",
+      ADMISSION_GATE_ID,
+      [
+        `name: Toolsmith admission`,
+        `description: Cryptographic admission gate for staged toolsmith tools (docs/toolsmith/attest-it-admission.md)`,
+        `authorizedSigners:`,
+        `  - ${identity.name}`,
+        `fingerprint:`,
+        `  paths:`,
+        `    - .claude/toolsmith`,
+        `  exclude:`,
+        `    - "**/history.jsonl"`,
+        `    - "**/*.local.*"`,
+        `maxAge: 365d`
+      ].join("\n")
+    );
+    notes.push(`Added gate "${ADMISSION_GATE_ID}" to ${configPath}.`);
+  }
+  if (!yamlSectionHasEntry(yamlText, "suites", ADMISSION_SUITE_NAME)) {
+    yamlText = upsertYamlBlock(
+      yamlText,
+      "suites",
+      ADMISSION_SUITE_NAME,
+      [
+        `gate: ${ADMISSION_GATE_ID}`,
+        `description: Re-lints every staged draft with the same proposal gate \`toolsmith approve\` enforces`,
+        `command: for f in .claude/toolsmith/staging/*; do [ -f "$f" ] && toolsmith lint "$f" || true; done`,
+        `interactive: true`
+      ].join("\n")
+    );
+    notes.push(`Added suite "${ADMISSION_SUITE_NAME}" to ${configPath}.`);
+  }
+  writeFileSync4(configPath, yamlText.endsWith("\n") ? yamlText : yamlText + "\n", "utf8");
+  if (!existingPin) {
+    writeSignerPin(root, {
+      slug: identity.name,
+      publicKey: identity.publicKey,
+      pinnedAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    notes.push(`Pinned signer "${identity.name}" at ${signerPinPath(root)}.`);
+  }
+  if (notes.length === 0) {
+    process.stdout.write(
+      `Admission already configured for signer "${identity.name}" \u2014 nothing to do (idempotent).
+`
+    );
+    return 0;
+  }
+  process.stdout.write(
+    [
+      ...notes,
+      "",
+      "Admission is now configured for this project. Every future `toolsmith approve` run for a",
+      "project-scope tool will require a valid attest-it seal from the pinned signer before",
+      "promotion \u2014 commit the staged draft and registry entry, then run",
+      `\`attest-it run --suite ${ADMISSION_SUITE_NAME}\` yourself (in your own terminal) before approving.`
+    ].join("\n") + "\n"
+  );
+  return 0;
+}
+
 // src/commands/revoke.ts
-import { existsSync as existsSync4, unlinkSync as unlinkSync2 } from "node:fs";
+import { existsSync as existsSync6, unlinkSync as unlinkSync2 } from "node:fs";
 function killAfter2(step) {
   if (process.env["TOOLSMITH_REVOKE_KILL_AFTER"] === step) {
     process.stderr.write(`[toolsmith-revoke test fault injection] killed after step "${step}"
@@ -753,7 +1184,7 @@ function runRevoke({ rawPath, commit, userScope }) {
   }
   const regPath = scope.regPath;
   let registry = null;
-  if (existsSync4(regPath)) {
+  if (existsSync6(regPath)) {
     registry = readRegistry(regPath);
     if (!registry) {
       process.stderr.write(
@@ -767,7 +1198,7 @@ function runRevoke({ rawPath, commit, userScope }) {
   const entry = idx !== -1 ? registry.tools[idx] : null;
   const noRegistryEntryNote = registry ? `No registry entry found for "${path}"` : `No registry found at ${regPath}`;
   const liveAbs = scope.scriptAbs(path);
-  const liveExistsNow = existsSync4(liveAbs);
+  const liveExistsNow = existsSync6(liveAbs);
   const rule = typeof entry?.permissionRule === "string" && entry.permissionRule ? entry.permissionRule : scope.ruleFor(path, liveAbs);
   const settingsFile = scope.settingsFile;
   const alreadyRetired = entry?.status === "retired";
@@ -879,7 +1310,7 @@ Rule currently granted: ${ruleGranted ? "yes (would be removed)" : "no (already 
 }
 
 // src/commands/verify.ts
-import { existsSync as existsSync5 } from "node:fs";
+import { existsSync as existsSync7 } from "node:fs";
 function verifyTool(tool, scope) {
   const name = tool?.name ?? "(unnamed)";
   const rawToolPath = tool?.path ?? "(no path)";
@@ -894,7 +1325,7 @@ function verifyTool(tool, scope) {
     return { status: "MISSING", name, path: rawToolPath };
   }
   const abs = scope.scriptAbs(path);
-  if (!existsSync5(abs)) {
+  if (!existsSync7(abs)) {
     return { status: "MISSING", name, path };
   }
   let sha;
@@ -920,7 +1351,7 @@ function runVerify({ rawPath, userScope }) {
   }
   const scope = resolution.scope;
   const regPath = scope.regPath;
-  if (!existsSync5(regPath)) {
+  if (!existsSync7(regPath)) {
     process.stderr.write(`Error: no registry found at ${regPath}.
 `);
     return 1;
@@ -957,10 +1388,10 @@ function runVerify({ rawPath, userScope }) {
 }
 
 // src/commands/list.ts
-import { existsSync as existsSync6 } from "node:fs";
+import { existsSync as existsSync8 } from "node:fs";
 function buildScopeReport(label, scope) {
   const regPath = scope.regPath;
-  if (!existsSync6(regPath)) {
+  if (!existsSync8(regPath)) {
     return { label, regPath, parseError: false, absent: true, tools: [], drafts: [] };
   }
   const registry = readRegistry(regPath);
@@ -978,7 +1409,7 @@ function buildScopeReport(label, scope) {
     const stagedRel = scope.normalizeStaged(staged.path);
     const stagedAbs = stagedRel ? scope.stagedAbs(stagedRel) : null;
     let state;
-    if (!stagedAbs || !existsSync6(stagedAbs)) {
+    if (!stagedAbs || !existsSync8(stagedAbs)) {
       state = "staged-missing";
     } else if (entry.status !== "approved") {
       state = "new";
@@ -1107,12 +1538,12 @@ function runList() {
 }
 
 // src/commands/analyze.ts
-import { existsSync as existsSync7, readFileSync as readFileSync5 } from "node:fs";
-import { join as join4 } from "node:path";
+import { existsSync as existsSync9, readFileSync as readFileSync7 } from "node:fs";
+import { join as join5 } from "node:path";
 
 // src/lib/watchlist.ts
 import { realpathSync as realpathSync2 } from "node:fs";
-import { dirname as dirname2, join as join3 } from "node:path";
+import { dirname as dirname4, join as join4 } from "node:path";
 function bundledDefaults() {
   try {
     return true ? JSON.parse(`{
@@ -1160,13 +1591,13 @@ function bundledDefaults() {
 function defaultWatchlistPath() {
   const pluginRoot = process.env["CLAUDE_PLUGIN_ROOT"];
   const rel = ["skills", "toolsmith", "references", "watchlist-defaults.json"];
-  if (pluginRoot) return join3(pluginRoot, ...rel);
+  if (pluginRoot) return join4(pluginRoot, ...rel);
   const argv1 = process.argv[1];
   if (!argv1) return null;
   try {
-    return join3(dirname2(realpathSync2(argv1)), "..", ...rel);
+    return join4(dirname4(realpathSync2(argv1)), "..", ...rel);
   } catch {
-    return join3(dirname2(argv1), "..", ...rel);
+    return join4(dirname4(argv1), "..", ...rel);
   }
 }
 function applyWatchlistLayer(patterns, config) {
@@ -1230,7 +1661,7 @@ function normalizeCommand(command) {
 function parseHistory(historyPath) {
   let raw;
   try {
-    raw = readFileSync5(historyPath, "utf8");
+    raw = readFileSync7(historyPath, "utf8");
   } catch {
     return [];
   }
@@ -1274,8 +1705,8 @@ function approvedTools() {
 var TOP_CLUSTERS = 20;
 function runAnalyze() {
   const root = projectRoot();
-  const historyPath = join4(root, ".claude", "toolsmith", "history.jsonl");
-  if (!existsSync7(historyPath)) {
+  const historyPath = join5(root, ".claude", "toolsmith", "history.jsonl");
+  if (!existsSync9(historyPath)) {
     process.stdout.write(
       `# Toolsmith usage analysis
 
@@ -1296,8 +1727,8 @@ History log at \`${historyPath}\` is empty or unparseable \u2014 not enough sign
   }
   const home = resolveHome();
   const watchlist = effectiveWatchlistPatterns(
-    home ? join4(home, ".claude", "toolsmith", "config.json") : null,
-    join4(root, ".claude", "toolsmith", "config.json")
+    home ? join5(home, ".claude", "toolsmith", "config.json") : null,
+    join5(root, ".claude", "toolsmith", "config.json")
   ).map((p) => toRegExp(p, "m")).filter((r) => r !== null);
   const tools = approvedTools();
   const clusters = /* @__PURE__ */ new Map();
@@ -1408,6 +1839,17 @@ Usage:
   toolsmith approve <path> --dry-run      Preview the promotion \u2014 read the review surface; no writes
   toolsmith approve <name-or-path> --user [--dry-run]
                                           Same, for a user-scope (global) tool
+  toolsmith approve --setup               One-time: scaffold the attest-it admission gate
+                                          (project scope only \u2014 see below)
+
+Admission gate (project scope, docs/toolsmith/attest-it-admission.md): once
+\`approve --setup\` has run for this project, every promotion additionally
+requires a valid attest-it seal \u2014 a cryptographic, presence-backed human
+signature over the staged draft AND its registry entry (covers/grants/
+permissionRule). Seal it yourself, in your own terminal, with
+\`attest-it run --suite toolsmith-admission\` before re-running approve.
+Projects that have never run --setup are unaffected (today's pin-only
+ceremony, unchanged). User scope does not have this gate (D-018).
 
 What to do:
   1. Run with --dry-run and READ the review surface \u2014 for a revision it is a
@@ -1539,6 +1981,20 @@ function main() {
       if (wantsHelp) {
         process.stdout.write(APPROVE_HELP);
         process.exit(0);
+      }
+      if (rest.includes("--setup")) {
+        if (rest.includes("--user")) {
+          process.stderr.write(
+            "Error: --setup is project-scope only (D-018); there is no --user form.\n\n" + APPROVE_HELP
+          );
+          process.exit(1);
+        }
+        runApproveSetup({ root: projectRoot() }).then((code) => process.exit(code)).catch((err) => {
+          process.stderr.write(`Error: ${err.message}
+`);
+          process.exit(1);
+        });
+        return;
       }
       const userScope = rest.includes("--user");
       const dryRun = rest.includes("--dry-run");

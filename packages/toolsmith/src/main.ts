@@ -12,11 +12,13 @@
  * Source of truth: packages/toolsmith/src/.
  */
 import { runApprove } from "./commands/approve.js";
+import { runApproveSetup } from "./commands/approve-setup.js";
 import { runRevoke } from "./commands/revoke.js";
 import { runVerify } from "./commands/verify.js";
 import { runList } from "./commands/list.js";
 import { runAnalyze } from "./commands/analyze.js";
 import { runLint } from "./commands/lint.js";
+import { projectRoot } from "./lib/scope.js";
 
 /** Injected at build time from the plugin manifest (never hand-typed — see
  * scripts/build-toolsmith-cli.mjs and ~/.claude/rules/no-hardcoded-versions.md). */
@@ -55,6 +57,17 @@ Usage:
   toolsmith approve <path> --dry-run      Preview the promotion — read the review surface; no writes
   toolsmith approve <name-or-path> --user [--dry-run]
                                           Same, for a user-scope (global) tool
+  toolsmith approve --setup               One-time: scaffold the attest-it admission gate
+                                          (project scope only — see below)
+
+Admission gate (project scope, docs/toolsmith/attest-it-admission.md): once
+\`approve --setup\` has run for this project, every promotion additionally
+requires a valid attest-it seal — a cryptographic, presence-backed human
+signature over the staged draft AND its registry entry (covers/grants/
+permissionRule). Seal it yourself, in your own terminal, with
+\`attest-it run --suite toolsmith-admission\` before re-running approve.
+Projects that have never run --setup are unaffected (today's pin-only
+ceremony, unchanged). User scope does not have this gate (D-018).
 
 What to do:
   1. Run with --dry-run and READ the review surface — for a revision it is a
@@ -195,6 +208,21 @@ function main(): void {
       if (wantsHelp) {
         process.stdout.write(APPROVE_HELP);
         process.exit(0);
+      }
+      if (rest.includes("--setup")) {
+        if (rest.includes("--user")) {
+          process.stderr.write(
+            "Error: --setup is project-scope only (D-018); there is no --user form.\n\n" + APPROVE_HELP,
+          );
+          process.exit(1);
+        }
+        runApproveSetup({ root: projectRoot() })
+          .then((code) => process.exit(code))
+          .catch((err: unknown) => {
+            process.stderr.write(`Error: ${(err as Error).message}\n`);
+            process.exit(1);
+          });
+        return;
       }
       const userScope = rest.includes("--user");
       const dryRun = rest.includes("--dry-run");
