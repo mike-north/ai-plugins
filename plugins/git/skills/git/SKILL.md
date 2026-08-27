@@ -71,10 +71,9 @@ gh stack unstack [<stack-number>] [--local]   # remove a stack (locally + on Git
 gh stack link <branch-or-pr>...   # link existing branches/PRs into a stack without local tracking
 ```
 
-**SSH throttling:** corporate networks sometimes throttle or block SSH to github.com, which
-affects `gh stack push`/`submit` too since they push over the configured remote. Stay on
-conventional SSH (no need to switch to an HTTPS+token remote). If pushes stall, reuse a single
-SSH connection instead of opening one per branch — add to `~/.ssh/config`:
+**SSH throttling:** corporate networks sometimes throttle SSH to github.com, which affects
+`gh stack push`/`submit` too since they push over the configured remote. If pushes stall, reuse
+a single SSH connection instead of opening one per branch — add to `~/.ssh/config`:
 ```
 Host github.com
   ControlMaster auto
@@ -83,6 +82,14 @@ Host github.com
 ```
 (create `~/.ssh/sockets` first). This multiplexes the pushes for all branches in the stack over
 one connection, which avoids the per-connection throttling that repeated SSH handshakes trigger.
+
+**SSH blocked outright:** if the network blocks SSH to github.com entirely (multiplexing won't
+help with that), switch the remote to HTTPS and let `gh` supply credentials via its git
+credential helper — no token needs to be written into the remote URL:
+```bash
+gh auth setup-git             # registers gh's credential helper for git
+git remote set-url origin https://github.com/<owner>/<repo>.git
+```
 
 ### `gst` (fallback for non-github.com hosts)
 
