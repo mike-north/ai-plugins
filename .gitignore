@@ -158,5 +158,8 @@ plugins/*/hooks/hooks.json
 scratch/
 .DS_Store
 
+# Git worktrees
+.worktrees/
+
 # Claude Code local configuration (auto-added)
 .claude/*.local.*

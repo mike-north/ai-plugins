@@ -2,18 +2,19 @@
 name: git
 description: >-
   Deterministic local-git utilities and stacked-branch management for agents: exact diff
-  statistics (meaningful vs raw line counts, implementation vs test split) and a stacked-PR
-  manager (gst) for chains of dependent branches. Use when asked about diff size, line
-  counts, PR/change metrics, or about creating, listing, restacking, submitting, or
-  navigating a branch stack. Always run the scripts for exact results — never estimate.
+  statistics (meaningful vs raw line counts, implementation vs test split) and stacked-PR
+  management (gh stack on github.com, gst as a fallback elsewhere) for chains of dependent
+  branches. Use when asked about diff size, line counts, PR/change metrics, or about creating,
+  listing, restacking, submitting, or navigating a branch stack. Always run the scripts for
+  exact results — never estimate.
 ---
 
 # Git utilities
 
 Deterministic scripts for local git work. **Never estimate or approximate git statistics —
-always run the appropriate script.** `diff-stats.sh` is purely local (no GitHub needed); `gst`
-is also local for branch/stack management, but its PR-facing operations (`gst submit`, and the
-PR-status column in `gst list`) call the `gh` CLI and require an authenticated GitHub CLI.
+always run the appropriate script.** `diff-stats.sh` is purely local (no GitHub needed).
+Stacked-PR management uses `gh stack` on github.com, or the local `gst` script as a fallback
+elsewhere — see below.
 
 ## Setup (invocation)
 
@@ -37,11 +38,64 @@ files per `.gitattributes`), and an **implementation vs test** breakdown (test =
 "test"). When reporting PR size, always cite the meaningful total and the impl/test split — a
 1000-line PR that's 600 lines of tests is very different from one with none.
 
-## Stacked PR management — `gst`
+## Stacked PR management
 
-A manager for chains of dependent branches (stacks). Metadata is stored as
-`git config branch.<name>.stack-parent` in the repo; trunk auto-detects `main` > `master` >
-`origin/HEAD`.
+A stack is a chain of dependent branches. Which tool to use depends on the remote host —
+check with `git remote get-url origin`:
+
+- **`github.com`** → use the native `gh stack` command (below). It manages PRs directly on
+  GitHub (creates the stack object, handles atomic stack merges, etc.) — prefer it over `gst`
+  on this host.
+- **Any other host** (e.g. `git.corp.stripe.com`) → `gh stack` won't work against it. Fall back
+  to `gst`. The org running that host may also provide its own stack-aware CLI — check before
+  defaulting to `gst`.
+
+### `gh stack` (github.com)
+
+Native GitHub CLI stack support (`gh stack --help`) — no local script needed, it's part of `gh`.
+
+```bash
+gh stack init <branch>...     # start a new stack (adopts existing branches, creates missing ones)
+gh stack add <branch>         # add a branch on top of the stack (-Am "msg" to commit staged changes)
+gh stack view [--short|--json]   # view the stack
+gh stack rebase [--continue|--abort|--upstack|--downstack]   # cascade rebase after upstream changes
+gh stack push                 # push branches only
+gh stack submit [--auto] [--open]   # push + create/update PRs
+gh stack sync [--prune]       # fetch, rebase, push, and sync PR state
+gh stack modify                # restructure: drop/fold/insert/reorder/rename branches
+gh stack up [n] / gh stack down [n]   # navigate the stack
+gh stack top / gh stack bottom / gh stack trunk   # jump to top/bottom/trunk
+gh stack checkout [<id>]      # check out by stack #, PR #, PR URL, or branch
+gh stack merge [--yes] [--squash|--merge|--rebase]   # atomic all-or-nothing stack merge
+gh stack unstack [<stack-number>] [--local]   # remove a stack (locally + on GitHub)
+gh stack link <branch-or-pr>...   # link existing branches/PRs into a stack without local tracking
+```
+
+**SSH throttling:** corporate networks sometimes throttle SSH to github.com, which affects
+`gh stack push`/`submit` too since they push over the configured remote. If pushes stall, reuse
+a single SSH connection instead of opening one per branch — add to `~/.ssh/config`:
+```
+Host github.com
+  ControlMaster auto
+  ControlPath ~/.ssh/sockets/%r@%h-%p
+  ControlPersist 10m
+```
+(create `~/.ssh/sockets` first). This multiplexes the pushes for all branches in the stack over
+one connection, which avoids the per-connection throttling that repeated SSH handshakes trigger.
+
+**SSH blocked outright:** if the network blocks SSH to github.com entirely (multiplexing won't
+help with that), switch the remote to HTTPS and let `gh` supply credentials via its git
+credential helper — no token needs to be written into the remote URL:
+```bash
+gh auth setup-git             # registers gh's credential helper for git
+git remote set-url origin https://github.com/<owner>/<repo>.git
+```
+
+### `gst` (fallback for non-github.com hosts)
+
+Metadata is stored as `git config branch.<name>.stack-parent` in the repo; trunk auto-detects
+`main` > `master` > `origin/HEAD`. Its PR-facing operations (`gst submit`, and the PR-status
+column in `gst list`) call the `gh` CLI and require an authenticated GitHub CLI.
 
 ```bash
 gst create <name>     # create a branch as a child of the current branch
@@ -59,19 +113,14 @@ gst orphan <branch>   # remove stack metadata from <branch>
 between branches to avoid SSH throttling (min 3s; `--no-delay` to disable; failed pushes retry
 once after 15s).
 
-> **Reliable pushes to github.com:** SSH is sometimes throttled or blocked on restrictive
-> networks. If `gst submit`/`git push` stalls or fails signing, add an HTTPS remote backed by a
-> `gh` token and push over that instead — HTTPS + the `gh` credential helper avoids the SSH
-> path entirely.
-
 ## Worktree discipline for stacks
 
-Worktrees give each stack branch its own checkout; use them alongside `gst` (gst manages
-metadata + PRs, worktrees manage the file layout).
+Worktrees give each stack branch its own checkout; use them alongside `gh stack`/`gst` (the
+stack tool manages metadata + PRs, worktrees manage the file layout).
 
 1. **Always branch from the tip of the previous branch** — each worktree forks from where the
-   previous branch finished, not from `main`. `gst create <child>` then
-   `git worktree add .worktrees/<child> <child>`.
+   previous branch finished, not from `main`. `gh stack add <child>` (or `gst create <child>`)
+   then `git worktree add .worktrees/<child> <child>`.
 2. **Never merge between stack branches.** Each branch is a linear extension of its parent; if
    C needs A's work, branch C from A's tip (or restack onto A) rather than merging.
 3. **Parallel branches sharing a parent** both fork from the parent's tip; linearize by rebasing
