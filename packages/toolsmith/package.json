@@ -16,6 +16,9 @@
     "prepack": "node scripts/build.mjs",
     "test": "vitest run --root ../.."
   },
+  "dependencies": {
+    "attest-it": "^0.10.1"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mike-north/ai-plugins.git",
@@ -25,7 +28,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

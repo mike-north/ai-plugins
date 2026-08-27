@@ -133,6 +133,10 @@ export function userSettingsPath(home: string): string {
  * scope run through one implementation. */
 export interface Scope {
   kind: "project" | "user";
+  /** Absolute root the scope resolves against — the project root for
+   * "project" scope, the home directory for "user" scope. Used by the
+   * attest-it admission gate (project scope only, D-018). */
+  root: string;
   normalize: (rawPath: unknown) => string | null;
   normalizeStaged: (rawPath: unknown) => string | null;
   regPath: string;
@@ -171,6 +175,7 @@ export function resolveScope(userScope: boolean): ScopeResolution {
       ok: true,
       scope: {
         kind: "project",
+        root,
         normalize: normalizePath,
         normalizeStaged: normalizeStagedProjectPath,
         regPath,
@@ -196,6 +201,7 @@ export function resolveScope(userScope: boolean): ScopeResolution {
     ok: true,
     scope: {
       kind: "user",
+      root: home,
       normalize: normalizeUserPath,
       normalizeStaged: normalizeUserStagedPath,
       regPath: userRegistryPath(home),

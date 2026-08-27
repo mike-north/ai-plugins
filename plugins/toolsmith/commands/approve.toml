@@ -61,6 +61,28 @@ read-only preview.
    inert, and the previous live version (if any) keeps serving every
    invocation untouched.
 
+   If this project has run `toolsmith approve --setup` (project scope only —
+   see "Setting up the attest-it admission gate" below), the commit run
+   additionally SEALS and VERIFIES an attest-it admission
+   (docs/toolsmith/attest-it-admission.md) before it places anything. What
+   that looks like depends on where the promotion command is actually run:
+   - In the user's own interactive terminal (the normal case — the toolsmith
+     hooks deny an agent-run commit invocation entirely, so this is how the
+     commit run reaches this step today): it runs
+     `attest-it run --suite toolsmith-admission` right there, inline — the
+     presence prompt is already in the user's own TTY, so there is nothing
+     further to hand off.
+   - Non-interactively (no TTY — a defense-in-depth path, not one an agent
+     can reach today): it never runs the seal command itself. It prints the
+     exact `attest-it run --suite toolsmith-admission` command and polls for
+     a seal produced in a SEPARATE terminal of the user's own, never hosting
+     the presence prompt itself (the agent-never-intermediary rule). If you
+     (the agent) ever see this message, tell the user to run that command in
+     their own terminal, then re-run the promotion command.
+
+   A missing, stale (edited-since-sealed), or wrong-signer seal refuses the
+   whole promotion with a distinct message; nothing is written.
+
 5. Verify and report. Once the user says they've run it, confirm the promotion
    landed with the read-only check:
 
@@ -121,4 +143,27 @@ turn.
 5. Report what was removed (rule / registry status / live file), or that it
    was already fully retired. Confirm with toolsmith verify (add --user for
    user scope) that the tool now reports retired.
+
+## Setting up the attest-it admission gate (project scope, one-time)
+
+Per docs/toolsmith/attest-it-admission.md (issue #76) and D-018
+(docs/harness-program/DECISIONS.md), a project may opt into requiring a
+cryptographic, presence-backed human seal before every promotion. This is
+entirely optional and additive — a project that skips it keeps today's
+pin-only ceremony forever.
+
+If the user asks to set this up: they must already have an attest-it identity
+(attest-it identity create) backed by 1Password or a YubiKey — never run
+attest-it identity create or the setup command yourself; both require the
+user's own presence action. Once they have an identity, run the one-time
+scaffold only after the user confirms they want it:
+
+   "${PLUGIN_ROOT}/scripts/toolsmith.mjs" approve --setup
+
+This is idempotent and safe to re-run. It refuses (AC3a) if the active
+identity's key isn't presence-backed, and refuses to silently re-pin to a
+different identity — rotating the signer is a human decision (remove
+.attest-it/toolsmith-admission-signer.json explicitly first). Like the commit
+run, this is a human act — the toolsmith hooks deny agent-run invocations of
+it too; you only ever explain what it does and let the user run it.
 """

@@ -16,7 +16,7 @@ project tool **shadows** a same-named user tool.
 ## The staged/live split
 
 Every tool's on-disk bytes exist in one of three states — see
-[`docs/toolsmith/staged-live-split.md`](../../../../docs/toolsmith/staged-live-split.md)
+[`docs/toolsmith/staged-live-split.md`](../../../../../docs/toolsmith/staged-live-split.md)
 for the full design (write-denial mechanism and its honest limits, the
 promotion apply manifest, rollout):
 
@@ -52,7 +52,7 @@ order from promotion, so the capability is always gone before the artifact:
 2. **De-register by marking the registry entry `status: "retired"`.**
    Steering only ever treats a `status: "approved"` entry as registered (per
    the [steering ↔ toolsmith
-   contract](../../../../docs/harness-program/contracts/steering-toolsmith.md)
+   contract](../../../../../docs/harness-program/contracts/steering-toolsmith.md)
    §1) — there is no separate registration artifact today, so flipping
    `status` away from `"approved"` to `"retired"` *is* the de-registration:
    one write, not two.
@@ -70,7 +70,7 @@ about it.
 **Retired entries are kept, not deleted.** Revoke keeps the entry (with its
 `approvedSha256` and `permissionRule` intact) so a tool's history stays
 auditable — matching
-[`docs/toolsmith/attest-it-admission.md`](../../../../docs/toolsmith/attest-it-admission.md)
+[`docs/toolsmith/attest-it-admission.md`](../../../../../docs/toolsmith/attest-it-admission.md)
 §"Promotion integration": "Revocation stays human-gated through the same
 ceremony; a revoked tool's seal is not deleted... the registry state and
 live placement are what change." Only its live placement and standing grant
@@ -168,6 +168,31 @@ shipped defaults' convention — the regex `gh(_\w+)?\s+api\b` rather than
 `gh\s+api\b` — for any command family with known wrapper binaries. Note that
 `covers` values live in JSON, where every regex backslash must be doubled:
 the entry is written `"gh(_\\w+)?\\s+api\\b"`.
+
+## The attest-it admission gate (project scope only)
+
+Per [`docs/toolsmith/attest-it-admission.md`](../../../../../docs/toolsmith/attest-it-admission.md)
+(issue #76) and [D-018](../../../../../docs/harness-program/DECISIONS.md): once a project has run
+`toolsmith approve --setup`, every project-scope promotion additionally requires a valid,
+presence-backed [`attest-it`](https://www.npmjs.com/package/attest-it) seal before the apply
+manifest runs — a cryptographic human signature over the staged draft's bytes AND its registry
+entry's `covers`/grants/`permissionRule` (the same content this schema describes above). This is
+entirely additive: **no new `registry.json` field exists for it.** The seal is attest-it's own
+artifact, not toolsmith's — it lives at `.attest-it/seals.yaml`, bound by content fingerprint over
+the whole `.claude/toolsmith/` tree (registry.json + the staging namespace), so any edit to a
+staged script or its registration data voids the seal without toolsmith needing to track a
+per-entry hash of its own. Two files toolsmith DOES own, both under `.attest-it/` (deliberately
+outside the sealed `.claude/toolsmith/` surface):
+
+- `.attest-it/config.yaml` — the gate (`toolsmith-admission`) and suite `approve --setup`
+  scaffolds; attest-it's own config format, documented on the attest-it project.
+- `.attest-it/toolsmith-admission-signer.json` — toolsmith's own signer-fingerprint pin
+  (`{slug, publicKey, pinnedAt}`), the interim self-enrollment guard while the published
+  attest-it CLI has no `verify --base` (attest-it#151; see the design doc's §Trust boundaries).
+
+A project that has never run `approve --setup` is entirely unaffected — promotion behaves exactly
+as documented above (today's pin-only ceremony). User scope does not have this gate at all (D-018;
+`~/.claude/toolsmith/` isn't a git repo, and attest-it seals committed content in a clean tree).
 
 ## Project vs. user scope — the shared contract
 

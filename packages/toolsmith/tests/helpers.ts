@@ -12,10 +12,43 @@ import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:f
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { computeFingerprintSync, createSeal, generateEd25519KeyPair, writeSealsSync } from "attest-it";
 
 export const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const CLI = join(REPO_ROOT, "plugins", "toolsmith", "scripts", "toolsmith.mjs");
 export const PLUGIN_ROOT = join(REPO_ROOT, "plugins", "toolsmith");
+/** The npm-package build (packages/toolsmith/dist/), which — unlike the
+ * committed, dependency-free plugin copy at `CLI` above — sits under a real
+ * node_modules and so CAN resolve `attest-it`'s dynamically-imported
+ * programmatic API. Only `approve --setup` needs this distinction (see
+ * scripts/build.mjs's `external` comment and commands/approve-setup.ts); the
+ * SEAL/VERIFY hot path in commands/attestation.ts is CLI-only and works
+ * identically from either build. */
+export const DIST_CLI = join(REPO_ROOT, "packages", "toolsmith", "dist", "toolsmith.mjs");
+
+let distCliBuilt = false;
+
+/**
+ * Build `DIST_CLI` fresh via the package's own `scripts/build.mjs --out`
+ * (single-target, so this never touches the committed plugin copy
+ * `dist-sync.test.ts` guards). `packages/toolsmith/dist/` is gitignored and
+ * NOT produced by the repo-level `pnpm check`/`aipm build` (that only builds
+ * plugin bundles) — CI runs `pnpm test` without ever having run
+ * `pnpm --filter @mike-north/toolsmith build`, so any suite that spawns
+ * `DIST_CLI` (only `approve --setup`, which needs `attest-it` resolvable
+ * from a real node_modules — see DIST_CLI's own doc comment) must build it
+ * itself. Idempotent per test-process run (a `beforeAll` may call this from
+ * more than one file).
+ */
+export function ensureDistCliBuilt(): void {
+  if (distCliBuilt) return;
+  execFileSync(
+    process.execPath,
+    [join(REPO_ROOT, "packages", "toolsmith", "scripts", "build.mjs"), "--out", DIST_CLI],
+    { stdio: "pipe" },
+  );
+  distCliBuilt = true;
+}
 
 /** Deterministic timestamp used across fixtures (never `new Date()`). */
 export const SINCE = "2024-01-15T10:30:00.000Z";
@@ -166,9 +199,18 @@ export interface RunCliOptions {
 }
 
 /** Spawn the committed CLI bundle with an isolated project root and HOME. */
+/** `attest-it` is a dependency of packages/toolsmith, not of the repo root,
+ * so its binary only lands in packages/toolsmith/node_modules/.bin — which
+ * is NOT on PATH when vitest's `--root ../..` puts the spawning process's
+ * cwd at the repo root. Prepend it explicitly so the admission gate's
+ * `spawnSync("attest-it", ...)` resolves in tests exactly as it would for a
+ * human who ran `pnpm install` in packages/toolsmith. */
+const TOOLSMITH_BIN_DIR = join(REPO_ROOT, "packages", "toolsmith", "node_modules", ".bin");
+
 export function runCli(args: string[], opts: RunCliOptions = {}): CliResult {
   const env: Record<string, string | undefined> = {
     ...process.env,
+    PATH: `${TOOLSMITH_BIN_DIR}:${process.env["PATH"] ?? ""}`,
     CLAUDE_PLUGIN_ROOT: PLUGIN_ROOT,
     ...(opts.proj ? { CLAUDE_PROJECT_DIR: opts.proj } : {}),
     ...(opts.home ? { HOME: opts.home } : {}),
@@ -178,6 +220,22 @@ export function runCli(args: string[], opts: RunCliOptions = {}): CliResult {
   if (!opts.env?.["TOOLSMITH_APPROVE_KILL_AFTER"]) delete env["TOOLSMITH_APPROVE_KILL_AFTER"];
   if (!opts.env?.["TOOLSMITH_APPROVE_CORRUPT_REGISTRY_STEP6"]) delete env["TOOLSMITH_APPROVE_CORRUPT_REGISTRY_STEP6"];
   const r = spawnSync(process.execPath, [CLI, ...args], { env, encoding: "utf8" });
+  if (r.error) throw r.error;
+  return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
+}
+
+/** Same as `runCli`, but against the npm-package build (`DIST_CLI`) instead
+ * of the committed plugin copy — see `DIST_CLI`'s doc comment. */
+export function runDistCli(args: string[], opts: RunCliOptions = {}): CliResult {
+  const env: Record<string, string | undefined> = {
+    ...process.env,
+    PATH: `${TOOLSMITH_BIN_DIR}:${process.env["PATH"] ?? ""}`,
+    CLAUDE_PLUGIN_ROOT: PLUGIN_ROOT,
+    ...(opts.proj ? { CLAUDE_PROJECT_DIR: opts.proj } : {}),
+    ...(opts.home ? { HOME: opts.home } : {}),
+    ...opts.env,
+  };
+  const r = spawnSync(process.execPath, [DIST_CLI, ...args], { env, encoding: "utf8" });
   if (r.error) throw r.error;
   return { status: r.status ?? -1, stdout: r.stdout, stderr: r.stderr };
 }
@@ -196,4 +254,103 @@ export function chflagsAvailableInTests(): boolean {
   } catch {
     return false;
   }
+}
+
+export function attestItAvailableInTests(): boolean {
+  try {
+    return (
+      spawnSync("attest-it", ["--version"], {
+        stdio: "ignore",
+        env: { ...process.env, PATH: `${TOOLSMITH_BIN_DIR}:${process.env["PATH"] ?? ""}` },
+      }).status === 0
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Init a real git repo at `proj` and commit everything currently on disk —
+ * attest-it's admission gate requires a clean, committed tree (AC5), so
+ * admission fixtures need real git plumbing, unlike the rest of this suite's
+ * bare tmp dirs. */
+export function gitCommitAll(proj: string, message = "init"): void {
+  spawnSync("git", ["init", "-q"], { cwd: proj });
+  spawnSync("git", ["config", "user.email", "toolsmith-tests@example.com"], { cwd: proj });
+  spawnSync("git", ["config", "user.name", "toolsmith-tests"], { cwd: proj });
+  spawnSync("git", ["add", "-A"], { cwd: proj });
+  spawnSync("git", ["commit", "-q", "-m", message], { cwd: proj });
+}
+
+export function gitDirty(proj: string, relPath: string, content: string): void {
+  writeFileSync(join(proj, relPath), content);
+}
+
+/** A fresh Ed25519 identity + the `.attest-it/config.yaml` +
+ * `.attest-it/toolsmith-admission-signer.json` this suite's `approve
+ * --setup` would produce for it, written directly (setup itself is exercised
+ * separately) so admission tests can focus on the SEAL/VERIFY gate. */
+export interface AdmissionFixture {
+  slug: string;
+  privateKeyPem: string;
+  publicKeyBase64: string;
+}
+
+export function writeAdmissionFixture(proj: string, slug = "testhuman"): AdmissionFixture {
+  const kp = generateEd25519KeyPair();
+  const configYaml = `version: 1
+settings:
+  maxAgeDays: 365
+  publicKeyPath: .attest-it/pubkey.pem
+  attestationsPath: .attest-it/attestations.json
+  sealsPath: .attest-it/seals.yaml
+team:
+  ${slug}:
+    name: ${slug}
+    publicKey: ${kp.publicKey}
+    publicKeyAlgorithm: ed25519
+gates:
+  toolsmith-admission:
+    name: Toolsmith admission
+    description: test fixture
+    authorizedSigners:
+      - ${slug}
+    fingerprint:
+      paths:
+        - .claude/toolsmith
+      exclude:
+        - "**/history.jsonl"
+        - "**/*.local.*"
+    maxAge: 365d
+suites:
+  toolsmith-admission:
+    gate: toolsmith-admission
+    description: test fixture
+    command: "true"
+`;
+  mkdirSync(join(proj, ".attest-it"), { recursive: true });
+  writeFileSync(join(proj, ".attest-it", "config.yaml"), configYaml);
+  writeFileSync(
+    join(proj, ".attest-it", "toolsmith-admission-signer.json"),
+    JSON.stringify({ slug, publicKey: kp.publicKey, pinnedAt: SINCE }, null, 2) + "\n",
+  );
+  return { slug, privateKeyPem: kp.privateKey, publicKeyBase64: kp.publicKey };
+}
+
+/** Compute the CURRENT admission fingerprint for `proj` and write a valid
+ * seal for it, signed by `fixture`'s key — simulating a human having just
+ * run `attest-it run --suite toolsmith-admission` in their own terminal. */
+export function sealAdmission(proj: string, fixture: AdmissionFixture): string {
+  const fp = computeFingerprintSync({
+    packages: [".claude/toolsmith"],
+    baseDir: proj,
+    ignore: ["**/history.jsonl", "**/*.local.*"],
+  });
+  const seal = createSeal({
+    gateId: "toolsmith-admission",
+    fingerprint: fp.fingerprint,
+    sealedBy: fixture.slug,
+    privateKey: fixture.privateKeyPem,
+  });
+  writeSealsSync(proj, { version: 1, seals: { "toolsmith-admission": seal } });
+  return fp.fingerprint;
 }

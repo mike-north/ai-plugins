@@ -69,7 +69,18 @@ for (const outfile of outfiles) {
     bundle: true,
     platform: 'node',
     format: 'esm',
-    target: 'node18',
+    target: 'node20',
+    // `attest-it` (approve --setup only, a rare human-run one-time command)
+    // is dynamically imported rather than inlined: its @attest-it/core
+    // dependency ships a `yaml` build with a dynamic `require('process')`
+    // esbuild cannot statically bundle into an ESM output. Marking it
+    // external keeps the hot path (approve/verify/lint, which never import
+    // it — see lib/attestation.ts's header) fully self-contained, and only
+    // `--setup` needs `attest-it` resolvable from node_modules (true for the
+    // npm-published dist/toolsmith.mjs, which declares it as a real
+    // dependency; the committed marketplace copy degrades to a clear error
+    // pointing at manual `.attest-it/config.yaml` authoring instead).
+    external: ['attest-it'],
     banner: { js: '#!/usr/bin/env node' },
     define: {
       __TOOLSMITH_VERSION__: JSON.stringify(manifest.version),
