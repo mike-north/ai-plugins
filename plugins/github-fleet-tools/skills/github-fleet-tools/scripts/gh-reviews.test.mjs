@@ -173,6 +173,15 @@ describe("gh-reviews handles an empty comment body", () => {
     expect(hasBlankLine(runWith(emptyStub, "threads", "1"))).toBe(false);
   });
 
+  it("resolve --dry-run: an empty body leaves no trailing whitespace", () => {
+    const out = runWith(emptyStub, "resolve", "1", "--dry-run");
+    const preview = out.split("\n").find((l) => l.startsWith("[would resolve]"));
+    expect(preview, "no [would resolve] line in resolve --dry-run output").toBeDefined();
+    // Appending an empty snippet unconditionally leaves the line ending in a
+    // space, which is invisible in review and trips whitespace linters.
+    expect(preview).toBe(preview.trimEnd());
+  });
+
   it("status: an empty body contributes no line of its own", () => {
     const out = runWith(emptyStub, "status", "1");
     // The threads block should hold exactly the bullet line plus the single
