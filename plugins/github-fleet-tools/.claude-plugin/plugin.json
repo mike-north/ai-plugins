@@ -1,6 +1,6 @@
 {
   "name": "github-fleet-tools",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Opinionated, allowlistable command-line tools for an agent to engage with GitHub: read-only PR/issue-queue inspection plus bounded write verbs (label, comment, reply/resolve review threads, create issue/PR, mark ready, guarded merge). Each wraps one gh operation with no arbitrary-API escape hatch, so it can be pre-approved while raw `gh api` stays gated.",
   "author": {
     "name": "Mike North"
