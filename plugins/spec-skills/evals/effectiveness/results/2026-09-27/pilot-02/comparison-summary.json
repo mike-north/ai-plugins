@@ -1,0 +1,796 @@
+{
+  "comparisons": [
+    {
+      "pair": "c01-repeat-1-none",
+      "winner": "runs/c01/current/repeat-1",
+      "rationale": "Both candidates satisfy the core task by saving a proposed, not accepted collapse around a customer-owned use/binding of a published version in a context, without drifting into API design. B is stronger because it explicitly records the enabling assumption, the sacrificed independent installation lifecycle, revision triggers, and updates the resumable work checkpoint. A is useful and scoped, but its treatment of the consequential tradeoff is more implicit and it leaves the existing .work checkpoint stale."
+    },
+    {
+      "pair": "c02-repeat-1-none",
+      "winner": "runs/c02/current/repeat-1",
+      "rationale": "Both candidates satisfy the core task and avoid the reviewer-note trap of automatically rejecting discriminators or derived concepts. B is marginally stronger because it more explicitly separates proposed recommendation from product decision, tests what deletion would still need to explain, and frames DispatchEligibility as a meaningful caller-facing judgment rather than stored identity. A is also solid, but slightly less developed on the consequences of alternative modeling."
+    },
+    {
+      "pair": "c03-repeat-1-none",
+      "winner": "runs/c03/none/repeat-1",
+      "rationale": "Both candidates satisfy the core behavioral audit: they preserve the missing-spec state at stage 1, record the accepted pinned-usage rule at stage 2, recover that intent at stage 3, and find that publish mutates existing usage versions. A is slightly stronger because it stays closer to the requested scope and evidence. B is also high quality, but it adds an extra new-usage default example, rewrites notes as superseded, and makes an unsupported claim about git status in the final review."
+    },
+    {
+      "pair": "c04-repeat-1-none",
+      "winner": "tie",
+      "rationale": "Both candidates satisfy the core behavior: they preserve the stage-1 D1-based partial work, recover from the stale checkpoint after D2, update examples to v2 local office-time semantics with DST/timezone coverage, preserve legacy v1 behavior, and leave the unrelated billing checkpoint intact. A has a cleaner neutral reading-map update after D2, while B provides stronger validation-oriented examples and more explicit stale-checkpoint reconciliation. These differences are real but not enough to establish a decisive winner."
+    },
+    {
+      "pair": "c05-repeat-1-none",
+      "winner": "runs/c05/current/repeat-1",
+      "rationale": "Both outputs are strong and materially satisfy the review task. A is slightly better because it explicitly avoids inventing an invalid-limit defect by noting the implementation does reject 6 before mutation, and it more clearly distinguishes unexamined/runtime evidence from verified snapshot findings."
+    },
+    {
+      "pair": "c06-repeat-1-none",
+      "winner": "runs/c06/current/repeat-1",
+      "rationale": "A better preserves the project authority model and existing contributor records. It keeps ACCT-48 as authoritative, places the local campaign draft in .work as an explicitly unsynchronized reconciliation artifact, expands the existing domain document, and keeps the prior private naming investigation discoverable. B captures much of the same semantic intent, but it overwrites .work/index.md and drops the existing naming-investigation entry, and it places the campaign draft in docs/ despite the fixture's stronger project convention that campaign authority is the issue and contributor checkpoints belong in .work."
+    },
+    {
+      "pair": "c07-repeat-1-none",
+      "winner": "runs/c07/current/repeat-1",
+      "rationale": "Both candidates correctly identified the core semantic contradiction, preserved the code, treated passing tests as limited evidence, and highlighted the unresolved beta migration boundary. B is slightly stronger because it saved the review in docs/ and linked it from docs/index.md, matching the repository convention that shared review material belongs in docs/ and making the artifact more discoverable for a future contributor. A's substantive analysis is also strong, but its review lives only under .work/, which is less aligned with the supplied project conventions."
+    },
+    {
+      "pair": "c08-repeat-1-none",
+      "winner": "runs/c08/current/repeat-1",
+      "rationale": "Both candidates satisfy the core product and implementation behavior and both make the same notable scope error by implementing during stage 2 before the explicit implementation stage. B is stronger overall because its domain artifacts and final review are more traceable and discriminating, with clearer governing-source references, stress scenarios, revision triggers, and a more complete review narrative. A has slightly stronger stage-3 test granularity, but B's accumulated specification and review evidence is more useful across the full four-stage journey."
+    }
+  ],
+  "per_case_dimensions": [
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "reasoning",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "reasoning",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "current",
+      "dimension": "reasoning",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "none",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "none",
+      "dimension": "reasoning",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "none",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c03",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c03",
+      "variant": "current",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c03",
+      "variant": "current",
+      "dimension": "review",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c03",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c03",
+      "variant": "current",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c03",
+      "variant": "none",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c03",
+      "variant": "none",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c03",
+      "variant": "none",
+      "dimension": "review",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c03",
+      "variant": "none",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c03",
+      "variant": "none",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c04",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c04",
+      "variant": "current",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c04",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c04",
+      "variant": "current",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c04",
+      "variant": "none",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c04",
+      "variant": "none",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c04",
+      "variant": "none",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c04",
+      "variant": "none",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "current",
+      "dimension": "capability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "current",
+      "dimension": "review",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "current",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "none",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "none",
+      "dimension": "capability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "none",
+      "dimension": "review",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "none",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c06",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c06",
+      "variant": "current",
+      "dimension": "capability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c06",
+      "variant": "current",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c06",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c06",
+      "variant": "none",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c06",
+      "variant": "none",
+      "dimension": "capability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c06",
+      "variant": "none",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 1,
+      "sample_stdev": null,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "case": "c06",
+      "variant": "none",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c07",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c07",
+      "variant": "current",
+      "dimension": "review",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c07",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c07",
+      "variant": "current",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c07",
+      "variant": "none",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c07",
+      "variant": "none",
+      "dimension": "review",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c07",
+      "variant": "none",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c07",
+      "variant": "none",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c08",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 1,
+      "sample_stdev": null,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "case": "c08",
+      "variant": "current",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c08",
+      "variant": "current",
+      "dimension": "reasoning",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c08",
+      "variant": "current",
+      "dimension": "review",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c08",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 1,
+      "sample_stdev": null,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "case": "c08",
+      "variant": "current",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c08",
+      "variant": "none",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 1,
+      "sample_stdev": null,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "case": "c08",
+      "variant": "none",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c08",
+      "variant": "none",
+      "dimension": "reasoning",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c08",
+      "variant": "none",
+      "dimension": "review",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c08",
+      "variant": "none",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 1,
+      "sample_stdev": null,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "case": "c08",
+      "variant": "none",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    }
+  ],
+  "human_preference": "PENDING",
+  "scope": "Pilot sample, not a population reliability estimate"
+}

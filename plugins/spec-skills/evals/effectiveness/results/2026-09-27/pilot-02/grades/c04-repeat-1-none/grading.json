@@ -1,0 +1,141 @@
+{
+  "winner": "tie",
+  "rationale": "Both candidates satisfy the core behavior: they preserve the stage-1 D1-based partial work, recover from the stale checkpoint after D2, update examples to v2 local office-time semantics with DST/timezone coverage, preserve legacy v1 behavior, and leave the unrelated billing checkpoint intact. A has a cleaner neutral reading-map update after D2, while B provides stronger validation-oriented examples and more explicit stale-checkpoint reconciliation. These differences are real but not enough to establish a decisive winner.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "continuity": {
+          "score": 3,
+          "evidence": [
+            "A/stage-1/after.json .work/office-times.md: \"Progress: drafted the first two UTC examples in docs/examples.md...\"",
+            "A/stage-2/after.json .work/office-times.md: \"Resumed after reading current shared sources...\""
+          ],
+          "explanation": "Maintains the partial examples task across stages and clearly resumes from the prior checkpoint."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "A/stage-2/after.json docs/examples.md: \"New office schedules use v2 local office time... Legacy v1 schedules continue to run at the fixed 09:00 UTC instant\"",
+            "A/stage-2/after.json .work/office-times.md: \"docs/decisions.md now accepts D2 for new office schedules... docs/domain.md matches D2\""
+          ],
+          "explanation": "Correctly gives current D2/domain text priority over the stale D1 checkpoint while preserving D1 for legacy schedules."
+        },
+        "traceability": {
+          "score": 3,
+          "evidence": [
+            "A/stage-2/after.json docs/examples.md: \"Store timezone and wall time\" concepts are reflected in examples using `America/New_York` and `Europe/London`.",
+            "A/stage-2/after.json .work/office-times.md: references docs/decisions.md, docs/domain.md, and docs/examples.md reconciliation."
+          ],
+          "explanation": "The artifacts explain the source basis and make the reconciliation discoverable."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "A/stage-2/after.json .work/billing.md remains: \"Contributor: Ren. Next: compare rounding rules. Do not change this record.\"",
+            "A/stage-2/after.json docs/decisions.md preserves D1 and D2 text unchanged."
+          ],
+          "explanation": "Keeps unrelated records intact and confines changes to examples, index, and the office-times checkpoint."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "First stage preserves the live examples task and its initial D1 basis in a discoverable checkpoint.",
+          "verdict": "pass",
+          "evidence": "A/stage-1/after.json .work/office-times.md records D1 fixed UTC basis, drafted examples, and a checkpoint question."
+        },
+        {
+          "criterion": "After the contributor update, reads D2/current domain text and recognizes local wall-clock semantics supersede fixed UTC for this scope.",
+          "verdict": "pass",
+          "evidence": "A/stage-2/after.json docs/examples.md states new office schedules use v2 local office time and legacy v1 remains fixed UTC."
+        },
+        {
+          "criterion": "Continues the existing examples task with a timezone/DST example and explicitly reconciles the stale checkpoint rather than repeating obsolete UTC intent.",
+          "verdict": "pass",
+          "evidence": "A/stage-2/after.json docs/examples.md includes New York/London and DST offset examples; .work/office-times.md says the previous checkpoint predated contributor change and was reconciled."
+        },
+        {
+          "criterion": "Keeps the unrelated billing checkpoint intact and preserves D1 history.",
+          "verdict": "pass",
+          "evidence": "A/stage-2/after.json .work/billing.md is unchanged; docs/decisions.md still contains D1 and its legacy status."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No raw execution trace is available to verify claimed timezone checks; judgment is based on artifact snapshots and responses only."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "continuity": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/after.json .work/office-times.md: \"Last meaningful result: created docs/examples.md with two partial examples...\"",
+            "B/stage-2/after.json .work/office-times.md: \"reconcile the stale D1-only checkpoint with current accepted project intent\""
+          ],
+          "explanation": "Very clearly preserves and resumes the examples task."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "B/stage-2/after.json docs/examples.md: \"New v2 office appointments run at `09:00` in the named IANA office timezone.\"",
+            "B/stage-2/after.json docs/examples.md: \"Fixed `09:00 UTC` remains valid only for legacy v1 schedules\""
+          ],
+          "explanation": "Correctly follows D2 for new schedules and retains D1 only for legacy schedules."
+        },
+        "traceability": {
+          "score": 2,
+          "evidence": [
+            "B/stage-2/after.json .work/office-times.md explicitly lists recovered sources and result.",
+            "B/stage-2/after.json docs/index.md still describes Scheduling domain as \"accepted time meaning for v1 office scheduling\" and Decisions as \"acceptance basis for fixed UTC instants.\""
+          ],
+          "explanation": "The checkpoint and examples are highly traceable, but the reading map retains stale v1/fixed-UTC descriptions after D2."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "B/stage-2/after.json .work/billing.md remains unchanged.",
+            "B/stage-2/after.json docs/decisions.md preserves both D1 and D2."
+          ],
+          "explanation": "Changes are appropriately scoped and unrelated contributor records are preserved."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "First stage preserves the live examples task and its initial D1 basis in a discoverable checkpoint.",
+          "verdict": "pass",
+          "evidence": "B/stage-1/after.json .work/office-times.md records fixed UTC D1 scope, partial examples, pending question, and next action."
+        },
+        {
+          "criterion": "After the contributor update, reads D2/current domain text and recognizes local wall-clock semantics supersede fixed UTC for this scope.",
+          "verdict": "pass",
+          "evidence": "B/stage-2/after.json docs/examples.md states v2 local timezone plus wall time is the new schedule meaning."
+        },
+        {
+          "criterion": "Continues the existing examples task with a timezone/DST example and explicitly reconciles the stale checkpoint rather than repeating obsolete UTC intent.",
+          "verdict": "pass",
+          "evidence": "B/stage-2/after.json docs/examples.md includes ordinary v2, DST boundary, multiple offices, repeated local time, nonexistent local time, and legacy v1 examples; .work/office-times.md explicitly names the stale D1-only checkpoint."
+        },
+        {
+          "criterion": "Keeps the unrelated billing checkpoint intact and preserves D1 history.",
+          "verdict": "pass",
+          "evidence": "B/stage-2/after.json .work/billing.md is unchanged; docs/decisions.md keeps D1 as retained for legacy schedules."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [
+        "B/stage-2/after.json docs/index.md retains stale descriptions focused on v1/fixed UTC despite D2 being current for new office schedules."
+      ],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No raw execution trace is available to verify claimed Node Intl validation; judgment is based on artifact snapshots and responses only."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is reasonably discriminating for continuity, authority, traceability, and scope. The unchanged/existence checks are weak alone, since both candidates can pass them while still having stale or semantically wrong documentation. Human usefulness review remains pending."
+}

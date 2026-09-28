@@ -1,0 +1,114 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc 'pwd && rg --files'",
+    "exit_code": 0,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c04/none/repeat-1/workspace\nAGENTS.md\ndocs/decisions.md\ndocs/index.md\ndocs/domain.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "18f2e98120c3b59617463eb1e0e467b480db91b9296c4e0a28b2dd63db5004cb"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc 'find . -maxdepth 3 -type f | sort'",
+    "exit_code": 0,
+    "output_excerpt": "./.git/HEAD\n./.git/config\n./.git/description\n./.git/hooks/applypatch-msg.sample\n./.git/hooks/commit-msg.sample\n./.git/hooks/fsmonitor-watchman.sample\n./.git/hooks/post-update.sample\n./.git/hooks/pre-applypatch.sample\n./.git/hooks/pre-commit.sample\n./.git/hooks/pre-merge-commit.sample\n./.git/hooks/pre-push.sample\n./.git/hooks/pre-rebase.sample\n./.git/hooks/pre-receive.sample\n./.git/hooks/prepare-commit-msg.sample\n./.git/hooks/push-to-checkout.sample\n./.git/hooks/sendemail-validate.sample\n./.git/hooks/update.sample\n./.git/info/exclude\n./.gitignore\n./.work/billing.md\n./.work/index.md\n./.work/office-times.md\n./AGENTS.md\n./docs/decisions.md\n./docs/domain.md\n./docs/index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "d0770132fa4e6a7bffbc887c9a14eb7b26d2826fad49a6ca684fb8ed243386bc"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' AGENTS.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+    "output_truncated": false,
+    "full_output_sha256": "88424f7d90b560c9dced34e9f8825ecbcbd005b6921c693c786cff8cf9707346"
+  },
+  {
+    "id": "item_5",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+    "output_truncated": false,
+    "full_output_sha256": "7ea01f7466f50e438267782c28f28bb9534264cc1ef43319a704fd63d7e9efbd"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' .work/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Work index\n- office-times: .work/office-times.md\n- billing: .work/billing.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "48db9fa0fa3dd3da4833305380b222fbe5822ba70b993f3839b6dfffa1691d84"
+  },
+  {
+    "id": "item_7",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/decisions.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Decisions\nD1: Mira accepted fixed UTC instants for v1 to avoid daylight-saving policy. Revisit when local-office scheduling is required.\n",
+    "output_truncated": false,
+    "full_output_sha256": "f2abb97cef5dbe1bfc69b0a53da9e9fd39507bd6f0bdbd9839b4209b1b535718"
+  },
+  {
+    "id": "item_8",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/domain.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Scheduling\n## Time meaning\nAccepted by Mira for v1: run appointments at 09:00 UTC. This plan intentionally does not interpret local wall clocks.\n",
+    "output_truncated": false,
+    "full_output_sha256": "f1de7987bd76e575edd8e3b23dbf8118c84b0da85957ae75256d5d38104b0129"
+  },
+  {
+    "id": "item_9",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' .work/office-times.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Office times\nOriginal job: flesh out office scheduling examples. Fixed UTC accepted in D1. Next: write three UTC examples.\n",
+    "output_truncated": false,
+    "full_output_sha256": "f76088dae2df61c9b543798c5437dcf53b9a7f5aa1e90e79f30aa921a25023ff"
+  },
+  {
+    "id": "item_10",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' .work/billing.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Billing investigation\nContributor: Ren. Next: compare rounding rules. Do not change this record.\n",
+    "output_truncated": false,
+    "full_output_sha256": "2612d5a475321da9f48ed463d5bdf111ca84598edbd09c592cb6cbcd9c2ebe04"
+  },
+  {
+    "id": "item_14",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/examples.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Scheduling examples\n\nThese examples document the accepted v1 scheduling behavior: appointments run at a fixed 09:00 UTC instant. They intentionally avoid interpreting office-local wall clocks or daylight-saving transitions.\n\n## Accepted behavior examples\n\n### Example 1: Single office appointment\n\nGiven an office appointment is scheduled for 2026-10-05, the v1 appointment time is 2026-10-05T09:00:00Z.\n\nThis result is independent of the office location because v1 treats the appointment time as a UTC instant rather than a local office time.\n\n### Example 2: Offices in different regions\n\nGiven two offices both schedule appointments for 2026-10-05, one in New York and one in London, both v1 appointments run at 2026-10-05T09:00:00Z.\n\nThe office region does not change the stored or executed instant in v1. Any local display conversion is outside the accepted scheduling behavior.\n\n## Checkpoint before completing remaining examples\n\nNext question: should the third example cover a daylight-saving boundary date to make the non-local-time behavior explicit, or should it cover a recurring multi-day appointment series at 09:00 UTC?\n",
+    "output_truncated": false,
+    "full_output_sha256": "f2bbbeb4db7fd8fd6be33ce8b4b1fd2c517d3f0692bf449966758472aeca47f1"
+  },
+  {
+    "id": "item_15",
+    "command": "/bin/zsh -lc \"sed -n '1,120p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- Scheduling domain: docs/domain.md\n- Scheduling decisions: docs/decisions.md\n- Scheduling examples: docs/examples.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "28d84eec3c6b39614b50780fcfa67e35e4900fce4a3677d5efc6c03d20e3837a"
+  },
+  {
+    "id": "item_16",
+    "command": "/bin/zsh -lc \"sed -n '1,160p' .work/office-times.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Office times\nOriginal job: flesh out office scheduling examples. Fixed UTC accepted in D1.\n\nProgress: drafted the first two UTC examples in docs/examples.md and linked the examples from docs/index.md.\n\nCheckpoint: before completing all examples, decide whether the next example should cover a daylight-saving boundary date or a recurring multi-day appointment series.\n",
+    "output_truncated": false,
+    "full_output_sha256": "20f4ee0795ab85576a62a3d259e177ac62d2ee2d2c9fb95fca73c5f0f4a0aea5"
+  },
+  {
+    "id": "item_17",
+    "command": "/bin/zsh -lc 'git diff -- docs/examples.md docs/index.md .work/office-times.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_19",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n",
+    "output_truncated": false,
+    "full_output_sha256": "bee4bdd2fc991062f11bcac59a01cec4dae8d9b9e37b8a6168c1f01d3bbf1bbc"
+  }
+]

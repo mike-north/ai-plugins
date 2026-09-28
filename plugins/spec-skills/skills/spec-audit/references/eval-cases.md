@@ -90,7 +90,7 @@ Recommended FormSpec version:
 Success criteria:
 
 - checks structured fields and invariants
-- looks for tests that prove those behaviors
+- looks for tests that meaningfully check those behaviors without claiming exhaustive proof
 - reports missing determinism or location guarantees separately from wording issues
 
 Common failure modes:

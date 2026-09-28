@@ -1,0 +1,80 @@
+{
+  "winner": "B",
+  "rationale": "B better matches the requested routing and scope. The task asks to resume a focused domain-modeling comparison without restarting the broader product discussion; the hidden rubric expects domain-planning. B selects domain-planning, explains why, keeps deep-design narrowly scoped, and explicitly avoids spec-authoring/spec-audit. A avoids unrelated spec work, but selects only deep-design and misses the expected domain-planning capability.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "routing": {
+          "score": 1,
+          "evidence": [
+            "A/stage-1/response.md: \"Applicable skill: `deep-design`\"",
+            "rubric.json: \"expected_routes\": [\"domain-planning\"]"
+          ],
+          "explanation": "A recognizes this is a conceptual comparison rather than spec authoring or auditing, but it omits the expected domain-planning route, which is the central capability for clarifying whether publication and adoption are distinct lifecycle/domain events."
+        },
+        "scope": {
+          "score": 2,
+          "evidence": [
+            "A/stage-1/response.md: \"It is not asking to audit implementation against a spec or draft a formal specification yet.\"",
+            "A/stage-1/after.json: \".work/models.md\" unchanged from before"
+          ],
+          "explanation": "A keeps the scope narrow and avoids unrelated spec workflows. However, its explanation remains somewhat generic and does not identify the domain-planning dependency needed for the user job."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "partial",
+          "evidence": "A selects `deep-design` and explains that the task is a focused conceptual comparison, but misses the expected `domain-planning` capability."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [
+        "A/stage-1/response.md does not select `domain-planning`, despite the task being about domain concepts and lifecycle boundaries."
+      ],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No tool traces are available in the anonymous package, but the task explicitly asks only to judge the supplied artifacts."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "routing": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/response.md: \"Applicable skills: `domain-planning`, `deep-design`\"",
+            "B/stage-1/response.md: \"`domain-planning` fits because the request is about clarifying domain concepts and lifecycle boundaries\""
+          ],
+          "explanation": "B selects the expected domain-planning route and gives a concise, task-grounded reason. Including deep-design as a narrow supporting capability is reasonable because the prompt asks to resume a focused comparison."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/response.md: \"not restarting the whole product discussion\"",
+            "B/stage-1/response.md: \"Not applicable: `spec-audit`, `spec-authoring` because this is not yet an alignment review or spec-writing task.\"",
+            "B/stage-1/after.json: \".work/models.md\" unchanged from before"
+          ],
+          "explanation": "B stays tightly scoped to the live comparison, explicitly rejects unrelated spec workflows, and does not perform extra artifact changes."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "pass",
+          "evidence": "B selects `domain-planning`, explains its fit, limits `deep-design` to the specific comparison, and excludes `spec-audit`/`spec-authoring`."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No raw execution traces are available, so this evaluation is limited to artifact and response quality."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is narrow but discriminating for this trigger task: it clearly expects `domain-planning` and penalizes over-triggering unrelated specification workflows. It leaves room for an additional supporting capability, which is appropriate here because the prompt also references a focused comparison. Human usefulness review beyond routing quality remains pending."
+}

@@ -1,0 +1,5 @@
+Saved the audit in [docs/adoption-review.md](<evaluation-repository>/scratch/effectiveness/pilot-01/runs/c03/none/repeat-1/workspace/docs/adoption-review.md) and linked it from [docs/index.md](<evaluation-repository>/scratch/effectiveness/pilot-01/runs/c03/none/repeat-1/workspace/docs/index.md).
+
+Finding: the current implementation does **not** match the accepted publication/adoption contract. `publish` updates `extension['latest']`, but then also mutates matching existing usages to the new version, which contradicts the documented requirement that existing usages remain pinned until explicit adoption.
+
+I separated the migration question into its own section: future automatic adoption/migration needs a separate contract covering eligibility, opt-in/out behavior, and migration-risk ownership. No tests were run because this was a documentation audit only.

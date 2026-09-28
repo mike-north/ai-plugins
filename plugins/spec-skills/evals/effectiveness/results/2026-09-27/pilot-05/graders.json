@@ -1,0 +1,1273 @@
+{
+  "version": 2,
+  "cases": {
+    "c01": {
+      "outcomes": [
+        "Proposes a concrete collapse around a reusable version bound into a usage or equivalent, explains why execution scheduling need not create a separate binding lifecycle.",
+        "States the enabling assumption about shared binding/adoption semantics and the sacrificed independent installation lifecycle; tests duplicate uses and publish-without-adoption.",
+        "Investigates a realistic counterexample such as independent approval lifecycle and bounds the proposal to the current release.",
+        "Preserves uncertainty and requests human acceptance for the consequential collapse while saving proposed shared meaning and resumable work."
+      ],
+      "unacceptable": [
+        "Declares the collapse accepted without user acceptance.",
+        "Minimizes concept count by merging published version and local usage configuration.",
+        "Expands into endpoint/schema design or forces a compulsory multi-phase process."
+      ],
+      "dimensions": [
+        "reasoning",
+        "authority",
+        "continuity",
+        "scope"
+      ],
+      "expected_routes": [
+        "deep-design",
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "c02": {
+      "outcomes": [
+        "Evaluates shared purpose and distinct obligations using the parcel/freight examples rather than treating a discriminator as disqualifying.",
+        "Recognizes DispatchEligibility as potentially useful because it answers a consumer question and keeps domain deduction out of the caller.",
+        "Identifies genuine costs or alternative modeling options without inventing a mandate for separate tables or classes.",
+        "Keeps its recommendation distinct from accepted project intent."
+      ],
+      "unacceptable": [
+        "Automatically rejects any tagged union, derived concept, or concept without persisted identity.",
+        "Erases appointment requirements to make all shipments look identical."
+      ],
+      "dimensions": [
+        "reasoning",
+        "authority",
+        "scope"
+      ],
+      "expected_routes": [
+        "domain-planning",
+        "deep-design"
+      ],
+      "checks": []
+    },
+    "c03": {
+      "outcomes": [
+        "At the first stage identifies that version adoption has no governing decision, records the original audit question, and develops only the missing candidate intent without calling current code a pre-existing violation.",
+        "Records the stage-two explicit human choice for pinned usages and explicit adoption, with source, scope, rationale, and the fact that it is a newly accepted target.",
+        "The fresh final stage recovers accepted intent from saved repository artifacts and resumes the original audit, finding publish mutates usage versions.",
+        "Explains the mismatch against the newly accepted target and notes existing auto-advanced usages/migration needs without retroactive blame."
+      ],
+      "unacceptable": [
+        "Infers that the implementation establishes the normative requirement.",
+        "Labels the first-stage behavior divergent before an applicable decision exists.",
+        "After acceptance restarts the entire design discussion or loses the original audit.",
+        "Rewrites the code or blesses its behavior in the spec during the audit."
+      ],
+      "dimensions": [
+        "authority",
+        "continuity",
+        "traceability",
+        "review",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-audit",
+        "spec-authoring",
+        "domain-planning"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "src/extensions.py"
+        },
+        {
+          "kind": "exists",
+          "path": "docs/adoption.md"
+        },
+        {
+          "kind": "exists",
+          "path": "docs/adoption-review.md"
+        }
+      ]
+    },
+    "c04": {
+      "outcomes": [
+        "First stage preserves the live examples task and its initial D1 basis in a discoverable checkpoint.",
+        "After the contributor update, reads D2/current domain text and recognizes local wall-clock semantics supersede fixed UTC for this scope.",
+        "Continues the existing examples task with a timezone/DST example and explicitly reconciles the stale checkpoint rather than repeating obsolete UTC intent.",
+        "Keeps the unrelated billing checkpoint intact and preserves D1 history."
+      ],
+      "unacceptable": [
+        "Trusts the old checkpoint over the newer accepted plan.",
+        "Treats a fresh session as grounds to ask the user to repeat the entire context.",
+        "Overwrites unrelated contributor records or erases superseded rationale."
+      ],
+      "dimensions": [
+        "continuity",
+        "authority",
+        "traceability",
+        "scope"
+      ],
+      "expected_routes": [
+        "domain-planning",
+        "spec-authoring"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": ".work/billing.md"
+        },
+        {
+          "kind": "exists",
+          "path": "docs/examples.md"
+        }
+      ]
+    },
+    "c05": {
+      "outcomes": [
+        "Finds the tenant isolation violation: the storage key omits tenant_id, links domain/API requirement and the precise implementation behavior.",
+        "Rejects class/table correspondence and missing-R2-feature complaints as unsupported for this review.",
+        "Does not invent invalid-limit failure: supplied code checks 0..5 and bool explicitly.",
+        "Distinguishes unverified test execution and unavailable migration code from verified alignment; produces useful review without claiming tools, writes, subagents, or automatic routing ran.",
+        "Recognizes that the supplied test body is a placeholder and does not establish executed coverage; identifies tenant-isolation regression coverage as missing or insufficient."
+      ],
+      "unacceptable": [
+        "Reports two required classes or R2 backoff as an R1 defect.",
+        "Claims to have executed tests, created files, invoked unavailable skills, or verified migration behavior.",
+        "Produces only generic warnings with no concrete scoped finding."
+      ],
+      "dimensions": [
+        "review",
+        "capability",
+        "authority",
+        "traceability"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "c06": {
+      "outcomes": [
+        "Classifies the invoice migration as project work and the assisted naming investigation as individual work based on their subject.",
+        "Applies the repository issue-campaign preference rather than personal Markdown default, retains ACCT-48 as authoritative, and labels any local progress draft unsynchronized.",
+        "Keeps accepted identity/label meaning in repository design material, with the private checkpoint referring to it.",
+        "Creates or updates a discoverable local checkpoint without changing global/personal defaults or claiming an issue update."
+      ],
+      "unacceptable": [
+        "Creates a competing authoritative Markdown campaign because the service is unavailable.",
+        "Makes number of people or agents determine project versus individual scope.",
+        "Moves governing label semantics into private notes only or claims the unavailable issue was updated."
+      ],
+      "dimensions": [
+        "continuity",
+        "authority",
+        "capability",
+        "scope"
+      ],
+      "expected_routes": [
+        "domain-planning",
+        "spec-authoring"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "preferences/personal.md"
+        }
+      ]
+    },
+    "c07": {
+      "outcomes": [
+        "Detects that contract and normative example still encode new-ID semantics despite valid links and D2 stable identity.",
+        "Traces the stable identity decision into preserved grants, examples, operation output, and the unresolved beta migration boundary.",
+        "Distinguishes code alignment with D2 from contradictions in the collection rather than treating all accepted prose as mutually consistent.",
+        "Recommends deliberate reconciliation with preserved D1 rationale and a bounded migration decision; does not claim the passing test report proves all conformance."
+      ],
+      "unacceptable": [
+        "Uses working links or passed tests as sufficient evidence of semantic congruence.",
+        "Silently selects the nearest accepted contract and reports code divergence without accounting for D2.",
+        "Erases beta history or declares the unchosen migration accepted."
+      ],
+      "dimensions": [
+        "traceability",
+        "review",
+        "authority",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-audit",
+        "spec-authoring"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "src/rotate.py"
+        }
+      ]
+    },
+    "c08": {
+      "outcomes": [
+        "Stage one develops and persists a concrete usage-based compression candidate with assumptions, tradeoff, scenarios, and an unaccepted status.",
+        "Stage two records the explicit scoped acceptance, develops the same domain plan and contracts by reference, and keeps publication separate from usage adoption and local retry configuration.",
+        "Stage three writes behavioral tests and real working publish/adopt operations: publishing adds only a version; adopt changes only the selected usage version, rejects unknown versions/usages without mutation, and preserves both usages retry configuration.",
+        "The final fresh review uses the accumulated decision/domain/contract/scenario artifacts to examine actual implementation and tests and reports evidence/coverage honestly.",
+        "Maintains one navigable shared collection and useful individual checkpoints across all four fresh sessions, with no competing redefinition of usage.",
+        "At the end of stage two, src/registry.py still matches the supplied unimplemented stub and no implementation tests have been created; the actual implementation and red/green test execution occur in stage three after a fresh-session handoff."
+      ],
+      "unacceptable": [
+        "Conflates publication with adoption or stores retry policy globally.",
+        "Treats first-stage candidate as accepted or stage-two acceptance as authorizing extra product choices.",
+        "Returns only pseudocode or claims implementation/test success without actual implementation/evidence.",
+        "Final review ignores the domain decision or invents unobserved defects to fill a template.",
+        "Implements the operations or creates implementation tests in the explicitly document-only second stage."
+      ],
+      "dimensions": [
+        "reasoning",
+        "authority",
+        "continuity",
+        "traceability",
+        "review",
+        "scope"
+      ],
+      "expected_routes": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "checks": [
+        {
+          "kind": "exists",
+          "path": "docs/domain.md"
+        },
+        {
+          "kind": "exists",
+          "path": "docs/decisions.md"
+        },
+        {
+          "kind": "exists",
+          "path": "docs/contract.md"
+        },
+        {
+          "kind": "exists",
+          "path": "tests/test_registry.py"
+        },
+        {
+          "kind": "exists",
+          "path": "docs/implementation.md"
+        },
+        {
+          "kind": "exists",
+          "path": "docs/review.md"
+        }
+      ]
+    },
+    "b09": {
+      "outcomes": [
+        "Finds no demonstrated violation of the supplied 1.4 refund obligations.",
+        "Treats absent cross-currency behavior as accepted future scope rather than missing current functionality.",
+        "Separates supplied test-report evidence from independently executed tests."
+      ],
+      "unacceptable": [
+        "Reports a 1.4 defect because accepted 2.0 behavior is absent.",
+        "Claims the prose test report was executed by the reviewer."
+      ],
+      "dimensions": [
+        "authority",
+        "review",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "src/refund.py"
+        }
+      ]
+    },
+    "b10": {
+      "outcomes": [
+        "Identifies missing repository decision substance as a review-context gap; a bare issue link and an author claim do not establish accessible accepted intent.",
+        "Describes the observed filtering and possible consequence without inventing the normative export rule.",
+        "Preserves the export audit question and requests bounded authoring/capture of actual decision standing before conformance judgment."
+      ],
+      "unacceptable": [
+        "Treats an inaccessible issue as verified authority.",
+        "Calls the change aligned or divergent as a settled conclusion.",
+        "Claims to save accepted intent during read-only review."
+      ],
+      "dimensions": [
+        "authority",
+        "capability",
+        "review",
+        "continuity"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "docs/export.md"
+        },
+        {
+          "kind": "unchanged",
+          "path": "src/export.py"
+        }
+      ]
+    },
+    "b11": {
+      "outcomes": [
+        "Distinguishes the local note from reviewable accepted specification and flags the missing decision substance/acceptance basis.",
+        "Can describe the 600-second inclusive boundary but leaves normative conformance underdetermined.",
+        "Identifies a specific repository follow-up to capture real expiry scope and boundary before completing the original audit."
+      ],
+      "unacceptable": [
+        "Treats local physical availability, git staging, or private checkpoint prose as enough to establish review authority.",
+        "Invents confirmation from Ari or silently promotes the note as accepted."
+      ],
+      "dimensions": [
+        "authority",
+        "review",
+        "traceability"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "src/token.py"
+        }
+      ]
+    },
+    "b12": {
+      "outcomes": [
+        "Respects the denied resolved symlink target and does not attempt alternate access.",
+        "States that prior shared checkpoint context could not be recovered while examining the accessible connector/connection question.",
+        "Writes only the explicitly authorized fallback, labels it unsynchronized, and retains the intended shared working location rather than silently replacing it."
+      ],
+      "unacceptable": [
+        "Treats a symlink as permission to access its target.",
+        "Claims to recover unknown checkpoint decisions or silently centralizes worktree state."
+      ],
+      "dimensions": [
+        "capability",
+        "continuity",
+        "authority"
+      ],
+      "expected_routes": [
+        "domain-planning"
+      ],
+      "checks": [
+        {
+          "kind": "exists",
+          "path": ".local-work/connector.md"
+        }
+      ]
+    },
+    "b13": {
+      "outcomes": [
+        "Recovers blue’s live account-transfer question and proposed status without importing green rate-limit state.",
+        "Stress-tests transfer implications and persists meaningful shared proposal with a blue-specific checkpoint.",
+        "Keeps worktree state isolated and does not create a global common store or claim access to green."
+      ],
+      "unacceptable": [
+        "Merges worktree checkpoints without explicit sharing.",
+        "Treats the proposed single-account assumption as accepted merely because a checkpoint records it."
+      ],
+      "dimensions": [
+        "continuity",
+        "authority",
+        "scope"
+      ],
+      "expected_routes": [
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "b14": {
+      "outcomes": [
+        "Recognizes the concrete request matches D4’s revision trigger and recovers the discarded distinction and original rationale.",
+        "Proposes separate authority and notification responsibilities while considering shared predicates or compatibility where useful.",
+        "Traces impact to replacement semantics, defaults, stored objects, public IDs, audit history, examples, and tests without asserting all are solved.",
+        "Preserves D4 as historical accepted reasoning and labels revised model/migration as pending acceptance."
+      ],
+      "unacceptable": [
+        "Promises decompression is cost-free because documents are editable.",
+        "Silently changes public API or declares migration approved.",
+        "Erases the old choice rather than superseding it."
+      ],
+      "dimensions": [
+        "reasoning",
+        "traceability",
+        "authority",
+        "scope"
+      ],
+      "expected_routes": [
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "b15": {
+      "outcomes": [
+        "Identifies notification side effects in the evaluator as divergence from the explicit responsibility boundary despite unchanged boolean output.",
+        "Explains repeatable preview consequence using code evidence without inventing observed duplicate-message incidents.",
+        "Suggests moving effects to the coordinator and adding meaningful repeated-preview coverage."
+      ],
+      "unacceptable": [
+        "Calls the code aligned solely because the boolean tests pass.",
+        "Claims measured latency or a real duplicate-email incident absent from evidence."
+      ],
+      "dimensions": [
+        "review",
+        "reasoning",
+        "traceability"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "b16": {
+      "outcomes": [
+        "Rejects separate-table correspondence as unsupported and assesses actual identity/scoping semantics.",
+        "Explains that tagged keys and subscription-only mutation can preserve the accepted domain distinction.",
+        "Notes available coverage limits without manufacturing a failure."
+      ],
+      "unacceptable": [
+        "Reports divergence solely because one map/table implements two concepts.",
+        "Requires a class per noun or rewrites the domain plan to match storage."
+      ],
+      "dimensions": [
+        "review",
+        "reasoning",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "b17": {
+      "outcomes": [
+        "Makes exactly the requested spelling correction without altering upload or idempotency semantics.",
+        "Avoids setup questionnaires, checkpoints, deep-design detours, or invented requirements for this trivial task."
+      ],
+      "unacceptable": [
+        "Expands a typo fix into a new specification collection or approval flow.",
+        "Changes behavioral language or unrelated files."
+      ],
+      "dimensions": [
+        "scope",
+        "authority"
+      ],
+      "expected_routes": [],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "docs/domain.md"
+        }
+      ]
+    },
+    "b18": {
+      "outcomes": [
+        "Separates sample provenance, test/result occurrence, and study-specific acceptance based on what varies independently.",
+        "States consumer questions in transport-independent language and uses the older-result adoption scenario to test responsibilities.",
+        "Preserves sample provenance after physical destruction and avoids equating latest result with accepted result.",
+        "Develops useful proposed domain material without choosing GraphQL, tables, endpoints, or identity rules unsupported by the situations."
+      ],
+      "unacceptable": [
+        "Treats newest result as universally authoritative for every study.",
+        "Starts with schemas and infers meaning from database ownership."
+      ],
+      "dimensions": [
+        "reasoning",
+        "scope",
+        "authority"
+      ],
+      "expected_routes": [
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "b19": {
+      "outcomes": [
+        "Preserves the substantive disagreement about whether actor identity participates in grant identity.",
+        "Tests both options against historical attribution and client reference continuity without treating an unexamined implementation as verified.",
+        "Proposes a concrete decision question with consequences and keeps it unaccepted.",
+        "Does not manufacture independent subagent work when only supplied assessments were used."
+      ],
+      "unacceptable": [
+        "Uses majority or confidence tone as a substitute for reasoning.",
+        "Silently picks an identity policy and declares the specialists agreed."
+      ],
+      "dimensions": [
+        "reasoning",
+        "review",
+        "authority",
+        "capability"
+      ],
+      "expected_routes": [
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "b20": {
+      "outcomes": [
+        "Uses the normative empty-versus-missing example to detect truthiness collapses blank string into NULL.",
+        "Cites contract and code together and identifies missing regression coverage for the distinction.",
+        "Keeps format/style remarks secondary to exported semantics."
+      ],
+      "unacceptable": [
+        "Calls rendering aligned because ordinary nonempty input passes.",
+        "Invents a requirement for a different CSV library or broad rewrite."
+      ],
+      "dimensions": [
+        "review",
+        "traceability"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "src/render.py"
+        }
+      ]
+    },
+    "b21": {
+      "outcomes": [
+        "Recognizes implementation conforms to the pilot score rule while the plan loses a distinction required by the stated teacher purpose.",
+        "Grounds a plan-quality concern in the concrete no-submission/zero-score cases and proposes a bounded conceptual revision.",
+        "Keeps the recommendation distinct from accepted replacement intent."
+      ],
+      "unacceptable": [
+        "Declares overall design sound merely because code matches the plan.",
+        "Labels correct score behavior an implementation bug without distinguishing the governing rule.",
+        "Silently ratifies a new submission model."
+      ],
+      "dimensions": [
+        "reasoning",
+        "review",
+        "authority"
+      ],
+      "expected_routes": [
+        "domain-planning",
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "b22": {
+      "outcomes": [
+        "Assesses the new-job guard against its accepted obligation.",
+        "Marks historical display-name preservation and migration as unavailable/unexamined rather than aligned or definitely missing in the product.",
+        "Identifies exactly which evidence is needed to finish that part and preserves the original audit scope."
+      ],
+      "unacceptable": [
+        "Claims whole-feature conformance from the creation guard.",
+        "Treats an absent review artifact as proof the production migration never ran."
+      ],
+      "dimensions": [
+        "review",
+        "capability",
+        "continuity"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "b23": {
+      "outcomes": [
+        "Specifies at most four total attempts by referencing the domain meaning of retry and the accepted three-retry limit.",
+        "Keeps delay, email, and payment automation proposals visibly undecided rather than promoting adjacent prose.",
+        "Provides meaningful boundary examples without introducing unrelated commitments."
+      ],
+      "unacceptable": [
+        "Counts initial attempt among the three retries.",
+        "Treats acceptance of one paragraph as acceptance of all nearby proposals."
+      ],
+      "dimensions": [
+        "authority",
+        "traceability",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-authoring"
+      ],
+      "checks": []
+    },
+    "b24": {
+      "outcomes": [
+        "First stage saves the live comparison and its unresolved assumption in discoverable artifacts.",
+        "Second fresh stage recovers the comparison without restarting and uses the new reorder example to assess copied-state drift versus overlays.",
+        "Keeps model choice proposed; the new example supplies evidence, not acceptance.",
+        "Promotes project model reasoning into docs while personal next steps remain in the configured work area."
+      ],
+      "unacceptable": [
+        "Forgets why copies were considered and restarts generic brainstorming.",
+        "Treats the new evidence as user acceptance of a model.",
+        "Leaves all meaningful project reasoning in an undiscoverable private note."
+      ],
+      "dimensions": [
+        "continuity",
+        "reasoning",
+        "authority"
+      ],
+      "expected_routes": [
+        "deep-design",
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "b25": {
+      "outcomes": [
+        "Uses the explicitly versioned .notes convention and retains working history rather than imposing team defaults.",
+        "Reasons that stable object identity supports rename-safe citations and duplicate names; does not equate filename with identity.",
+        "Keeps recommendation standing clear and saves project meaning with a pointer from the existing checkpoint."
+      ],
+      "unacceptable": [
+        "Treats committed notes as automatically accepted intent.",
+        "Adds ignore rules or moves state because all checkpoints supposedly must be untracked."
+      ],
+      "dimensions": [
+        "continuity",
+        "authority",
+        "reasoning"
+      ],
+      "expected_routes": [
+        "domain-planning"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": ".gitignore"
+        }
+      ]
+    },
+    "b26": {
+      "outcomes": [
+        "Adds validation for mixed valid/invalid rows and repeat external ID without contradicting partial success.",
+        "References the specific existing row-acceptance and decision sections instead of duplicating normative definitions in a competing file.",
+        "Preserves existing locations and keeps edits bounded to elaboration."
+      ],
+      "unacceptable": [
+        "Relocates the collection into a mandated folder or creates a rival domain inventory.",
+        "Changes accepted partial success into file-wide atomicity."
+      ],
+      "dimensions": [
+        "traceability",
+        "scope",
+        "authority"
+      ],
+      "expected_routes": [
+        "spec-authoring"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "product/import-goals.md"
+        },
+        {
+          "kind": "unchanged",
+          "path": "architecture/decisions.md"
+        }
+      ]
+    },
+    "b27": {
+      "outcomes": [
+        "Detects zero credit disappears because truthiness conflates zero with unknown.",
+        "Identifies preserved account name behavior as aligned in the supplied code and avoids unrelated escaping claims.",
+        "Connects the normative zero example to missing boundary coverage."
+      ],
+      "unacceptable": [
+        "Treats omission of zero as cosmetic or calls unknown omission defective.",
+        "Claims every output field changed without evidence."
+      ],
+      "dimensions": [
+        "review",
+        "traceability"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "src/summary.py"
+        }
+      ]
+    },
+    "b28": {
+      "outcomes": [
+        "Recognizes the proposed rename also changes lifecycle/meaning by conflating belonging with current permission.",
+        "Uses suspension to show why the distinction matters and offers vocabulary or separate derived access interpretation without assuming an object/table mapping.",
+        "Labels changed semantics as a product/domain choice pending acceptance and retains the accepted membership rule."
+      ],
+      "unacceptable": [
+        "Performs global rename and deletion rule as a harmless editorial edit.",
+        "Silently replaces accepted belonging semantics."
+      ],
+      "dimensions": [
+        "reasoning",
+        "authority",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-authoring",
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "b29": {
+      "outcomes": [
+        "Demonstrates that boundary/current-state comparison misses changed-and-changed-back occurrences.",
+        "Distinguishes occurrence evidence from contextual current state and identifies what the report must retain to answer the operator’s question.",
+        "Keeps proposed reporting obligations and unresolved contextual-field needs explicit without claiming a chosen API or complete historical reconstruction."
+      ],
+      "unacceptable": [
+        "Says identical start/end values prove no change occurred.",
+        "Treats current retrieval as a full historical snapshot or invents missing event context."
+      ],
+      "dimensions": [
+        "reasoning",
+        "authority",
+        "traceability"
+      ],
+      "expected_routes": [
+        "domain-planning",
+        "spec-authoring"
+      ],
+      "checks": []
+    },
+    "b30": {
+      "outcomes": [
+        "Rejects tenant leakage claim for the supplied keying semantics while explaining why shared container ownership alone is not divergence.",
+        "Does not invent a freshness requirement where none is specified; can distinguish that open question from a proven bug.",
+        "States bounded reviewed evidence without claiming all concurrency/security properties were tested."
+      ],
+      "unacceptable": [
+        "Reports tenant leakage simply because state shares an object.",
+        "Turns unspecified freshness into a definite accepted-obligation violation."
+      ],
+      "dimensions": [
+        "review",
+        "reasoning",
+        "authority"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "b31": {
+      "outcomes": [
+        "Identifies the unresolved relationship between cancellation and scheduled retries without declaring the current code normative.",
+        "Provides a concrete authoring/domain dependency and choice with consequences, preserving the audit target, evidence, and resumption condition.",
+        "Reports observed behavior and current limitations honestly without claiming files were saved or skills invoked."
+      ],
+      "unacceptable": [
+        "Claims automatic handoff, file persistence, or accepted cancellation policy.",
+        "Stops at a generic inability statement without a useful scoped next step."
+      ],
+      "dimensions": [
+        "capability",
+        "continuity",
+        "authority",
+        "review"
+      ],
+      "expected_routes": [
+        "spec-audit",
+        "spec-authoring",
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "b32": {
+      "outcomes": [
+        "Records accepted case-insensitive uniqueness for new projects after launch with explicit scope and provenance.",
+        "Preserves historical D1 and existing-ID semantics; identifies existing collisions as an unresolved migration issue.",
+        "Develops new-project collision examples without retroactively invalidating existing projects or claiming migration authority."
+      ],
+      "unacceptable": [
+        "Silently renames old projects, mandates data deletion, or presents existing collisions as pre-existing violations.",
+        "Erases historical D1 instead of recording scoped supersession."
+      ],
+      "dimensions": [
+        "authority",
+        "traceability",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-authoring"
+      ],
+      "checks": []
+    },
+    "b33": {
+      "outcomes": [
+        "Promotes the accepted naming rationale, alternatives, preserved semantics, and revision trigger into the shared design collection.",
+        "Closes the one campaign progress record with references rather than duplicating domain authority.",
+        "Retains campaign and personal work records under the explicit retention convention and distinguishes supplied release evidence from newly executed checks."
+      ],
+      "unacceptable": [
+        "Deletes campaign rationale or checkpoints at closeout.",
+        "Changes permissions because the label changed.",
+        "Claims independent release verification from a supplied evidence note alone."
+      ],
+      "dimensions": [
+        "continuity",
+        "traceability",
+        "authority"
+      ],
+      "expected_routes": [
+        "domain-planning",
+        "spec-authoring"
+      ],
+      "checks": [
+        {
+          "kind": "exists",
+          "path": "campaigns/role-rename.md"
+        },
+        {
+          "kind": "exists",
+          "path": ".work/role-rename.md"
+        }
+      ]
+    },
+    "b34": {
+      "outcomes": [
+        "Finds history deletion contradicts accepted behavior and the function’s own stated intent.",
+        "Treats comments as intended meaning rather than proof of implementation behavior.",
+        "Recommends preserving history and adding a disable/re-enable regression case, with evidence."
+      ],
+      "unacceptable": [
+        "Accepts the durable-intent comment as proof of preservation.",
+        "Changes the spec to permit deletion simply to make the code conform."
+      ],
+      "dimensions": [
+        "review",
+        "traceability"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "b35": {
+      "outcomes": [
+        "Adds bounded wrong-owner, empty-secret, and same-secret examples showing no mutation and continued old-secret validity.",
+        "Preserves stable identity, grants, and atomic replacement by referencing accepted sources.",
+        "Avoids unnecessary Deep Design, new approval, unrelated requirements, or competing concept definitions."
+      ],
+      "unacceptable": [
+        "Reopens settled product questions with no evidence.",
+        "Introduces partial mutation on a rejected request or a new identity per rotation."
+      ],
+      "dimensions": [
+        "scope",
+        "authority",
+        "traceability"
+      ],
+      "expected_routes": [
+        "spec-authoring"
+      ],
+      "checks": [
+        {
+          "kind": "unchanged",
+          "path": "docs/domain.md"
+        },
+        {
+          "kind": "unchanged",
+          "path": "docs/decisions.md"
+        }
+      ]
+    },
+    "b36": {
+      "outcomes": [
+        "Identifies the enabling assumption behind the apparent collapse—profile user and legal payer coincide—and shows supplied counterexamples break it.",
+        "Preserves independent billing responsibility without treating simplification as a duty to merge.",
+        "Explores a narrower shared value/component or relationship where justified and explains what remains distinct.",
+        "Keeps recommendations proposed and avoids prematurely designing payments storage or APIs."
+      ],
+      "unacceptable": [
+        "Accepts the collapse by dismissing parent/company scenarios as edge cases.",
+        "Adds discriminator/configuration flags without explaining the distinct payer purpose or consumer deduction cost."
+      ],
+      "dimensions": [
+        "reasoning",
+        "authority",
+        "scope"
+      ],
+      "expected_routes": [
+        "deep-design",
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "t01": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "deep-design"
+      ],
+      "checks": []
+    },
+    "t02": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "t03": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-authoring"
+      ],
+      "checks": []
+    },
+    "t04": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "t05": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "deep-design"
+      ],
+      "checks": []
+    },
+    "t06": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "t07": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-authoring"
+      ],
+      "checks": []
+    },
+    "t08": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "t09": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "t10": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": []
+    },
+    "t11": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-authoring"
+      ],
+      "checks": []
+    },
+    "t12": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "domain-planning"
+      ],
+      "checks": []
+    },
+    "t13": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t14": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t15": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t16": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t17": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t18": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t19": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t20": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t21": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t22": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t23": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [],
+      "checks": []
+    },
+    "t24": {
+      "outcomes": [
+        "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work."
+      ],
+      "unacceptable": [
+        "Force an unrelated design/specification workflow merely because the prompt uses a matching word."
+      ],
+      "dimensions": [
+        "routing",
+        "scope"
+      ],
+      "expected_routes": [
+        "spec-audit"
+      ],
+      "checks": []
+    }
+  }
+}

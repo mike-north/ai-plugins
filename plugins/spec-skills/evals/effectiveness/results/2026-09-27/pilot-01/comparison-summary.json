@@ -1,0 +1,93 @@
+{
+  "comparisons": [
+    {
+      "pair": "c01-repeat-1-none",
+      "winner": "runs/c01/current/repeat-1",
+      "rationale": "B better satisfies the task because it saves a reusable design artifact in docs/, explicitly states the shared-semantics assumption and the lifecycle sacrifice, tests the key brief cases, preserves the proposed/not-accepted status, and bounds marketplace approval as a future counterexample. A has the right core idea and avoids API design, but it is thinner on the consequential assumption/sacrifice and saves the main candidate only in .work rather than shared docs."
+    }
+  ],
+  "per_case_dimensions": [
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "authority",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "continuity",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "reasoning",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "scope",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "authority",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "continuity",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "reasoning",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "scope",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    }
+  ],
+  "human_preference": "PENDING",
+  "scope": "Pilot sample, not a population reliability estimate"
+}

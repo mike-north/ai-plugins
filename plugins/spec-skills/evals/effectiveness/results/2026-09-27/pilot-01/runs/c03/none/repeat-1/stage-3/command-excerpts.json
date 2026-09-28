@@ -1,0 +1,130 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc 'pwd && rg --files'",
+    "exit_code": 0,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-01/runs/c03/none/repeat-1/workspace\nsrc/extensions.py\nAGENTS.md\ndocs/notes.md\ndocs/index.md\ndocs/adoption.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "851f8a7b47554df33b04ed020ad3e612e2ea3a39f2b0f2ba479d42166aa256f9"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": " M ../../../../../../../../.claude-plugin/marketplace.json\n M ../../../../../../../../.cursor-plugin/marketplace.json\n M ../../../../../../../../plugins/spec-skills/.claude-plugin/plugin.json\n M ../../../../../../../../plugins/spec-skills/.codex-plugin/plugin.json\n M ../../../../../../../../plugins/spec-skills/.cursor-plugin/plugin.json\n M ../../../../../../../../plugins/spec-skills/README.md\n M ../../../../../../../../plugins/spec-skills/aipm.config.ts\n M ../../../../../../../../plugins/spec-skills/skills/spec-audit/SKILL.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-audit/references/eval-cases.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-audit/references/eval-scorecard.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-audit/references/evidence-and-classification.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-audit/references/traceability-and-regression.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-authoring/SKILL.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-authoring/references/eval-cases.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-authoring/references/eval-scorecard.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-authoring/references/project-adaptation.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-authoring/references/skill-evals.md\n?? ../../../../../../../../plugins/spec-skills/agents/alignment-tracer.md\n?? ../../../../../../../../plugins/spec-skills/agents/domain-assessor.md\n?? ../../../../../../../../plugins/spec-skills/evals/\n?? ../../../../../../../../plugins/spec-skills/skills/deep-design/\n?? ../../../../../../../../plugins/spec-skills/skills/domain-planning/\n?? ../../../../../../../../plugins/spec-skills/skills/spec-audit/assets/\n?? ../../../../../../../../plugins/spec-skills/skills/spec-audit/references/review-inputs.md\n?? ../../../../../../../../plugins/spec-skills/skills/spec-audit/scripts/\n?? ../../../../../../../../tests/spec-skills-review-inputs.test.mjs\n",
+    "output_truncated": false,
+    "full_output_sha256": "d4bcdaf7f8fd509a9a31c031dad4ac47c81b7a822769abfb0eb5824dbe6b38f0"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/adoption.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Extension Version Adoption Decision\n\n## Audit Question\n\nDoes publishing a new extension version cause existing usages to adopt that version, and is that behavior intentional?\n\n## Decision\n\nPublishing an extension version updates the extension's `latest` version only. Existing usages remain pinned to the version they already chose. Moving a usage to a newer version is a separate, explicit usage operation.\n\nThis release accepts pinned usages as the product contract. It does not accept automatic migration of existing data when a new version is published.\n\n## Rationale\n\nPinned usages preserve reproducibility: a usage that was configured and validated against one extension version keeps running against that version after later publication events. This keeps publication focused on making a new version available, not changing existing usage behavior.\n\nExplicit adoption keeps ownership clear. The actor responsible for a usage chooses when that usage should move, so migration can be reviewed, tested, or coordinated independently from the publisher's release cadence.\n\nAutomatic adoption can still be introduced in a later release, but it would need its own contract covering eligibility, opt-in or opt-out rules, and ownership of migration risk. Until then, publication and adoption are separate responsibilities.\n\n## Acceptance Criteria\n\n- Publishing version `N` records `N` as the extension's latest published version.\n- Existing usages of that extension remain pinned to their previous versions after publication.\n- Adopting version `N` for a usage requires an explicit operation against that usage.\n- Any future automatic adoption behavior must be specified separately, including its scope, opt-in or opt-out rules, and migration ownership.\n\n## Audit Examples\n\n### Publishing Leaves Existing Usages Pinned\n\nGiven extension `spellcheck` has latest version `1` and usage `doc-editor` references `spellcheck` version `1`, when version `2` is published for `spellcheck`, then `spellcheck.latest` becomes `2` and `doc-editor.version` remains `1`.\n\n### Publishing Does Not Affect Other Extensions\n\nGiven usage `theme-picker` references extension `themes` version `3`, when version `2` is published for extension `spellcheck`, then `theme-picker.version` remains `3`.\n\n### Explicit Adoption Changes One Usage\n\nGiven extension `spellcheck` has latest version `2` and usages `doc-editor` and `mail-editor` both reference `spellcheck` version `1`, when `doc-editor` explicitly adopts version `2`, then `doc-editor.version` becomes `2` and `mail-editor.version` remains `1`.\n\n### New Usage May Choose The Latest Published Version\n\nGiven extension `spellcheck` has latest version `2`, when a new usage is created and chooses the latest published version, then that new usage references version `2`. This example does not change the pinned version of any existing usage.\n",
+    "output_truncated": false,
+    "full_output_sha256": "b54621ebdf0a2b598804a247a83af63d18bbcb68ff7f14ecdaf892d878b83440"
+  },
+  {
+    "id": "item_5",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/notes.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Installation notes\n\nSome customers want automatic updates; others want reproducibility. For the current release, the chosen contract is reproducibility by default: existing usages remain pinned when a new version is published, and adoption is an explicit usage operation.\n\nSee [adoption.md](adoption.md) for the accepted release contract and audit examples.\n",
+    "output_truncated": false,
+    "full_output_sha256": "78683963e1e2bd2390d2fe9356f92e94c49a569f810bb4c2ccc85f9ac92c43a5"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"sed -n '1,240p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- [notes.md](notes.md) records installation context for the current release decision.\n- [adoption.md](adoption.md) records the accepted version-adoption contract and audit examples for publishing behavior.\n",
+    "output_truncated": false,
+    "full_output_sha256": "cdacf83b4a1890ac1e5d3c23b69fb661bccdbb4ad229d5934618b494c49a801e"
+  },
+  {
+    "id": "item_7",
+    "command": "/bin/zsh -lc \"sed -n '1,240p' AGENTS.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+    "output_truncated": false,
+    "full_output_sha256": "88424f7d90b560c9dced34e9f8825ecbcbd005b6921c693c786cff8cf9707346"
+  },
+  {
+    "id": "item_8",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' src/extensions.py\"",
+    "exit_code": 0,
+    "output_excerpt": "\"\"\"Current extension behavior; this file is observation, not product authority.\"\"\"\ndef publish(extension, version, usages):\n    extension['latest'] = version\n    for usage in usages:\n        if usage['extension'] == extension['id']:\n            usage['version'] = version\n",
+    "output_truncated": false,
+    "full_output_sha256": "04a8c15e9628e7e4de8c8cd6347d2456b738f3a91a3ff6b9fb56afeef243d792"
+  },
+  {
+    "id": "item_10",
+    "command": "/bin/zsh -lc 'nl -ba docs/adoption.md'",
+    "exit_code": 0,
+    "output_excerpt": "     1\t# Extension Version Adoption Decision\n     2\t\n     3\t## Audit Question\n     4\t\n     5\tDoes publishing a new extension version cause existing usages to adopt that version, and is that behavior intentional?\n     6\t\n     7\t## Decision\n     8\t\n     9\tPublishing an extension version updates the extension's `latest` version only. Existing usages remain pinned to the version they already chose. Moving a usage to a newer version is a separate, explicit usage operation.\n    10\t\n    11\tThis release accepts pinned usages as the product contract. It does not accept automatic migration of existing data when a new version is published.\n    12\t\n    13\t## Rationale\n    14\t\n    15\tPinned usages preserve reproducibility: a usage that was configured and validated against one extension version keeps running against that version after later publication events. This keeps publication focused on making a new version available, not changing existing usage behavior.\n    16\t\n    17\tExplicit adoption keeps ownership clear. The actor responsible for a usage chooses when that usage should move, so migration can be reviewed, tested, or coordinated independently from the publisher's release cadence.\n    18\t\n    19\tAutomatic adoption can still be introduced in a later release, but it would need its own contract covering eligibility, opt-in or opt-out rules, and ownership of migration risk. Until then, publication and adoption are separate responsibilities.\n    20\t\n    21\t## Acceptance Criteria\n    22\t\n    23\t- Publishing version `N` records `N` as the extension's latest published version.\n    24\t- Existing usages of that extension remain pinned to their previous versions after publication.\n    25\t- Adopting version `N` for a usage requires an explicit operation against that usage.\n    26\t- Any future automatic adoption behavior must be specified separately, including its scope, opt-in or opt-out rules, and migration ownership.\n    27\t\n    28\t## Audit Examples\n    29\t\n    30\t### Publishing Leaves Existing Usages Pinned\n    31\t\n    32\tGiven extension `spellcheck` has latest version `1` and usage `doc-editor` references `spellcheck` version `1`, when version `2` is published for `spellcheck`, then `spellcheck.latest` becomes `2` and `doc-editor.version` remains `1`.\n    33\t\n    34\t### Publishing Does Not Affect Other Extensions\n    35\t\n    36\tGiven usage `theme-picker` references extension `themes` version `3`, when version `2` is published for extension `spellcheck`, then `theme-picker.version` remains `3`.\n    37\t\n    38\t### Explicit Adoption Changes One Usage\n    39\t\n    40\tGiven extension `spellcheck` has latest version `2` and usages `doc-editor` and `mail-editor` both reference `spellcheck` version `1`, when `doc-editor` explicitly adopts version `2`, then `doc-editor.version` becomes `2` and `mail-editor.version` remains `1`.\n    41\t\n    42\t### New Usage May Choose The Latest Published Version\n    43\t\n    44\tGiven extension `spellcheck` has latest version `2`, when a new usage is created and chooses the latest published version, then that new usage references version `2`. This example does not change the pinned version of any existing usage.\n",
+    "output_truncated": false,
+    "full_output_sha256": "71fc3cae142d64ed57ebc9860ce0830653e14d4ac28c97385e01699dfedbf8f6"
+  },
+  {
+    "id": "item_11",
+    "command": "/bin/zsh -lc 'nl -ba docs/notes.md'",
+    "exit_code": 0,
+    "output_excerpt": "     1\t# Installation notes\n     2\t\n     3\tSome customers want automatic updates; others want reproducibility. For the current release, the chosen contract is reproducibility by default: existing usages remain pinned when a new version is published, and adoption is an explicit usage operation.\n     4\t\n     5\tSee [adoption.md](adoption.md) for the accepted release contract and audit examples.\n",
+    "output_truncated": false,
+    "full_output_sha256": "59264c75b0ea3406037ae98f9ed4439ed5deaf522474721a193c86e76c4de91c"
+  },
+  {
+    "id": "item_12",
+    "command": "/bin/zsh -lc 'nl -ba src/extensions.py'",
+    "exit_code": 0,
+    "output_excerpt": "     1\t\"\"\"Current extension behavior; this file is observation, not product authority.\"\"\"\n     2\tdef publish(extension, version, usages):\n     3\t    extension['latest'] = version\n     4\t    for usage in usages:\n     5\t        if usage['extension'] == extension['id']:\n     6\t            usage['version'] = version\n",
+    "output_truncated": false,
+    "full_output_sha256": "a27d6a87a8683afa0dac41867e9a87f67bbd3ce8c2fba8032829285f02821619"
+  },
+  {
+    "id": "item_14",
+    "command": "/bin/zsh -lc \"rg --files -g '.work/**' -g '\"'!../**'\"'\"",
+    "exit_code": 1,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_20",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/adoption-review.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Publication and Adoption Audit\n\n## Scope\n\nThis review resumes the publication/adoption audit using only current repository artifacts. The current target is whether the implemented publishing behavior matches the accepted release contract for version adoption.\n\n## Evidence\n\n- `docs/adoption.md` defines the accepted decision: publishing updates only the extension's `latest` version, while existing usages remain pinned to the versions they already chose.\n- `docs/adoption.md` states that the current release does not accept automatic migration of existing data when a new version is published.\n- `docs/adoption.md` acceptance criteria require existing usages to remain pinned after publication and require a separate explicit operation to adopt a newer version for a usage.\n- `docs/notes.md` confirms the current release choice: reproducibility by default, with existing usages pinned and adoption handled as an explicit usage operation.\n- `src/extensions.py` implements `publish` by setting `extension['latest'] = version`, then iterating over all usages for that extension and assigning `usage['version'] = version`.\n\n## Finding\n\nThe current implementation does not satisfy the accepted publication/adoption contract.\n\nPublishing correctly records the new latest version on the extension, but it also automatically changes every existing usage of that extension to the newly published version. That behavior contradicts the documented current target, where publication makes a version available and existing usages remain pinned until an explicit adoption operation changes a specific usage.\n\n## Impact\n\nThe implemented behavior removes the reproducibility guarantee described in the release decision. A usage validated against an earlier extension version can be moved by a later publication event without a usage owner explicitly choosing adoption.\n\n## Required Current-Target Change\n\nFor the current release target, `publish` should update only the extension's latest published version. It should not mutate existing usage versions. Any operation that changes a usage's pinned version should be separate from publishing and scoped to the intended usage.\n\n## Migration Question Outside The Current Target\n\nA future release may choose to support automatic adoption or migration, but that is a separate product question from the current target. Before implementing automatic adoption, the project should specify eligibility, opt-in or opt-out behavior, ownership of migration risk, and whether existing pinned usages are ever migrated without per-usage approval.\n",
+    "output_truncated": false,
+    "full_output_sha256": "24df90580946eefdb2852a2237cff97c697af8d4ec4cf68d421769527155a992"
+  },
+  {
+    "id": "item_21",
+    "command": "/bin/zsh -lc 'git diff -- docs/index.md docs/adoption-review.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_23",
+    "command": "/bin/zsh -lc 'git status --short -- docs/index.md docs/adoption-review.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_24",
+    "command": "/bin/zsh -lc 'git ls-files -- docs/index.md docs/adoption-review.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_25",
+    "command": "/bin/zsh -lc \"sed -n '1,80p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- [notes.md](notes.md) records installation context for the current release decision.\n- [adoption.md](adoption.md) records the accepted version-adoption contract and audit examples for publishing behavior.\n- [adoption-review.md](adoption-review.md) records the publication/adoption audit finding against the current implementation.\n",
+    "output_truncated": false,
+    "full_output_sha256": "73093e18acd4d6682aee8f8371940f7bb7133b623d6a7331fe352f1632874c68"
+  }
+]

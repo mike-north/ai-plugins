@@ -1,0 +1,38 @@
+{
+  "c01-repeat-1-none": {
+    "A": "runs/c01/none/repeat-1",
+    "B": "runs/c01/current/repeat-1"
+  },
+  "c05-repeat-1-none": {
+    "A": "runs/c05/current/repeat-1",
+    "B": "runs/c05/none/repeat-1"
+  },
+  "c02-repeat-1-prior": {
+    "A": "runs/c02/prior/repeat-1",
+    "B": "runs/c02/current/repeat-1"
+  },
+  "t01-repeat-1-prior": {
+    "A": "runs/t01/current/repeat-1",
+    "B": "runs/t01/prior/repeat-1"
+  },
+  "t05-repeat-1-prior": {
+    "A": "runs/t05/current/repeat-1",
+    "B": "runs/t05/prior/repeat-1"
+  },
+  "t09-repeat-1-prior": {
+    "A": "runs/t09/prior/repeat-1",
+    "B": "runs/t09/current/repeat-1"
+  },
+  "t13-repeat-1-prior": {
+    "A": "runs/t13/current/repeat-1",
+    "B": "runs/t13/prior/repeat-1"
+  },
+  "t17-repeat-1-prior": {
+    "A": "runs/t17/prior/repeat-1",
+    "B": "runs/t17/current/repeat-1"
+  },
+  "t24-repeat-1-prior": {
+    "A": "runs/t24/prior/repeat-1",
+    "B": "runs/t24/current/repeat-1"
+  }
+}

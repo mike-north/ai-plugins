@@ -1,0 +1,80 @@
+{
+  "winner": "tie",
+  "rationale": "Both outputs correctly select `spec-audit` as the applicable capability, keep scope narrow, and avoid launching an unrelated design/spec-authoring workflow. A is slightly more explicit about rejecting `deep-design`; B is slightly clearer about the alignment/contradiction nature of the work and when `spec-authoring` might become relevant. No meaningful quality difference is established.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "routing": {
+          "score": 3,
+          "evidence": [
+            "A/stage-1/response.md: \"Applicable skill: `spec-audit`\"",
+            "A/stage-1/response.md: \"This is an audit of a test expectation against a governing specification\""
+          ],
+          "explanation": "Correctly routes to the expected `spec-audit` capability and ties the route to the spec/test contradiction."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "A/stage-1/response.md: \"Not selecting `spec-authoring` because the request is not to draft or revise the spec yet.\"",
+            "A/stage-1/response.md: \"Not selecting `deep-design` because this is a concrete source-of-truth conflict\""
+          ],
+          "explanation": "Keeps the answer scoped to capability selection and avoids unrelated workflows triggered only by matching vocabulary."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "pass",
+          "evidence": [
+            "Selected `spec-audit` and briefly explained why other candidate skills were not selected."
+          ]
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No artifacts changed, which is appropriate for this routing task. Trace compliance is outside this blind quality review."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "routing": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/response.md: \"Applicable skill: `spec-audit`\"",
+            "B/stage-1/response.md: \"review alignment between a specification and a test\""
+          ],
+          "explanation": "Correctly routes to `spec-audit` and frames the problem as a specification/test alignment audit."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/response.md: \"Not applicable: `spec-authoring` unless the governing source is ambiguous or missing\""
+          ],
+          "explanation": "Avoids unrelated work and gives a concise condition under which an additional capability might later apply."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "pass",
+          "evidence": [
+            "Selected `spec-audit` and limited the dependency discussion to a possible later `spec-authoring` need."
+          ]
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No artifacts changed, which is appropriate for this routing task. Trace compliance is outside this blind quality review."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is narrow and largely discriminates only route selection and avoiding overreach. Both candidates satisfy the hidden outcome, so there is little basis for a non-tie."
+}

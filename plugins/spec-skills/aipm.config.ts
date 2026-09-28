@@ -1,8 +1,13 @@
 import { defineConfig } from '@ai-plugin-marketplace/core';
 
+/**
+ * Keeps the established plugin identity while exposing one connected design/specification
+ * experience. Shared skills and references ship together; host manifests describe native
+ * components, and aipm generates the marketplace registrations and hook artifacts.
+ */
 export default defineConfig({
-  version: "0.0.1",
+  version: "0.1.0",
   targets: ["claude", "cursor", "codex"],
-  description: "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
-  keywords: ["specs", "skills", "quality"],
+  description: "Connected design and specification work: Deep Design, domain planning, spec authoring, and alignment review with shared decisions, repository artifacts, and resumable handoffs.",
+  keywords: ["design", "domain-modeling", "specifications", "review", "continuity"],
 });

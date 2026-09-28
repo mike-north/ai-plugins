@@ -1,0 +1,127 @@
+{
+  "winner": "B",
+  "rationale": "Both candidates satisfy the core task well: they reject the reviewer’s automatic deletion argument, preserve the parcel/freight distinctions, treat DispatchEligibility as a useful derived answer, and label the result as a recommendation rather than an accepted decision. B is slightly stronger because it more directly frames the reviewer’s objections as risks rather than proofs, keeps product-decision status visible in both the assessment and index, and gives clearer revision triggers without overcommitting to one representation.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "reasoning": {
+          "score": 3,
+          "evidence": [
+            "docs/shipment-concept-assessment.md: \"The discriminator is evidence that the model may be hiding distinct operational requirements, and that risk should be taken seriously. But the shared invariant is not implementation convenience...\"",
+            "docs/shipment-concept-assessment.md: \"They show shared lifecycle rules plus kind-specific readiness requirements.\"",
+            "docs/shipment-concept-assessment.md: \"The examples pass if `Shipment` owns only the shared movement promise and lifecycle rules, while parcel and freight own their distinct readiness facts.\""
+          ],
+          "explanation": "A reasons from shared purpose and variant-specific obligations, tests the supplied examples, and identifies when the abstraction would become weak."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "docs/shipment-concept-assessment.md: \"No product decision has been made.\"",
+            "docs/shipment-concept-assessment.md: \"The current evidence supports retaining `Shipment` as a constrained abstraction and testing it with additional scenarios before committing to schema or API shape.\""
+          ],
+          "explanation": "A keeps the recommendation provisional and does not claim acceptance or impose an unsupported schema mandate."
+        },
+        "scope": {
+          "score": 2,
+          "evidence": [
+            "docs/index.md: \"- [Shipment concept assessment](shipment-concept-assessment.md)\"",
+            "docs/shipment-concept-assessment.md: \"Do not promote `DispatchEligibility` into an independent stored domain object yet.\""
+          ],
+          "explanation": "A produces the requested durable assessment and updates the reading map. It is a bit more elaborate than necessary, but the added sections are relevant rather than distracting."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Evaluates shared purpose and distinct obligations using the parcel/freight examples rather than treating a discriminator as disqualifying.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-concept-assessment.md: \"Parcel and freight both represent a promise...\" and the stress-test table covers no-label parcel, no-appointment freight, and canceled freight."
+        },
+        {
+          "criterion": "Recognizes DispatchEligibility as potentially useful because it answers a consumer question and keeps domain deduction out of the caller.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-concept-assessment.md: \"It is useful as a named derived answer because the warehouse operator needs that answer, but the name should not imply independent identity.\""
+        },
+        {
+          "criterion": "Identifies genuine costs or alternative modeling options without inventing a mandate for separate tables or classes.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-concept-assessment.md: \"If most consumers branch on `kind` for most behavior, revisit the model and split it.\" and \"Split `Shipment` into only `ParcelShipment` and `FreightShipment`: not yet justified.\""
+        },
+        {
+          "criterion": "Keeps its recommendation distinct from accepted project intent.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-concept-assessment.md: \"No product decision has been made.\""
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [
+        "docs/shipment-concept-assessment.md includes somewhat method-heavy sections such as \"Assumption ledger\", \"Collapse pass\", and \"Model graveyard\"; they remain relevant but add ceremony beyond the immediate task."
+      ],
+      "limitations": [
+        "No execution trace is available in the blind package, so process claims cannot be verified here."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "reasoning": {
+          "score": 3,
+          "evidence": [
+            "docs/shipment-concept-assessment.md: \"The `kind` discriminator is a compression risk, not an automatic failure.\"",
+            "docs/shipment-concept-assessment.md: \"Parcel labels and freight dock appointments are service-specific readiness evidence, not yet proof that parcel and freight are unrelated concepts.\"",
+            "docs/shipment-concept-assessment.md: \"The examples do not prove the abstraction is correct for all future fulfillment scenarios.\""
+          ],
+          "explanation": "B gives a balanced domain assessment grounded in shared consumer questions, explicit variant obligations, and limits of the examples."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "docs/index.md: \"recommendation only, not an accepted product decision.\"",
+            "docs/shipment-concept-assessment.md: \"Standing: reasoned recommendation only. No product decision has been made.\""
+          ],
+          "explanation": "B is especially clear about the recommendation’s standing and avoids converting the assessment into accepted project intent."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "docs/shipment-concept-assessment.md: \"Alternative models\" section lists separate models, derived checks, and stored decision record options.",
+            "docs/shipment-concept-assessment.md: \"Revisit the recommendation if...\""
+          ],
+          "explanation": "B covers the requested recommendation and example checks while adding focused alternatives and revision triggers that are useful for future design work."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Evaluates shared purpose and distinct obligations using the parcel/freight examples rather than treating a discriminator as disqualifying.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-concept-assessment.md: \"The useful concept is a promise to move specified goods...\" and the example table preserves label, appointment, and cancellation requirements."
+        },
+        {
+          "criterion": "Recognizes DispatchEligibility as potentially useful because it answers a consumer question and keeps domain deduction out of the caller.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-concept-assessment.md: \"A derived answer can still be a domain concept when it names a consumer question and keeps callers from reverse-engineering several rules.\""
+        },
+        {
+          "criterion": "Identifies genuine costs or alternative modeling options without inventing a mandate for separate tables or classes.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-concept-assessment.md: \"Delete `Shipment` and model `ParcelShipment` and `FreightShipment` separately. This is warranted if... The current examples do not show that.\""
+        },
+        {
+          "criterion": "Keeps its recommendation distinct from accepted project intent.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-concept-assessment.md: \"Standing: reasoned recommendation only. No product decision has been made.\""
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No execution trace is available in the blind package, so process claims cannot be verified here."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is well aligned with the task and discriminates against the main failure modes: automatic rejection of discriminators, erasing freight/parcel differences, and treating derived concepts as fake. It is less discriminating between two strong answers because both can fully satisfy the outcomes with different document structures. Human usefulness review is still pending."
+}

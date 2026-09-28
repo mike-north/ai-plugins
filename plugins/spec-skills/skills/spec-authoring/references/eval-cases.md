@@ -42,7 +42,7 @@ Common failure modes:
 
 - generic architecture-doc boilerplate
 - missing changelog or decision-log implications
-- examples that do not say what they prove
+- examples that do not say what they check or illustrate
 - prose that sounds confident where the sources are actually ambiguous
 
 ## Case 2: Sparse Docs, New Spec

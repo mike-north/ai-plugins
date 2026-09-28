@@ -1,0 +1,5 @@
+Done. I saved the design candidate in [docs/installation-collapse-candidate.md](<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c01/none/repeat-1/workspace/docs/installation-collapse-candidate.md) and added it to [docs/index.md](<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c01/none/repeat-1/workspace/docs/index.md).
+
+The proposed smaller idea is **use**: a customer-owned use of a published version in a run context, with local configuration and common lifecycle state. The note tests that framing against every situation in `docs/brief.md`, marks it as **proposed, not accepted**, and keeps the decision explicit: whether to collapse the three installation concepts into one shared **use** concept with tile/schedule/webhook as run contexts.
+
+No API design, no external services, no commits.

@@ -15,7 +15,7 @@ Run at least one task from each category:
 
 - the agent identifies governing sources early
 - the deliverable shape is explicit
-- examples are concrete and say what they prove
+- examples are concrete and say what they check or illustrate
 - assumptions are labeled instead of hidden
 - the resulting document can plausibly drive implementation or tests
 

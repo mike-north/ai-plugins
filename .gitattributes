@@ -3,3 +3,6 @@ plugins/*/hooks/payload-adapter linguist-generated=true
 plugins/*/hooks/payload-adapter.generated linguist-generated=true
 plugins/*/hooks/cursor-shim.mjs linguist-generated=true
 plugins/*/hooks/cursor-shim.mjs.generated linguist-generated=true
+
+# Disable Git whitespace-error checks for verbatim captured evaluation responses.
+plugins/spec-skills/evals/effectiveness/results/**/response.md -whitespace

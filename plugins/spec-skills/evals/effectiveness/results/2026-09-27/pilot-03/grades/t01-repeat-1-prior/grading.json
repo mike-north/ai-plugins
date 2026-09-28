@@ -1,0 +1,82 @@
+{
+  "winner": "B",
+  "rationale": "Both outputs correctly route the job to `deep-design` and avoid performing unrelated work. B is slightly stronger because it clearly distinguishes the requested design-reframing work from spec drafting or auditing, while A introduces `domain-planning` as a possible adjacent next step that is not required by the task.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "routing": {
+          "score": 3,
+          "evidence": [
+            "A/stage-1/response.md: \"Applicable skill: `deep-design`\"",
+            "A/stage-1/response.md: \"matches `deep-design` directly\""
+          ],
+          "explanation": "A selects the expected route and gives a task-grounded reason."
+        },
+        "scope": {
+          "score": 2,
+          "evidence": [
+            "A/stage-1/response.md: \"Possibly adjacent but not primary: `domain-planning`\""
+          ],
+          "explanation": "A does not force unrelated work, but mentioning an adjacent capability adds mild unnecessary scope beyond the requested route."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "pass",
+          "evidence": [
+            "Selected `deep-design` and explained that the prompt asks to challenge assumptions and seek a smaller model. No artifacts or extra workflow were created."
+          ]
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [
+        "Mentions `domain-planning` as a possible next step despite no required dependency in the prompt."
+      ],
+      "limitations": [
+        "No process trace is available in the anonymous package, so capability compliance cannot be verified here."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "routing": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/response.md: \"Applicable skill: `deep-design`\"",
+            "B/stage-1/response.md: \"That is design clarification and reframing\""
+          ],
+          "explanation": "B selects the expected route and grounds it in the actual task."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/response.md: \"not spec drafting or spec compliance auditing\"",
+            "B/stage-1/response.md: \"Not applicable: `spec-authoring`, `spec-audit`\""
+          ],
+          "explanation": "B cleanly avoids unrelated spec workflows despite matching vocabulary in the broader task metadata."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "pass",
+          "evidence": [
+            "Selected `deep-design`, explained why, and explicitly ruled out unrelated spec-authoring and spec-audit routes."
+          ]
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No process trace is available in the anonymous package, so capability compliance cannot be verified here."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is narrow and discriminates mainly on routing and avoiding over-triggering from skill vocabulary. Both outputs satisfy the core requirement; the only meaningful distinction is B's tighter scope control."
+}

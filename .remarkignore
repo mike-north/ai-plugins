@@ -5,3 +5,7 @@
 # Authored docs (README, SKILL.md, POWER.md, GEMINI.md) are still linted.
 plugins/*/skills/*/resources/
 plugins/*/skills/*/references/
+
+# Captured evaluation responses are evidence; preserve their original Markdown.
+# Authored protocols, assessments, and result summaries remain linted.
+plugins/spec-skills/evals/effectiveness/results/**/runs/**/response.md

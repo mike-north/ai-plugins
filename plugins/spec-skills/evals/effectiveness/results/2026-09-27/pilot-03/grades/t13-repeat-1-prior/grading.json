@@ -1,0 +1,105 @@
+{
+  "winner": "B",
+  "rationale": "Both outputs correctly avoided triggering an unrelated design/specification workflow and provided a direct French translation. B is slightly stronger because it briefly explains why no listed skill/capability applies, matching the hidden outcome's request to explain routing/dependency briefly without doing unrelated work.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "routing": {
+          "score": 3,
+          "evidence": [
+            {
+              "path": "A/stage-1/response.md",
+              "quote": "Applicable skills: none."
+            }
+          ],
+          "explanation": "Correctly identifies that no design/specification capability should be invoked for a simple translation request."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            {
+              "path": "A/stage-1/response.md",
+              "quote": "French translation: **planification du domaine**."
+            }
+          ],
+          "explanation": "Keeps the answer tightly scoped to translation and does not explain software methodology."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "partial",
+          "evidence": [
+            {
+              "path": "A/stage-1/response.md",
+              "quote": "Applicable skills: none."
+            },
+            {
+              "path": "A/stage-1/response.md",
+              "quote": "French translation: **planification du domaine**."
+            }
+          ]
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "A does not briefly explain why no capability applies, though the routing choice is clear and correct."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "routing": {
+          "score": 3,
+          "evidence": [
+            {
+              "path": "B/stage-1/response.md",
+              "quote": "Applicable skills: none."
+            },
+            {
+              "path": "B/stage-1/response.md",
+              "quote": "Reason: This is a simple translation request, not a design, specification authoring, or audit task."
+            }
+          ],
+          "explanation": "Correctly routes away from the near-miss skill names and gives a brief justification."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            {
+              "path": "B/stage-1/response.md",
+              "quote": "French: **planification du domaine**"
+            }
+          ],
+          "explanation": "Answers the translation request directly and does not perform methodology explanation or other unrelated work."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "pass",
+          "evidence": [
+            {
+              "path": "B/stage-1/response.md",
+              "quote": "Applicable skills: none."
+            },
+            {
+              "path": "B/stage-1/response.md",
+              "quote": "Reason: This is a simple translation request, not a design, specification authoring, or audit task."
+            }
+          ]
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": []
+    }
+  ],
+  "eval_critique": "The rubric is appropriate for distinguishing lexical near-miss routing behavior. The two candidates are both successful, so the comparison is only weakly discriminating; B's advantage is limited to a slightly clearer routing explanation."
+}

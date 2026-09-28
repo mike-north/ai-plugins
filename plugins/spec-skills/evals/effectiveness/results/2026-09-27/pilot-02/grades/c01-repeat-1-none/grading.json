@@ -1,0 +1,146 @@
+{
+  "winner": "B",
+  "rationale": "Both candidates satisfy the core task by saving a proposed, not accepted collapse around a customer-owned use/binding of a published version in a context, without drifting into API design. B is stronger because it explicitly records the enabling assumption, the sacrificed independent installation lifecycle, revision triggers, and updates the resumable work checkpoint. A is useful and scoped, but its treatment of the consequential tradeoff is more implicit and it leaves the existing .work checkpoint stale.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "reasoning": {
+          "score": 2,
+          "evidence": [
+            "docs/installation-collapse-candidate.md: \"Use **use** as the organizing idea: a customer has a use of a published version in a specific operating context.\"",
+            "docs/installation-collapse-candidate.md: \"Schedule still has a clock, but the clock belongs to the scheduled run context, not to a separate lifecycle model.\"",
+            "docs/installation-collapse-candidate.md: \"The customer creates two distinct uses that point to the same published version and carry different local configuration.\""
+          ],
+          "explanation": "A gives a coherent collapse and tests the key brief situations, including duplicate uses and schedule clocks. It is less explicit about the underlying assumption and what lifecycle independence is being sacrificed."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "docs/installation-collapse-candidate.md: \"Status: proposed, not accepted.\"",
+            "docs/installation-collapse-candidate.md: \"Decide whether to accept the collapse from three installation concepts to one customer-owned **use** concept...\"",
+            "response.md: \"No API design, no external services, no commits.\""
+          ],
+          "explanation": "A preserves uncertainty, asks for a human decision, and does not claim acceptance or exceed the requested conceptual scope."
+        },
+        "continuity": {
+          "score": 2,
+          "evidence": [
+            "docs/index.md: \"installation-collapse-candidate.md: proposed smaller organizing idea for the installation concepts and the decision still open.\"",
+            ".work/essence.md remains: \"Current candidate: separate installation kinds. No human decision yet.\""
+          ],
+          "explanation": "A saves the design in docs and indexes it, but leaves the active work checkpoint stale, which weakens fresh-session recovery."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "docs/installation-collapse-candidate.md: \"This candidate intentionally avoids an API design.\"",
+            "docs/installation-collapse-candidate.md: \"It is only a vocabulary and responsibility split...\""
+          ],
+          "explanation": "A stays within the requested design-vocabulary pass and avoids endpoint or schema design."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Proposes a concrete collapse around a reusable version bound into a usage or equivalent, explains why execution scheduling need not create a separate binding lifecycle.",
+          "verdict": "pass",
+          "evidence": "Proposes **use** as a customer-owned binding to a published version, and states that the schedule clock belongs to scheduled run context rather than a separate lifecycle model."
+        },
+        {
+          "criterion": "States the enabling assumption about shared binding/adoption semantics and the sacrificed independent installation lifecycle; tests duplicate uses and publish-without-adoption.",
+          "verdict": "partial",
+          "evidence": "Tests duplicate uses and publishing leaving existing uses alone. It implies shared lifecycle semantics, but does not clearly label the enabling assumption or sacrificed independent lifecycle."
+        },
+        {
+          "criterion": "Investigates a realistic counterexample such as independent approval lifecycle and bounds the proposal to the current release.",
+          "verdict": "pass",
+          "evidence": "States future product approval or marketplace work remains separate and outside the current release."
+        },
+        {
+          "criterion": "Preserves uncertainty and requests human acceptance for the consequential collapse while saving proposed shared meaning and resumable work.",
+          "verdict": "partial",
+          "evidence": "Marks the document proposed and asks for a decision, and saves it in docs/index.md. However, .work/essence.md still says the current candidate is separate installation kinds."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [
+        "Did not update .work/essence.md, leaving the resumable checkpoint inconsistent with the new saved candidate."
+      ],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No execution trace is available for verifying tool/process claims, by package design."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "reasoning": {
+          "score": 3,
+          "evidence": [
+            "docs/customer-use-collapse-candidate.md: \"A customer creates a **Customer Use**: one configured adoption of a published behavior version in one delivery context.\"",
+            "docs/customer-use-collapse-candidate.md: \"The collapse depends on this assumption... tile, schedule, and webhook uses share the same adoption contract...\"",
+            "docs/customer-use-collapse-candidate.md: \"The proposed collapse gives up treating tile, schedule, and webhook installation as independently meaningful product concepts...\""
+          ],
+          "explanation": "B directly articulates the model, its assumptions, the tradeoff, and the conditions under which the collapse should be revisited."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "docs/customer-use-collapse-candidate.md: \"Status: proposed exploration. No collapse has been accepted.\"",
+            "docs/customer-use-collapse-candidate.md: \"Do you accept this bounded collapse for the current release?\"",
+            "docs/customer-use-collapse-candidate.md: \"Acceptance would settle only the current organizing model. It would not design an API...\""
+          ],
+          "explanation": "B is careful about decision authority and explicitly bounds what acceptance would and would not mean."
+        },
+        "continuity": {
+          "score": 3,
+          "evidence": [
+            "docs/index.md: \"Customer use collapse candidate... proposed, not yet accepted...\"",
+            ".work/essence.md: \"Current candidate: collapse `TileInstallation`, `ScheduleInstallation`, and `WebhookInstallation` into one proposed **Customer Use** concept...\"",
+            ".work/essence.md: \"Standing: proposed exploration only. The user explicitly has not accepted any collapse.\""
+          ],
+          "explanation": "B saves the durable design artifact, indexes it, and updates the active work checkpoint with the proposal, status, and pending decision."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "docs/customer-use-collapse-candidate.md: \"This pass deliberately avoids API design.\"",
+            "docs/customer-use-collapse-candidate.md: \"It would not design an API, commit to representation details, or decide the future marketplace model.\""
+          ],
+          "explanation": "B stays squarely in conceptual product design and avoids implementation or process expansion."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Proposes a concrete collapse around a reusable version bound into a usage or equivalent, explains why execution scheduling need not create a separate binding lifecycle.",
+          "verdict": "pass",
+          "evidence": "Defines Customer Use as configured adoption of a published behavior version in a delivery context, and says the schedule clock belongs to scheduled delivery rather than a different installation kind."
+        },
+        {
+          "criterion": "States the enabling assumption about shared binding/adoption semantics and the sacrificed independent installation lifecycle; tests duplicate uses and publish-without-adoption.",
+          "verdict": "pass",
+          "evidence": "Has explicit sections titled \"Enabling assumption\" and \"Sacrifice\"; stress test covers publishing leaving existing uses alone and two Customer Uses choosing the same version with different configuration."
+        },
+        {
+          "criterion": "Investigates a realistic counterexample such as independent approval lifecycle and bounds the proposal to the current release.",
+          "verdict": "pass",
+          "evidence": "Discusses future managed marketplace approval as outside current release and recommends adding a separate approval/listing concept later if it enters scope."
+        },
+        {
+          "criterion": "Preserves uncertainty and requests human acceptance for the consequential collapse while saving proposed shared meaning and resumable work.",
+          "verdict": "pass",
+          "evidence": "Marks status as proposed exploration, asks \"Do you accept this bounded collapse for the current release?\", updates docs/index.md, and updates .work/essence.md with current candidate and pending decision."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No execution trace is available for verifying tool/process claims, by package design."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is discriminating for this task: it distinguishes merely naming a shared concept from preserving decision authority, testing counterexamples, and leaving resumable artifacts. It does leak a preferred model shape somewhat through phrases like reusable version bound into usage, but it explicitly allows equivalents, and both candidates can be judged on actual semantic fit rather than exact naming."
+}

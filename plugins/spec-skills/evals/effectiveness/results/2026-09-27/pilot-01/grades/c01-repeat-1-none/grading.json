@@ -1,0 +1,149 @@
+{
+  "winner": "B",
+  "rationale": "B better satisfies the task because it saves a reusable design artifact in docs/, explicitly states the shared-semantics assumption and the lifecycle sacrifice, tests the key brief cases, preserves the proposed/not-accepted status, and bounds marketplace approval as a future counterexample. A has the right core idea and avoids API design, but it is thinner on the consequential assumption/sacrifice and saves the main candidate only in .work rather than shared docs.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "reasoning": {
+          "score": 2,
+          "evidence": [
+            ".work/essence.md: \"Treat the customer-facing concept as a **use of a published product version**.\"",
+            ".work/essence.md: \"The clock belongs to the scheduled context; enablement and version choice still belong to the use.\"",
+            ".work/essence.md: \"two uses can point at the same published version and carry different local configuration.\""
+          ],
+          "explanation": "A identifies the core collapse and checks the important brief scenarios, but the analysis is compact and leaves the enabling assumption and sacrificed lifecycle mostly implicit."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            ".work/essence.md: \"This is a candidate only. No collapse has been accepted.\"",
+            ".work/essence.md: \"Decide whether the design should collapse...\"",
+            "response.md: \"preserved that no collapse has been accepted\""
+          ],
+          "explanation": "A correctly preserves user authority and frames the collapse as a decision awaiting acceptance."
+        },
+        "continuity": {
+          "score": 2,
+          "evidence": [
+            ".work/essence.md: \"## Decision needed\"",
+            ".work/index.md remains: \"- essence: .work/essence.md\""
+          ],
+          "explanation": "A leaves a resumable checkpoint with the candidate and decision, but does not place the main shared design artifact under docs/ despite project guidance."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            ".work/essence.md: \"This note intentionally does not design an API.\"",
+            "response.md: \"No API design added.\""
+          ],
+          "explanation": "A stays within the requested conceptual pass and avoids endpoint/schema design."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Proposes a concrete collapse around a reusable version bound into a usage or equivalent, explains why execution scheduling need not create a separate binding lifecycle.",
+          "verdict": "pass",
+          "evidence": ".work/essence.md proposes \"a use of a published product version\" and says for Scheduled job: \"The clock belongs to the scheduled context; enablement and version choice still belong to the use.\""
+        },
+        {
+          "criterion": "States the enabling assumption about shared binding/adoption semantics and the sacrificed independent installation lifecycle; tests duplicate uses and publish-without-adoption.",
+          "verdict": "partial",
+          "evidence": ".work/essence.md tests \"Publishing a new version\" and \"Same version twice,\" but does not explicitly state the enabling assumption or the sacrificed independent installation lifecycle."
+        },
+        {
+          "criterion": "Investigates a realistic counterexample such as independent approval lifecycle and bounds the proposal to the current release.",
+          "verdict": "partial",
+          "evidence": ".work/essence.md: \"Future managed marketplace: independent approval of products can be layered onto the published product later; it is outside the current release...\" This bounds the issue, but does not deeply investigate context-varying approval as a counterexample."
+        },
+        {
+          "criterion": "Preserves uncertainty and requests human acceptance for the consequential collapse while saving proposed shared meaning and resumable work.",
+          "verdict": "pass",
+          "evidence": ".work/essence.md: \"This is a candidate only. No collapse has been accepted.\" and \"Decide whether the design should collapse...\""
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [
+        "Did not create or update a shared docs/ artifact, even though AGENTS.md says shared product, domain, specification, decision, and review material belongs in docs/."
+      ],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No command trace is available, so process claims cannot be independently verified here.",
+        "The saved candidate is only in .work/essence.md, which weakens fresh-session recovery through docs/index.md."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "reasoning": {
+          "score": 3,
+          "evidence": [
+            "docs/use-binding-collapse-candidate.md: \"A customer creates a **use binding**: one concrete use of a published product version in a customer-owned context.\"",
+            "docs/use-binding-collapse-candidate.md: \"The clock affects execution timing... scheduling [is] a context-specific execution fact\"",
+            "docs/use-binding-collapse-candidate.md: \"The current release does not need separate lifecycle, ownership, permission, approval, or version-selection rules...\""
+          ],
+          "explanation": "B gives a concrete organizing idea, tests it across the brief, states the premise behind the collapse, and explains the boundaries."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "docs/use-binding-collapse-candidate.md: \"Status: proposed, not accepted.\"",
+            ".work/essence.md: \"Standing: proposed only. The user explicitly has not accepted any collapse.\"",
+            "docs/use-binding-collapse-candidate.md: \"Decide whether to accept this proposed collapse for the current release\""
+          ],
+          "explanation": "B consistently treats the collapse as a proposal requiring human acceptance."
+        },
+        "continuity": {
+          "score": 3,
+          "evidence": [
+            "docs/index.md adds: \"use-binding-collapse-candidate.md\": \"proposed, not accepted, collapse...\"",
+            ".work/essence.md: \"Last meaningful result: saved a proposed collapse in `docs/use-binding-collapse-candidate.md`.\"",
+            "docs/use-binding-collapse-candidate.md: \"## Decision Needed\""
+          ],
+          "explanation": "B leaves both a shared design artifact and a clear checkpoint for resuming the work."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "docs/use-binding-collapse-candidate.md: \"Do not design an API from this candidate. It is only a domain-compression proposal.\"",
+            "response.md: \"No API was designed.\""
+          ],
+          "explanation": "B stays on conceptual domain planning and avoids API/schema expansion."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Proposes a concrete collapse around a reusable version bound into a usage or equivalent, explains why execution scheduling need not create a separate binding lifecycle.",
+          "verdict": "pass",
+          "evidence": "docs/use-binding-collapse-candidate.md defines \"use binding\" as use of a published product version and says schedule's clock is \"not enough by itself to justify a separate installation concept.\""
+        },
+        {
+          "criterion": "States the enabling assumption about shared binding/adoption semantics and the sacrificed independent installation lifecycle; tests duplicate uses and publish-without-adoption.",
+          "verdict": "pass",
+          "evidence": "docs/use-binding-collapse-candidate.md includes \"## Enabling Assumption,\" \"## Sacrifice,\" \"Existing Uses After Publishing,\" and \"Same Version Used Twice.\""
+        },
+        {
+          "criterion": "Investigates a realistic counterexample such as independent approval lifecycle and bounds the proposal to the current release.",
+          "verdict": "pass",
+          "evidence": "docs/use-binding-collapse-candidate.md: \"Marketplace approval may later become an independent product availability concern... outside the current release\" and \"If marketplace approval starts varying by context...\""
+        },
+        {
+          "criterion": "Preserves uncertainty and requests human acceptance for the consequential collapse while saving proposed shared meaning and resumable work.",
+          "verdict": "pass",
+          "evidence": "docs/use-binding-collapse-candidate.md: \"Status: proposed, not accepted\"; docs/index.md links the candidate; .work/essence.md records \"Pending human choice.\""
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [
+        ".work/essence.md includes process/source details such as \"Sources examined: `_guidance/deep-design/SKILL.md`...\" which are not needed for the product decision artifact."
+      ],
+      "limitations": [
+        "No command trace is available, so process claims such as examined guidance files cannot be verified from the supplied package."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is reasonably discriminating for this task: it rewards the key conceptual collapse while checking authority, continuity, counterexamples, and scope. One caveat is that process claims in artifacts cannot be audited from the anonymous package, so quality judging should not overvalue claimed source examination. The AGENTS.md convention about docs/ versus .work/ is important and makes B meaningfully stronger for recovery."
+}

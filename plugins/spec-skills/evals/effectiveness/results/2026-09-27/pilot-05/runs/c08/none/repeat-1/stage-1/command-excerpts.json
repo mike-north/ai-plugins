@@ -1,0 +1,114 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc \"pwd && rg --files -g '\"'!*'\"' -g 'docs/**' -g '.work/**'\"",
+    "exit_code": 1,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-05/runs/c08/none/repeat-1/workspace\n",
+    "output_truncated": false,
+    "full_output_sha256": "30d6c9d71108e47fb191a54b263dd77c22fa5271fa3b550b1c75a9da01733f64"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/brief.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Reusable behavior\nAuthors publish numbered versions. Customers use the same version in multiple places with different local retry limits. The first sketch has TileInstall and JobInstall, whose binding lifecycles are the same. Execution engines are out of scope. Users need to know which version each use is on. Nothing is accepted yet.\n",
+    "output_truncated": false,
+    "full_output_sha256": "c173700d217654d9102ded3f518541c0364fe9e19190d12d3ef3ea648bd19c80"
+  },
+  {
+    "id": "item_3",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+    "output_truncated": false,
+    "full_output_sha256": "7ea01f7466f50e438267782c28f28bb9534264cc1ef43319a704fd63d7e9efbd"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' .work/index.md\"",
+    "exit_code": 1,
+    "output_excerpt": "sed: .work/index.md: No such file or directory\n",
+    "output_truncated": false,
+    "full_output_sha256": "fcaeb2b9811dce4b9a2660fad37e99785fe582f2f1bb648987264b7e3947ea26"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc 'find docs -maxdepth 2 -type f -print'",
+    "exit_code": 0,
+    "output_excerpt": "docs/index.md\ndocs/brief.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "49436321da7aeac7e3e44b3ce82fbbb52070df2e162b0df7dda840dc29769a70"
+  },
+  {
+    "id": "item_7",
+    "command": "/bin/zsh -lc 'ls -la'",
+    "exit_code": 0,
+    "output_excerpt": "total 16\ndrwxr-xr-x@ 7 mnorth  staff  224 Sep 27 12:04 .\ndrwxr-xr-x@ 4 mnorth  staff  128 Sep 27 12:04 ..\ndrwxr-xr-x@ 9 mnorth  staff  288 Sep 27 12:04 .git\n-rw-r--r--@ 1 mnorth  staff    7 Sep 27 12:04 .gitignore\n-rw-r--r--@ 1 mnorth  staff  825 Sep 27 12:04 AGENTS.md\ndrwxr-xr-x@ 4 mnorth  staff  128 Sep 27 12:04 docs\ndrwxr-xr-x@ 3 mnorth  staff   96 Sep 27 12:04 src\n",
+    "output_truncated": false,
+    "full_output_sha256": "c71d42b1fe48105e3329b28562c2bbc24ad566ce95a3ac2cd3395607e5038912"
+  },
+  {
+    "id": "item_8",
+    "command": "/bin/zsh -lc 'find .work -maxdepth 2 -type f -print'",
+    "exit_code": 1,
+    "output_excerpt": "find: .work: No such file or directory\n",
+    "output_truncated": false,
+    "full_output_sha256": "7506efcb9ace9fd75444b64b4c42152f58c362f38ded146e5a468f6cc79621e6"
+  },
+  {
+    "id": "item_9",
+    "command": "/bin/zsh -lc 'ls -la docs'",
+    "exit_code": 0,
+    "output_excerpt": "total 16\ndrwxr-xr-x@ 4 mnorth  staff  128 Sep 27 12:04 .\ndrwxr-xr-x@ 7 mnorth  staff  224 Sep 27 12:04 ..\n-rw-r--r--@ 1 mnorth  staff  338 Sep 27 12:04 brief.md\n-rw-r--r--@ 1 mnorth  staff   73 Sep 27 12:04 index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "acfe5ff3423eacbb3382f7999eb9bf49dfe38dab5901a6b8b3901d9837e5bcae"
+  },
+  {
+    "id": "item_11",
+    "command": "/bin/zsh -lc 'mkdir -p .work'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_15",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/decisions.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Decisions\n\n## Proposed: Collapse TileInstall and JobInstall into Use\n\nStatus: Proposed, not accepted.\n\nThe brief says TileInstall and JobInstall have the same binding lifecycles. The consequential smaller-model choice is to represent that shared lifecycle once as Use, with tile and job treated as Placement contexts.\n\nWhy this matters:\n\n- The product can explain one local binding concept instead of two near-duplicates.\n- Each Use can clearly report the Behavior Version it is on.\n- Local retry limits remain local to each Use, so the same Behavior Version can be reused with different operational tolerances.\n- Tile and job differences remain expressible through Placement without forcing duplicated lifecycle state.\n\nRisks:\n\n- If tile and job later need different policy, audit, permission, or lifecycle semantics, Use may become too broad.\n- The word Use may be too generic for users unless the product language around placement and version is crisp.\n- Collapsing too early could hide important domain distinctions that the first sketch captured.\n\nDecision rule before acceptance:\n\nAccept the collapse only if tile and job bindings share the same lifecycle states, version-selection rules, local configuration contract, and upgrade behavior. If any of those diverge, keep a shared lower-level binding abstraction and compose it into TileInstall and JobInstall instead.\n",
+    "output_truncated": false,
+    "full_output_sha256": "37cbb33a1b531e688df791631844897faabf9699cdfdba0a2dfe4d9e629b7d53"
+  },
+  {
+    "id": "item_16",
+    "command": "/bin/zsh -lc \"sed -n '1,240p' docs/domain.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Tentative Domain Model\n\nThis model is a proposal for exploring the reusable behavior brief. It is not an accepted collapse, and names are intentionally provisional.\n\n## Smaller Model\n\n### Behavior\n\nA Behavior is the reusable authored unit. It represents the durable intent that a customer wants to run in more than one place.\n\nResponsibilities:\n\n- Own the stable identity of the reusable behavior across versions.\n- Group authored versions that belong to the same reusable idea.\n- Stay independent from customer-specific placement and retry settings.\n\nBoundary:\n\n- A Behavior does not describe where it is used.\n- A Behavior does not carry local execution settings.\n\n### Behavior Version\n\nA Behavior Version is a numbered published snapshot of a Behavior. It is the thing customers can bind to from local uses.\n\nResponsibilities:\n\n- Preserve the published content for a specific version number.\n- Make the version used by each local placement visible.\n- Avoid ambiguity when authors publish newer versions.\n\nBoundary:\n\n- A Behavior Version does not decide whether customers upgrade.\n- A Behavior Version does not own per-use retry limits.\n\n### Use\n\nA Use is a customer's local binding to one Behavior Version. It is the proposed smaller replacement for separate TileInstall and JobInstall concepts when their binding lifecycles are the same.\n\nResponsibilities:\n\n- Identify which Behavior Version a local placement is using.\n- Hold local configuration that varies by placement, such as retry limit.\n- Expose a shared binding lifecycle for all placement kinds.\n\nBoundary:\n\n- A Use does not publish behavior.\n- A Use does not execute behavior; execution engines remain out of scope.\n\n### Placement\n\nA Placement describes the local context where a Use appears, such as a tile or job.\n\nResponsibilities:\n\n- Preserve the meaningful difference between tile and job contexts.\n- Keep context-specific identity or display concerns out of the binding lifecycle.\n\nBoundary:\n\n- A Placement should not fork the lifecycle unless the lifecycle actually differs.\n- A Placement should not duplicate version-binding state.\n\n## Open Questions\n\n- Are tile and job differences only placement differences, or do they imply separate policy, authorization, or audit requirements?\n- Does a Use bind to an exact Behavior Version forever until changed, or can it follow a channel such as latest?\n- Is retry limit the only local override, or is it an example of a broader local configuration set?\n- What lifecycle states matter for a Use before execution begins, such as draft, active, disabled, or removed?\n\n## Non-Goals\n\n- Defining execution engine behavior.\n- Designing authoring workflows beyond numbered publication.\n- Accepting the TileInstall and JobInstall collapse.\n",
+    "output_truncated": false,
+    "full_output_sha256": "e18c27ba9036c72dc4c3faf6028ed17a5ca82d6378618a78abec9a800040e5db"
+  },
+  {
+    "id": "item_17",
+    "command": "/bin/zsh -lc \"sed -n '1,120p' .work/index.md && sed -n '1,220p' .work/2026-09-27-model-exploration.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Work Records\n\n- [2026-09-27 model exploration](2026-09-27-model-exploration.md)\n# 2026-09-27 Model Exploration\n\n## Request\n\nExplore the product idea in `docs/brief.md` and propose a smaller model without implementing anything. The user has not accepted a collapse.\n\n## Inputs\n\n- `docs/index.md` says to read relevant files under `docs/`.\n- `docs/brief.md` describes reusable authored behavior, numbered published versions, customer local uses with different retry limits, duplicated TileInstall and JobInstall binding lifecycles, version visibility needs, and execution engines as out of scope.\n\n## Output\n\n- Drafted `docs/domain.md` with a tentative smaller model: Behavior, Behavior Version, Use, and Placement.\n- Drafted `docs/decisions.md` with a proposed but unaccepted choice to collapse TileInstall and JobInstall into Use only if their lifecycle and binding semantics truly match.\n\n## Status\n\nNo implementation was performed. The collapse remains tentative and unaccepted.\n",
+    "output_truncated": false,
+    "full_output_sha256": "487d1389426a8adc6b91aeb4bca0fff2fa15fdb2a11a7a371814c762ac58724e"
+  },
+  {
+    "id": "item_18",
+    "command": "/bin/zsh -lc 'git diff -- docs/domain.md docs/decisions.md .work/index.md .work/2026-09-27-model-exploration.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_19",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n",
+    "output_truncated": false,
+    "full_output_sha256": "267595be09b3fbeb28c423bdd37c4d29a7621a4bff828be2e4af15efab2ae50e"
+  }
+]

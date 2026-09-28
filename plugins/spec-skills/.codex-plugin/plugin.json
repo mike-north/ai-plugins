@@ -1,20 +1,26 @@
 {
   "name": "spec-skills",
-  "version": "0.0.1",
-  "description": "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
+  "version": "0.1.0",
+  "description": "Connected design and specification work: Deep Design, domain planning, spec authoring, and alignment review with shared decisions, repository artifacts, and resumable handoffs.",
   "keywords": [
-    "specs",
-    "skills",
-    "quality"
+    "design",
+    "domain-modeling",
+    "specifications",
+    "review",
+    "continuity"
   ],
   "skills": "./skills",
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "Spec Skills",
-    "shortDescription": "Audit and author software specifications",
-    "longDescription": "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
+    "displayName": "Design and Specification",
+    "shortDescription": "Explore, model, specify, and review with continuity",
+    "longDescription": "Connected design and specification work: Deep Design, domain planning, spec authoring, and alignment review with shared decisions, repository artifacts, and resumable handoffs.",
     "category": "developer-tools",
     "capabilities": [],
     "defaultPrompt": ""
-  }
+  },
+  "agents": [
+    "./agents/domain-assessor.md",
+    "./agents/alignment-tracer.md"
+  ]
 }

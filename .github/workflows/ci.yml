@@ -43,6 +43,17 @@ jobs:
       - name: Run unit tests (pnpm test)
         run: pnpm test
 
+      # Keep harness validation independent of the runner image's default Python.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Infrastructure checks do not launch model trials or consume service credentials.
+      - name: Validate design/specification evaluation harness
+        run: |
+          python3 -m unittest discover -s plugins/spec-skills/evals/effectiveness -p 'test_*.py'
+          python3 plugins/spec-skills/evals/effectiveness/harness.py validate
+
       - name: Run markdown lint (pnpm lint)
         run: pnpm lint
 

@@ -1,0 +1,1100 @@
+[
+  {
+    "run": "pilot-01",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "reasoning",
+    "score": 2
+  },
+  {
+    "run": "pilot-01",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-01",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 2
+  },
+  {
+    "run": "pilot-01",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-01",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "reasoning",
+    "score": 3
+  },
+  {
+    "run": "pilot-01",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-01",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 3
+  },
+  {
+    "run": "pilot-01",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c07",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c07",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "review",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c07",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c07",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c07",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c07",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "review",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c07",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c07",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "review",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "review",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "reasoning",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 1
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "review",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 1
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "reasoning",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 1
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "review",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 1
+  },
+  {
+    "run": "pilot-02",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "reasoning",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "reasoning",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c05",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "review",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c05",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "capability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c05",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c05",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c05",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "review",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c05",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "capability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c05",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c05",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c02",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "reasoning",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c02",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c02",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c02",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "reasoning",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c02",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c02",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c06",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c06",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c06",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "capability",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c06",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-02",
+    "case": "c06",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 1
+  },
+  {
+    "run": "pilot-02",
+    "case": "c06",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c06",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "capability",
+    "score": 2
+  },
+  {
+    "run": "pilot-02",
+    "case": "c06",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t05",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 2
+  },
+  {
+    "run": "pilot-03",
+    "case": "t05",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 2
+  },
+  {
+    "run": "pilot-03",
+    "case": "t05",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t05",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t17",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t17",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t17",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 1
+  },
+  {
+    "run": "pilot-03",
+    "case": "t17",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 2
+  },
+  {
+    "run": "pilot-03",
+    "case": "t13",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t13",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t13",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t13",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t09",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 1
+  },
+  {
+    "run": "pilot-03",
+    "case": "t09",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 2
+  },
+  {
+    "run": "pilot-03",
+    "case": "t09",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t09",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 2
+  },
+  {
+    "run": "pilot-03",
+    "case": "t01",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t01",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "reasoning",
+    "score": 2
+  },
+  {
+    "run": "pilot-03",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c01",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "reasoning",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "continuity",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c01",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c02",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "reasoning",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c02",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c02",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 2
+  },
+  {
+    "run": "pilot-03",
+    "case": "c02",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "reasoning",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c02",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c02",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c05",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "review",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c05",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "capability",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c05",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c05",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c05",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "review",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c05",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "capability",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c05",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "authority",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "c05",
+    "variant": "none",
+    "repeat": "repeat-1",
+    "baseline": "none",
+    "dimension": "traceability",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t24",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t24",
+    "variant": "prior",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t24",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "routing",
+    "score": 3
+  },
+  {
+    "run": "pilot-03",
+    "case": "t24",
+    "variant": "current",
+    "repeat": "repeat-1",
+    "baseline": "prior",
+    "dimension": "scope",
+    "score": 3
+  }
+]

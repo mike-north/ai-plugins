@@ -1,0 +1,114 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc \"pwd && rg --files -g '\"'!*node_modules*'\"' -g '\"'!*.git*'\"'\"",
+    "exit_code": 0,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-03/runs/c01/none/repeat-1/workspace\nAGENTS.md\ndocs/brief.md\ndocs/index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "9d229e0d7c0a5472af08d22dfb374d71e298a5c66ffb73d45ff7de37fbf9d9c1"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc 'find . -maxdepth 3 -name AGENTS.md -print'",
+    "exit_code": 0,
+    "output_excerpt": "./AGENTS.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "2d4039b572e104de871bc719f3883e9a99da161dcb7126d402d00d38ddb42206"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc \"sed -n '1,240p' AGENTS.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+    "output_truncated": false,
+    "full_output_sha256": "88424f7d90b560c9dced34e9f8825ecbcbd005b6921c693c786cff8cf9707346"
+  },
+  {
+    "id": "item_5",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+    "output_truncated": false,
+    "full_output_sha256": "7ea01f7466f50e438267782c28f28bb9534264cc1ef43319a704fd63d7e9efbd"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"sed -n '1,320p' docs/brief.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Author once, use in several places\nStatus: exploration. Authors publish a version of reusable behavior. Customers use it in a dashboard tile, a scheduled job, or a webhook response. Each use chooses a published version and local configuration; publishing leaves existing uses alone. Today the sketch names TileInstallation, ScheduleInstallation, and WebhookInstallation, plus a separate ProductRegistration for each. None has shipped. Schedule execution has a clock, but the binding's enable/disable and version choice work the same. A customer can use one version twice with different configuration. A future managed marketplace might approve products independently; this is outside the current release.\n",
+    "output_truncated": false,
+    "full_output_sha256": "b9a95aedb4424784dc48a2de33de1233012c8ec955d96e14e2cad19a9d725608"
+  },
+  {
+    "id": "item_8",
+    "command": "/bin/zsh -lc 'find .work -maxdepth 3 -type f -print 2>/dev/null || true'",
+    "exit_code": 0,
+    "output_excerpt": ".work/essence.md\n.work/index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "0815f3376db7a1a6cf79c979bbd0f3a011ff99061f03cd8d90a333af7d55d2df"
+  },
+  {
+    "id": "item_9",
+    "command": "/bin/zsh -lc 'ls -la'",
+    "exit_code": 0,
+    "output_excerpt": "total 16\ndrwxr-xr-x@ 7 mnorth  staff  224 Sep 27 11:40 .\ndrwxr-xr-x@ 4 mnorth  staff  128 Sep 27 11:40 ..\ndrwxr-xr-x@ 9 mnorth  staff  288 Sep 27 11:40 .git\n-rw-r--r--@ 1 mnorth  staff    7 Sep 27 11:40 .gitignore\ndrwxr-xr-x@ 4 mnorth  staff  128 Sep 27 11:40 .work\n-rw-r--r--@ 1 mnorth  staff  629 Sep 27 11:40 AGENTS.md\ndrwxr-xr-x@ 4 mnorth  staff  128 Sep 27 11:40 docs\n",
+    "output_truncated": false,
+    "full_output_sha256": "790b540493b0c90e216c8f2fa6ac2afd78403e5c3bbd3ee2ecd5cf28272315a6"
+  },
+  {
+    "id": "item_11",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' .work/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Active work\n- essence: .work/essence.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "b22741d8a79613a4b33d9ccf5ca949c0546dd97581e1524067e488d4661261a3"
+  },
+  {
+    "id": "item_12",
+    "command": "/bin/zsh -lc \"sed -n '1,320p' .work/essence.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Essence\nOriginal job: explain reusable behavior without three parallel installation products. Current candidate: separate installation kinds. No human decision yet.\n",
+    "output_truncated": false,
+    "full_output_sha256": "c49b112d390519cbb62bf27b32cbc149a055d290df2d1b13f0a1b7e843f63aef"
+  },
+  {
+    "id": "item_16",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/installation-organizing-candidate.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Installation organizing candidate\n\nStatus: candidate only. This note proposes a smaller organizing idea for the current exploration, but it does not record acceptance of a collapse.\n\n## Candidate\n\nUse `Product` and `Use` as the organizing nouns.\n\nA `Product` is the reusable behavior an author publishes. It owns the author-facing identity and the line of published versions.\n\nA `Use` is one customer's placement of one published product version into an operational situation. It owns the customer's version choice, local configuration, and enablement state. Tile, schedule, and webhook become use contexts rather than three installation families.\n\nThe smallest phrasing is: authors publish products; customers create uses of product versions in a context.\n\n## Test Against The Brief\n\nDashboard tile: a tile is a use context. The customer chooses a published version and local configuration for that tile. If the customer wants the same version twice with different configuration, they create two uses.\n\nScheduled job: a schedule is a use context with a clock. The clock explains when execution happens, but it does not need a separate installation concept for enablement, version selection, or configuration because those remain responsibilities of the use.\n\nWebhook response: a webhook is a use context. It has different invocation mechanics from a tile or schedule, but the binding to a product version, local configuration, and enablement state follows the same model.\n\nPublishing behavior: publishing a new product version leaves existing uses alone because each use points at a chosen published version until the customer changes that choice.\n\nMultiple configurations: one customer can use the same product version more than once because each use is its own configured placement, not a property of the product or version.\n\nFuture marketplace approval: a managed marketplace can approve products independently later. That approval belongs to product availability, not to this release's use model.\n\n## What This Collapses\n\nThis candidate replaces separate `TileInstallation`, `ScheduleInstallation`, and `WebhookInstallation` concepts with one customer-side concept: `Use`.\n\nIt also replaces separate per-surface product registration concepts with one author-side concept: `Product`, while leaving future marketplace approval outside the current release.\n\n## What It Does Not Decide\n\nThis pass does not design an API, name fields, define persistence tables, choose route shapes, or specify runtime execution contracts.\n\nThis pass also does not decide whether the collapse is accepted. It only makes the candidate explicit enough to compare against the three current concepts.\n\n## Decision Needed\n\nDecide whether to accept the conceptual collapse from three surface-specific installation concepts into one `Use` concept with a required context.\n\nIf accepted, the next design pass should describe the responsibilities and invariants of product, version, use, and use context without starting from three parallel installation families.\n\nIf rejected, the next design pass should name the concrete behavior that requires separate installation concepts despite their shared version choice, local configuration, enablement, and multiplicity semantics.\n",
+    "output_truncated": false,
+    "full_output_sha256": "763cf30b317efb9340a2faf38adc4f86d92e8f0cec13ffcec56724a3f96b45b0"
+  },
+  {
+    "id": "item_17",
+    "command": "/bin/zsh -lc \"sed -n '1,120p' docs/index.md && sed -n '1,120p' .work/index.md && sed -n '1,160p' .work/installation-organizing-candidate.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- `brief.md`: source brief for the current installation-concept exploration.\n- `installation-organizing-candidate.md`: candidate collapse and decision needed; not yet accepted.\n# Active work\n- essence: .work/essence.md\n- installation organizing candidate: .work/installation-organizing-candidate.md\n# Installation organizing candidate checkpoint\n\nStatus: candidate recorded, not accepted.\n\nRequested outcome: find a smaller organizing idea for the three installation concepts, test it against `docs/brief.md`, and save the candidate plus the decision needed without designing an API.\n\nSaved result: `docs/installation-organizing-candidate.md`.\n\nCurrent decision: accept or reject the collapse from `TileInstallation`, `ScheduleInstallation`, and `WebhookInstallation` into a single customer-side `Use` concept, where tile, schedule, and webhook are contexts for that use.\n",
+    "output_truncated": false,
+    "full_output_sha256": "47288c0a872e87e86f3b71b80fc089e85e263a0c179f3d186d8529f45fd12911"
+  },
+  {
+    "id": "item_18",
+    "command": "/bin/zsh -lc 'rg -n \"endpoint|route|field|schema|table|API|request|response body|payload|GraphQL|REST\" docs/installation-organizing-candidate.md .work/installation-organizing-candidate.md'",
+    "exit_code": 0,
+    "output_excerpt": ".work/installation-organizing-candidate.md:5:Requested outcome: find a smaller organizing idea for the three installation concepts, test it against `docs/brief.md`, and save the candidate plus the decision needed without designing an API.\ndocs/installation-organizing-candidate.md:37:This pass does not design an API, name fields, define persistence tables, choose route shapes, or specify runtime execution contracts.\n",
+    "output_truncated": false,
+    "full_output_sha256": "516713461cefd5dcc2850dfa6ade829872f6b9a815da2c647dd0967dd2c43284"
+  },
+  {
+    "id": "item_20",
+    "command": "/bin/zsh -lc 'git diff -- docs .work'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_22",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n",
+    "output_truncated": false,
+    "full_output_sha256": "bee4bdd2fc991062f11bcac59a01cec4dae8d9b9e37b8a6168c1f01d3bbf1bbc"
+  }
+]

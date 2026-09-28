@@ -13,7 +13,7 @@ Audit each important behavior across these layers:
 If the chain breaks, classify the gap accurately:
 
 - requirement exists but implementation is missing
-- implementation exists but tests do not prove it
+- implementation exists but relevant behavior or boundaries remain insufficiently checked
 - implementation follows an older or different rule
 - the specification is not clear enough to judge
 

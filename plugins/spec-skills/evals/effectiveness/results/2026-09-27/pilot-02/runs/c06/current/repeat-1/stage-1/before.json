@@ -1,0 +1,10 @@
+{
+  ".gitignore": ".work/\n",
+  ".work/index.md": "# Active work\n- naming-investigation: .work/naming.md\n",
+  ".work/naming.md": "# Personal naming investigation\nSubject: my comparison of receipt/title/label words. Three assistants helped. Next: test the label wording with an example. No campaign authority.\n",
+  "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\nThis repository uses issues.example/ACCT-48 as the authoritative migration campaign. Contributor working area: .work/. Personal defaults apply only where this project is silent.\n",
+  "docs/campaign-reference.md": "# Campaign\nAuthoritative record: issues.example/ACCT-48. Last known objective: migrate display labels without breaking cited invoice IDs. Service currently unavailable; supplied snapshot may be stale.\n",
+  "docs/domain.md": "# Invoice labels\nAccepted by owner: an invoice display label can change; the invoice identifier remains stable. Existing citations use the identifier and must still resolve.\n",
+  "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+  "preferences/personal.md": "# Supplied user-level defaults\nUse local Markdown campaign plans by default. Keep personal checkpoints untracked in .work/. Do not edit this preference file for project exceptions.\n"
+}

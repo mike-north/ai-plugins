@@ -1,0 +1,1334 @@
+[
+  {
+    "run": "pilot-01",
+    "case": "c01",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 96.352,
+    "usage": {
+      "input_tokens": 198816,
+      "cached_input_tokens": 163456,
+      "reasoning_output_tokens": 776,
+      "output_tokens": 4382
+    },
+    "commands": 18,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c01",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 51.543,
+    "usage": {
+      "input_tokens": 130855,
+      "cached_input_tokens": 106752,
+      "reasoning_output_tokens": 305,
+      "output_tokens": 2118
+    },
+    "commands": 8,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c03",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 104.14,
+    "usage": {
+      "input_tokens": 241554,
+      "cached_input_tokens": 215040,
+      "reasoning_output_tokens": 854,
+      "output_tokens": 4750
+    },
+    "commands": 23,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c03",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 132.785,
+    "usage": {
+      "input_tokens": 317385,
+      "cached_input_tokens": 287488,
+      "reasoning_output_tokens": 1001,
+      "output_tokens": 6240
+    },
+    "commands": 24,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c03",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-3",
+    "status": "COMPLETE",
+    "elapsed_seconds": 87.92,
+    "usage": {
+      "input_tokens": 292255,
+      "cached_input_tokens": 262528,
+      "reasoning_output_tokens": 442,
+      "output_tokens": 3891
+    },
+    "commands": 25,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c03",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 75.48,
+    "usage": {
+      "input_tokens": 182837,
+      "cached_input_tokens": 165888,
+      "reasoning_output_tokens": 635,
+      "output_tokens": 3216
+    },
+    "commands": 14,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c03",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 95.376,
+    "usage": {
+      "input_tokens": 268953,
+      "cached_input_tokens": 238720,
+      "reasoning_output_tokens": 501,
+      "output_tokens": 4158
+    },
+    "commands": 20,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c03",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-3",
+    "status": "COMPLETE",
+    "elapsed_seconds": 75.253,
+    "usage": {
+      "input_tokens": 219974,
+      "cached_input_tokens": 200064,
+      "reasoning_output_tokens": 394,
+      "output_tokens": 2992
+    },
+    "commands": 16,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c04",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 81.032,
+    "usage": {
+      "input_tokens": 214746,
+      "cached_input_tokens": 191488,
+      "reasoning_output_tokens": 687,
+      "output_tokens": 3655
+    },
+    "commands": 18,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c04",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 129.89,
+    "usage": {
+      "input_tokens": 291828,
+      "cached_input_tokens": 253696,
+      "reasoning_output_tokens": 1225,
+      "output_tokens": 6107
+    },
+    "commands": 24,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c04",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 57.276,
+    "usage": {
+      "input_tokens": 131252,
+      "cached_input_tokens": 118016,
+      "reasoning_output_tokens": 289,
+      "output_tokens": 2460
+    },
+    "commands": 13,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c04",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 116.862,
+    "usage": {
+      "input_tokens": 301733,
+      "cached_input_tokens": 281088,
+      "reasoning_output_tokens": 1538,
+      "output_tokens": 5405
+    },
+    "commands": 20,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c05",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 15.328,
+    "usage": {
+      "input_tokens": 21342,
+      "cached_input_tokens": 12672,
+      "reasoning_output_tokens": 88,
+      "output_tokens": 543
+    },
+    "commands": 0,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-01",
+    "case": "c05",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 12.305,
+    "usage": {
+      "input_tokens": 19925,
+      "cached_input_tokens": 12672,
+      "reasoning_output_tokens": 36,
+      "output_tokens": 455
+    },
+    "commands": 0,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c01",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 98.009,
+    "usage": {
+      "input_tokens": 195947,
+      "cached_input_tokens": 170624,
+      "reasoning_output_tokens": 829,
+      "output_tokens": 4674
+    },
+    "commands": 18,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c01",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 62.341,
+    "usage": {
+      "input_tokens": 137221,
+      "cached_input_tokens": 122112,
+      "reasoning_output_tokens": 523,
+      "output_tokens": 2748
+    },
+    "commands": 9,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c02",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 93.601,
+    "usage": {
+      "input_tokens": 236454,
+      "cached_input_tokens": 209920,
+      "reasoning_output_tokens": 708,
+      "output_tokens": 4412
+    },
+    "commands": 20,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c02",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 59.294,
+    "usage": {
+      "input_tokens": 136059,
+      "cached_input_tokens": 120064,
+      "reasoning_output_tokens": 272,
+      "output_tokens": 2634
+    },
+    "commands": 10,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 96.578,
+    "usage": {
+      "input_tokens": 205950,
+      "cached_input_tokens": 181888,
+      "reasoning_output_tokens": 765,
+      "output_tokens": 4459
+    },
+    "commands": 20,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 176.016,
+    "usage": {
+      "input_tokens": 614132,
+      "cached_input_tokens": 564992,
+      "reasoning_output_tokens": 843,
+      "output_tokens": 7501
+    },
+    "commands": 31,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-3",
+    "status": "COMPLETE",
+    "elapsed_seconds": 101.039,
+    "usage": {
+      "input_tokens": 358797,
+      "cached_input_tokens": 332928,
+      "reasoning_output_tokens": 465,
+      "output_tokens": 4529
+    },
+    "commands": 26,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 69.995,
+    "usage": {
+      "input_tokens": 183934,
+      "cached_input_tokens": 167936,
+      "reasoning_output_tokens": 390,
+      "output_tokens": 3005
+    },
+    "commands": 15,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 95.204,
+    "usage": {
+      "input_tokens": 220886,
+      "cached_input_tokens": 201088,
+      "reasoning_output_tokens": 450,
+      "output_tokens": 4291
+    },
+    "commands": 19,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c03",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-3",
+    "status": "COMPLETE",
+    "elapsed_seconds": 72.864,
+    "usage": {
+      "input_tokens": 199031,
+      "cached_input_tokens": 179200,
+      "reasoning_output_tokens": 179,
+      "output_tokens": 3127
+    },
+    "commands": 17,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 75.106,
+    "usage": {
+      "input_tokens": 188062,
+      "cached_input_tokens": 167552,
+      "reasoning_output_tokens": 665,
+      "output_tokens": 3371
+    },
+    "commands": 17,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 105.586,
+    "usage": {
+      "input_tokens": 228018,
+      "cached_input_tokens": 204800,
+      "reasoning_output_tokens": 621,
+      "output_tokens": 4909
+    },
+    "commands": 18,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 53.374,
+    "usage": {
+      "input_tokens": 136645,
+      "cached_input_tokens": 122112,
+      "reasoning_output_tokens": 205,
+      "output_tokens": 2273
+    },
+    "commands": 14,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c04",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 86.924,
+    "usage": {
+      "input_tokens": 190384,
+      "cached_input_tokens": 171008,
+      "reasoning_output_tokens": 820,
+      "output_tokens": 4002
+    },
+    "commands": 17,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c05",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 14.572,
+    "usage": {
+      "input_tokens": 20651,
+      "cached_input_tokens": 18816,
+      "reasoning_output_tokens": 122,
+      "output_tokens": 598
+    },
+    "commands": 0,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c05",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 10.062,
+    "usage": {
+      "input_tokens": 19925,
+      "cached_input_tokens": 18816,
+      "reasoning_output_tokens": 24,
+      "output_tokens": 367
+    },
+    "commands": 0,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c06",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 116.538,
+    "usage": {
+      "input_tokens": 262447,
+      "cached_input_tokens": 237952,
+      "reasoning_output_tokens": 953,
+      "output_tokens": 5485
+    },
+    "commands": 21,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c06",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 90.761,
+    "usage": {
+      "input_tokens": 188494,
+      "cached_input_tokens": 151552,
+      "reasoning_output_tokens": 411,
+      "output_tokens": 4241
+    },
+    "commands": 15,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c07",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 107.097,
+    "usage": {
+      "input_tokens": 268534,
+      "cached_input_tokens": 240000,
+      "reasoning_output_tokens": 603,
+      "output_tokens": 4820
+    },
+    "commands": 27,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c07",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 71.572,
+    "usage": {
+      "input_tokens": 160571,
+      "cached_input_tokens": 144000,
+      "reasoning_output_tokens": 234,
+      "output_tokens": 3169
+    },
+    "commands": 16,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 117.512,
+    "usage": {
+      "input_tokens": 218405,
+      "cached_input_tokens": 190080,
+      "reasoning_output_tokens": 281,
+      "output_tokens": 5636
+    },
+    "commands": 21,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 239.102,
+    "usage": {
+      "input_tokens": 560591,
+      "cached_input_tokens": 514688,
+      "reasoning_output_tokens": 989,
+      "output_tokens": 11717
+    },
+    "commands": 34,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-3",
+    "status": "COMPLETE",
+    "elapsed_seconds": 97.9,
+    "usage": {
+      "input_tokens": 304739,
+      "cached_input_tokens": 279936,
+      "reasoning_output_tokens": 734,
+      "output_tokens": 4238
+    },
+    "commands": 24,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-4",
+    "status": "COMPLETE",
+    "elapsed_seconds": 126.852,
+    "usage": {
+      "input_tokens": 529955,
+      "cached_input_tokens": 485632,
+      "reasoning_output_tokens": 626,
+      "output_tokens": 5588
+    },
+    "commands": 33,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 89.622,
+    "usage": {
+      "input_tokens": 189647,
+      "cached_input_tokens": 171008,
+      "reasoning_output_tokens": 455,
+      "output_tokens": 4106
+    },
+    "commands": 16,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 159.49,
+    "usage": {
+      "input_tokens": 517205,
+      "cached_input_tokens": 491648,
+      "reasoning_output_tokens": 372,
+      "output_tokens": 6853
+    },
+    "commands": 21,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-3",
+    "status": "COMPLETE",
+    "elapsed_seconds": 96.927,
+    "usage": {
+      "input_tokens": 283802,
+      "cached_input_tokens": 261248,
+      "reasoning_output_tokens": 725,
+      "output_tokens": 4312
+    },
+    "commands": 19,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-02",
+    "case": "c08",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-4",
+    "status": "COMPLETE",
+    "elapsed_seconds": 71.22,
+    "usage": {
+      "input_tokens": 204437,
+      "cached_input_tokens": 183296,
+      "reasoning_output_tokens": 292,
+      "output_tokens": 3147
+    },
+    "commands": 14,
+    "tool_attempts": null,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "c01",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 92.8,
+    "usage": {
+      "cached_input_tokens": 157312,
+      "output_tokens": 4303,
+      "reasoning_output_tokens": 515,
+      "input_tokens": 189820
+    },
+    "commands": 18,
+    "tool_attempts": 19,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "c01",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 71.549,
+    "usage": {
+      "cached_input_tokens": 186752,
+      "output_tokens": 3146,
+      "reasoning_output_tokens": 149,
+      "input_tokens": 202817
+    },
+    "commands": 14,
+    "tool_attempts": 15,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "c02",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 85.87,
+    "usage": {
+      "output_tokens": 3919,
+      "reasoning_output_tokens": 495,
+      "cached_input_tokens": 199680,
+      "input_tokens": 222760
+    },
+    "commands": 17,
+    "tool_attempts": 18,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "c02",
+    "variant": "prior",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 72.729,
+    "usage": {
+      "output_tokens": 3130,
+      "reasoning_output_tokens": 223,
+      "cached_input_tokens": 155264,
+      "input_tokens": 172654
+    },
+    "commands": 10,
+    "tool_attempts": 12,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "c05",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 15.94,
+    "usage": {
+      "cached_input_tokens": 12672,
+      "output_tokens": 680,
+      "reasoning_output_tokens": 174,
+      "input_tokens": 20651
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "c05",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 12.471,
+    "usage": {
+      "cached_input_tokens": 18816,
+      "output_tokens": 503,
+      "reasoning_output_tokens": 87,
+      "input_tokens": 19925
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t01",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 7.138,
+    "usage": {
+      "output_tokens": 159,
+      "reasoning_output_tokens": 72,
+      "cached_input_tokens": 18816,
+      "input_tokens": 20544
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t01",
+    "variant": "prior",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 7.122,
+    "usage": {
+      "output_tokens": 143,
+      "reasoning_output_tokens": 66,
+      "cached_input_tokens": 12672,
+      "input_tokens": 20545
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t05",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 8.035,
+    "usage": {
+      "output_tokens": 216,
+      "reasoning_output_tokens": 111,
+      "cached_input_tokens": 18816,
+      "input_tokens": 19862
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t05",
+    "variant": "prior",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 7.076,
+    "usage": {
+      "output_tokens": 161,
+      "reasoning_output_tokens": 55,
+      "cached_input_tokens": 18816,
+      "input_tokens": 19863
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t09",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 9.044,
+    "usage": {
+      "output_tokens": 276,
+      "reasoning_output_tokens": 151,
+      "cached_input_tokens": 12672,
+      "input_tokens": 19859
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t09",
+    "variant": "prior",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 7.353,
+    "usage": {
+      "output_tokens": 186,
+      "reasoning_output_tokens": 123,
+      "cached_input_tokens": 12672,
+      "input_tokens": 19860
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t13",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 4.645,
+    "usage": {
+      "output_tokens": 69,
+      "reasoning_output_tokens": 48,
+      "cached_input_tokens": 18816,
+      "input_tokens": 19844
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t13",
+    "variant": "prior",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 4.386,
+    "usage": {
+      "output_tokens": 62,
+      "reasoning_output_tokens": 22,
+      "cached_input_tokens": 18816,
+      "input_tokens": 19845
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t17",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 9.909,
+    "usage": {
+      "output_tokens": 289,
+      "reasoning_output_tokens": 222,
+      "cached_input_tokens": 18816,
+      "input_tokens": 19873
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t17",
+    "variant": "prior",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 4.451,
+    "usage": {
+      "output_tokens": 56,
+      "reasoning_output_tokens": 0,
+      "cached_input_tokens": 18816,
+      "input_tokens": 19874
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t24",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 6.84,
+    "usage": {
+      "output_tokens": 131,
+      "reasoning_output_tokens": 49,
+      "cached_input_tokens": 18816,
+      "input_tokens": 19856
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-03",
+    "case": "t24",
+    "variant": "prior",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 6.251,
+    "usage": {
+      "output_tokens": 133,
+      "reasoning_output_tokens": 34,
+      "cached_input_tokens": 18816,
+      "input_tokens": 19857
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-04",
+    "case": "t17",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 8.084,
+    "usage": {
+      "reasoning_output_tokens": 171,
+      "input_tokens": 19873,
+      "cached_input_tokens": 18816,
+      "output_tokens": 237
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-04",
+    "case": "t17",
+    "variant": "current",
+    "repeat": 2,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 7.186,
+    "usage": {
+      "reasoning_output_tokens": 104,
+      "input_tokens": 19873,
+      "cached_input_tokens": 18816,
+      "output_tokens": 179
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-04",
+    "case": "t17",
+    "variant": "current",
+    "repeat": 3,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 6.054,
+    "usage": {
+      "reasoning_output_tokens": 0,
+      "input_tokens": 19873,
+      "cached_input_tokens": 18816,
+      "output_tokens": 73
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-04",
+    "case": "t17",
+    "variant": "prior",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 9.261,
+    "usage": {
+      "reasoning_output_tokens": 81,
+      "input_tokens": 19874,
+      "cached_input_tokens": 18816,
+      "output_tokens": 159
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-04",
+    "case": "t17",
+    "variant": "prior",
+    "repeat": 2,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 7.773,
+    "usage": {
+      "reasoning_output_tokens": 105,
+      "input_tokens": 19874,
+      "cached_input_tokens": 18816,
+      "output_tokens": 160
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-04",
+    "case": "t17",
+    "variant": "prior",
+    "repeat": 3,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 4.945,
+    "usage": {
+      "reasoning_output_tokens": 0,
+      "input_tokens": 19874,
+      "cached_input_tokens": 18816,
+      "output_tokens": 75
+    },
+    "commands": 0,
+    "tool_attempts": 0,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-05",
+    "case": "c08",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 120.078,
+    "usage": {
+      "cached_input_tokens": 194176,
+      "output_tokens": 5710,
+      "input_tokens": 223659,
+      "reasoning_output_tokens": 776
+    },
+    "commands": 22,
+    "tool_attempts": 23,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-05",
+    "case": "c08",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 189.091,
+    "usage": {
+      "cached_input_tokens": 236544,
+      "output_tokens": 9668,
+      "input_tokens": 272248,
+      "reasoning_output_tokens": 663
+    },
+    "commands": 24,
+    "tool_attempts": 25,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-05",
+    "case": "c08",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-3",
+    "status": "COMPLETE",
+    "elapsed_seconds": 123.697,
+    "usage": {
+      "cached_input_tokens": 472320,
+      "output_tokens": 5232,
+      "input_tokens": 500528,
+      "reasoning_output_tokens": 280
+    },
+    "commands": 25,
+    "tool_attempts": 28,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-05",
+    "case": "c08",
+    "variant": "current",
+    "repeat": 1,
+    "stage": "stage-4",
+    "status": "COMPLETE",
+    "elapsed_seconds": 114.316,
+    "usage": {
+      "cached_input_tokens": 270336,
+      "output_tokens": 5454,
+      "input_tokens": 305432,
+      "reasoning_output_tokens": 837
+    },
+    "commands": 31,
+    "tool_attempts": 32,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-05",
+    "case": "c08",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-1",
+    "status": "COMPLETE",
+    "elapsed_seconds": 71.613,
+    "usage": {
+      "cached_input_tokens": 146048,
+      "output_tokens": 3150,
+      "input_tokens": 163078,
+      "reasoning_output_tokens": 229
+    },
+    "commands": 14,
+    "tool_attempts": 15,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-05",
+    "case": "c08",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-2",
+    "status": "COMPLETE",
+    "elapsed_seconds": 92.9,
+    "usage": {
+      "cached_input_tokens": 151168,
+      "output_tokens": 4388,
+      "input_tokens": 169178,
+      "reasoning_output_tokens": 604
+    },
+    "commands": 13,
+    "tool_attempts": 14,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-05",
+    "case": "c08",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-3",
+    "status": "COMPLETE",
+    "elapsed_seconds": 111.283,
+    "usage": {
+      "cached_input_tokens": 378496,
+      "output_tokens": 4604,
+      "input_tokens": 398095,
+      "reasoning_output_tokens": 422
+    },
+    "commands": 20,
+    "tool_attempts": 25,
+    "capability_violation": null
+  },
+  {
+    "run": "pilot-05",
+    "case": "c08",
+    "variant": "none",
+    "repeat": 1,
+    "stage": "stage-4",
+    "status": "COMPLETE",
+    "elapsed_seconds": 76.799,
+    "usage": {
+      "cached_input_tokens": 201728,
+      "output_tokens": 3402,
+      "input_tokens": 220662,
+      "reasoning_output_tokens": 528
+    },
+    "commands": 20,
+    "tool_attempts": 21,
+    "capability_violation": null
+  }
+]

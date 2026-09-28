@@ -1,0 +1,133 @@
+{
+  "case": "c08",
+  "variant": "none",
+  "repeat": 1,
+  "status": "COMPLETE",
+  "stages": [
+    {
+      "status": "COMPLETE",
+      "exit_code": 0,
+      "elapsed_seconds": 71.613,
+      "command": [
+        "codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "workspace-write",
+        "--json",
+        "--cd",
+        "<evaluation-repository>/scratch/effectiveness/pilot-05/runs/c08/none/repeat-1/workspace",
+        "--output-last-message",
+        "<evaluation-repository>/scratch/effectiveness/pilot-05/runs/c08/none/repeat-1/stage-1/response.md",
+        "-"
+      ],
+      "model_requested": null,
+      "stage_fresh_session": true,
+      "usage": {
+        "cached_input_tokens": 146048,
+        "output_tokens": 3150,
+        "input_tokens": 163078,
+        "reasoning_output_tokens": 229
+      },
+      "commands": 14,
+      "tool_items": 15,
+      "tool_attempts": 15
+    },
+    {
+      "status": "COMPLETE",
+      "exit_code": 0,
+      "elapsed_seconds": 92.9,
+      "command": [
+        "codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "workspace-write",
+        "--json",
+        "--cd",
+        "<evaluation-repository>/scratch/effectiveness/pilot-05/runs/c08/none/repeat-1/workspace",
+        "--output-last-message",
+        "<evaluation-repository>/scratch/effectiveness/pilot-05/runs/c08/none/repeat-1/stage-2/response.md",
+        "-"
+      ],
+      "model_requested": null,
+      "stage_fresh_session": true,
+      "usage": {
+        "cached_input_tokens": 151168,
+        "output_tokens": 4388,
+        "input_tokens": 169178,
+        "reasoning_output_tokens": 604
+      },
+      "commands": 13,
+      "tool_items": 14,
+      "tool_attempts": 14
+    },
+    {
+      "status": "COMPLETE",
+      "exit_code": 0,
+      "elapsed_seconds": 111.283,
+      "command": [
+        "codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "workspace-write",
+        "--json",
+        "--cd",
+        "<evaluation-repository>/scratch/effectiveness/pilot-05/runs/c08/none/repeat-1/workspace",
+        "--output-last-message",
+        "<evaluation-repository>/scratch/effectiveness/pilot-05/runs/c08/none/repeat-1/stage-3/response.md",
+        "-"
+      ],
+      "model_requested": null,
+      "stage_fresh_session": true,
+      "usage": {
+        "cached_input_tokens": 378496,
+        "output_tokens": 4604,
+        "input_tokens": 398095,
+        "reasoning_output_tokens": 422
+      },
+      "commands": 20,
+      "tool_items": 25,
+      "tool_attempts": 25
+    },
+    {
+      "status": "COMPLETE",
+      "exit_code": 0,
+      "elapsed_seconds": 76.799,
+      "command": [
+        "codex",
+        "exec",
+        "--ignore-user-config",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "workspace-write",
+        "--json",
+        "--cd",
+        "<evaluation-repository>/scratch/effectiveness/pilot-05/runs/c08/none/repeat-1/workspace",
+        "--output-last-message",
+        "<evaluation-repository>/scratch/effectiveness/pilot-05/runs/c08/none/repeat-1/stage-4/response.md",
+        "-"
+      ],
+      "model_requested": null,
+      "stage_fresh_session": true,
+      "usage": {
+        "cached_input_tokens": 201728,
+        "output_tokens": 3402,
+        "input_tokens": 220662,
+        "reasoning_output_tokens": 528
+      },
+      "commands": 20,
+      "tool_items": 21,
+      "tool_attempts": 21
+    }
+  ],
+  "semantic_grade": "PENDING"
+}

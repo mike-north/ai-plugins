@@ -1,0 +1,200 @@
+{
+  "winner": "B",
+  "rationale": "Both candidates satisfy the core product and implementation behavior and both make the same notable scope error by implementing during stage 2 before the explicit implementation stage. B is stronger overall because its domain artifacts and final review are more traceable and discriminating, with clearer governing-source references, stress scenarios, revision triggers, and a more complete review narrative. A has slightly stronger stage-3 test granularity, but B's accumulated specification and review evidence is more useful across the full four-stage journey.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "reasoning": {
+          "score": 2,
+          "evidence": [
+            "docs/domain.md: \"A `Usage` is a customer's local binding of one place to one published version.\"",
+            "docs/decisions.md: \"Versions are pinned per usage. Publishing a version leaves every existing usage unchanged.\"",
+            "docs/review.md: \"No blocking or non-blocking defects found.\""
+          ],
+          "explanation": "The reasoning preserves the central model and behavior. It is adequate and clear, though less rich than B in stress scenarios, alternatives, and recovery context."
+        },
+        "authority": {
+          "score": 1,
+          "evidence": [
+            "A/stage-2/response.md: \"Implemented the release model end to end.\"",
+            "A/stage-2/after.json src/registry.py: \"versions.add(version_id)\"",
+            "A/stage-2/after.json tests/test_registry.py: behavioral tests already exist before the implementation stage"
+          ],
+          "explanation": "A followed acceptance and scope in the model, but implemented and tested during stage 2, before the later prompt explicitly asked for implementation."
+        },
+        "continuity": {
+          "score": 2,
+          "evidence": [
+            "docs/index.md links brief, domain, contract, decisions, and later implementation evidence",
+            ".work/index.md: \"Smaller model proposal\"",
+            "docs/review.md references domain, decisions, contract, brief, implementation, source, and tests"
+          ],
+          "explanation": "The shared collection is navigable and semantically consistent, but work checkpoints do not meaningfully evolve after stage 1."
+        },
+        "traceability": {
+          "score": 2,
+          "evidence": [
+            "docs/contract.md: \"This contract implements the choices recorded in [Decisions](decisions.md)\"",
+            "docs/implementation.md: \"This implementation keeps the accepted registry operations limited to the in-memory contract\"",
+            "docs/review.md coverage table maps contract requirement to implementation and test evidence"
+          ],
+          "explanation": "Traceability is good from decision to contract to tests. The final review table is useful, though the stage-2 premature implementation blurs stage boundaries."
+        },
+        "review": {
+          "score": 2,
+          "evidence": [
+            "docs/review.md: \"No blocking or non-blocking defects found.\"",
+            "docs/review.md: \"successful adoption does not separately assert that the `versions` set remains unchanged\""
+          ],
+          "explanation": "The review uses actual artifacts and reports a clean result with a reasonable residual gap. It is accurate but a bit thinner than B's source-by-source review."
+        },
+        "scope": {
+          "score": 1,
+          "evidence": [
+            "docs/contract.md: \"It does not define persistent storage... or separate tile/job installation lifecycles.\"",
+            "A/stage-2/response.md: \"Implemented the release model end to end.\""
+          ],
+          "explanation": "The domain scope is well bounded, but stage sequencing is materially overstepped by implementing in stage 2."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Stage one develops and persists a concrete usage-based compression candidate with assumptions, tradeoff, scenarios, and an unaccepted status.",
+          "verdict": "pass",
+          "evidence": "docs/domain.md stage 1 says the model is \"not accepted\" and proposes Use/Place; docs/decisions.md records \"Proposed, not accepted\" with consequences and guardrail."
+        },
+        {
+          "criterion": "Stage two records the explicit scoped acceptance, develops the same domain plan and contracts by reference, and keeps publication separate from usage adoption and local retry configuration.",
+          "verdict": "pass",
+          "evidence": "docs/decisions.md records accepted shared Usage and pinned versions; docs/contract.md separates publish and adopt and states retry configuration is local."
+        },
+        {
+          "criterion": "Stage three writes behavioral tests and real working publish/adopt operations: publishing adds only a version; adopt changes only the selected usage version, rejects unknown versions/usages without mutation, and preserves both usages retry configuration.",
+          "verdict": "pass",
+          "evidence": "tests/test_registry.py covers publish, explicit adoption, unknown usage, unpublished version, and two usages with retry limits; src/registry.py implements add and per-usage version assignment."
+        },
+        {
+          "criterion": "The final fresh review uses the accumulated decision/domain/contract/scenario artifacts to examine actual implementation and tests and reports evidence/coverage honestly.",
+          "verdict": "pass",
+          "evidence": "docs/review.md lists governing artifacts, checks implementation and tests, reports no defects, and notes a residual test coverage gap."
+        },
+        {
+          "criterion": "Maintains one navigable shared collection and useful individual checkpoints across all four fresh sessions, with no competing redefinition of usage.",
+          "verdict": "partial",
+          "evidence": "docs/index.md is navigable and usage remains consistent, but .work contains only the initial smaller-model checkpoint and is stale for later sessions."
+        }
+      ],
+      "authority_errors": [
+        "Stage 2 implemented src/registry.py and tests/test_registry.py even though implementation was requested in stage 3."
+      ],
+      "false_alarms": [],
+      "missed_issues": [
+        "The final review did not call out that implementation had already happened before the implementation stage; this is a process/scope issue, not a code defect."
+      ],
+      "unnecessary_detours": [],
+      "limitations": [
+        "Raw command traces are omitted, so claimed test execution cannot be independently verified from this package alone."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "reasoning": {
+          "score": 3,
+          "evidence": [
+            "docs/domain.md: \"Tile and job placements are represented as usage context kinds, not as separate `TileInstall` and `JobInstall` concepts\"",
+            "docs/domain.md includes \"Stress Scenarios\" covering pinned publication, explicit adoption, divergent future lifecycle, and execution-state deferral",
+            "docs/decisions.md includes alternatives, counterexamples, acceptance basis, and revision triggers"
+          ],
+          "explanation": "B gives a fuller, more durable domain model with scenarios, boundaries, alternatives, and revision triggers."
+        },
+        "authority": {
+          "score": 1,
+          "evidence": [
+            "B/stage-2/response.md: \"then implemented the small Python interface with tests first\"",
+            "B/stage-2/after.json src/registry.py already implements publish/adopt",
+            "B/stage-2/after.json tests/test_registry.py already exists"
+          ],
+          "explanation": "Like A, B materially oversteps stage sequencing by implementing during stage 2."
+        },
+        "continuity": {
+          "score": 2,
+          "evidence": [
+            "docs/index.md links brief, domain, contract, decisions, and implementation",
+            ".work/index.md points to smaller-model-exploration.md",
+            ".work/smaller-model-exploration.md is updated with later accepted and implementation state"
+          ],
+          "explanation": "B maintains stronger continuity than A, but still uses one evolving checkpoint rather than useful individual checkpoints across all fresh sessions."
+        },
+        "traceability": {
+          "score": 3,
+          "evidence": [
+            "docs/domain.md: \"Sources: [brief], the accepted collapse decision..., and the accepted pinned-version decision\"",
+            "docs/contract.md: \"Normative Rules\" enumerate publish/adopt requirements",
+            "docs/review.md: \"Governing Sources\" and aligned findings tie code/tests back to contract and decisions"
+          ],
+          "explanation": "Traceability is strong from brief to decisions, contract, tests, implementation evidence, and review."
+        },
+        "review": {
+          "score": 3,
+          "evidence": [
+            "docs/review.md: \"No divergent findings were found.\"",
+            "docs/review.md has aligned sections for publication, adoption, local configuration, and rejected adoption",
+            "docs/review.md states checks run and out-of-scope areas"
+          ],
+          "explanation": "The review is thorough, evidence-grounded, and appropriately clean without inventing defects."
+        },
+        "scope": {
+          "score": 1,
+          "evidence": [
+            "docs/contract.md excludes persistent storage, authorization, scheduling, upgrade recommendations, and independent tile/job lifecycles",
+            "B/stage-2/response.md admits implementation during the documentation/contract stage"
+          ],
+          "explanation": "Product scope is tightly bounded, but process scope is significantly violated by early implementation."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Stage one develops and persists a concrete usage-based compression candidate with assumptions, tradeoff, scenarios, and an unaccepted status.",
+          "verdict": "pass",
+          "evidence": "docs/domain.md stage 1 says \"Status: proposed, not accepted\" and includes Usage Context, assumptions, consumer questions, stress scenarios, and rejected/deferred models."
+        },
+        {
+          "criterion": "Stage two records the explicit scoped acceptance, develops the same domain plan and contracts by reference, and keeps publication separate from usage adoption and local retry configuration.",
+          "verdict": "pass",
+          "evidence": "docs/decisions.md records accepted collapse and pinned explicit adoption; docs/contract.md gives normative rules separating publish from adopt and keeping retry local."
+        },
+        {
+          "criterion": "Stage three writes behavioral tests and real working publish/adopt operations: publishing adds only a version; adopt changes only the selected usage version, rejects unknown versions/usages without mutation, and preserves both usages retry configuration.",
+          "verdict": "pass",
+          "evidence": "tests/test_registry.py verifies publication with two usages pinned, explicit adoption preserving retry limits, and invalid adoption without mutating usages; src/registry.py implements the operations."
+        },
+        {
+          "criterion": "The final fresh review uses the accumulated decision/domain/contract/scenario artifacts to examine actual implementation and tests and reports evidence/coverage honestly.",
+          "verdict": "pass",
+          "evidence": "docs/review.md lists governing sources, inspected artifacts, checks, out-of-scope areas, and aligned findings against actual code/tests."
+        },
+        {
+          "criterion": "Maintains one navigable shared collection and useful individual checkpoints across all four fresh sessions, with no competing redefinition of usage.",
+          "verdict": "partial",
+          "evidence": "docs/index.md remains navigable and usage remains consistently Version Usage, but .work has one evolving checkpoint rather than individual checkpoints across sessions."
+        }
+      ],
+      "authority_errors": [
+        "Stage 2 implemented src/registry.py and tests/test_registry.py before the stage-3 implementation request."
+      ],
+      "false_alarms": [],
+      "missed_issues": [
+        "The final review did not identify the earlier stage-sequencing/scope issue."
+      ],
+      "unnecessary_detours": [
+        ".work/smaller-model-exploration.md records internal guidance sources that are not needed for the product handoff."
+      ],
+      "limitations": [
+        "Raw command traces are omitted, so claimed test execution cannot be independently verified from this package alone."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is good at distinguishing semantic alignment from mere file existence, but the expected checks are weak because they only assert artifact presence. The staged prompts make implementation timing somewhat ambiguous in stage 2 by specifying the small Python interface behavior before the explicit implementation request in stage 3; this creates a real but not catastrophic authority issue for both candidates. Human usefulness review of the final artifacts is still pending."
+}

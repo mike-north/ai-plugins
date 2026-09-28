@@ -43,7 +43,7 @@ Notable reusable patterns from FormSpec:
 - explicit root principles
 - numbered cross-referenced docs
 - concrete expected artifacts
-- examples that say what they prove
+- examples that say what they check or illustrate and what they do not establish
 - explicit exceptions and non-properties
 - parity or consistency sections for multiple authoring surfaces
 

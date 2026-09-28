@@ -1,0 +1,34 @@
+{
+  "c01-repeat-1-none": {
+    "A": "runs/c01/none/repeat-1",
+    "B": "runs/c01/current/repeat-1"
+  },
+  "c02-repeat-1-none": {
+    "A": "runs/c02/none/repeat-1",
+    "B": "runs/c02/current/repeat-1"
+  },
+  "c03-repeat-1-none": {
+    "A": "runs/c03/none/repeat-1",
+    "B": "runs/c03/current/repeat-1"
+  },
+  "c04-repeat-1-none": {
+    "A": "runs/c04/none/repeat-1",
+    "B": "runs/c04/current/repeat-1"
+  },
+  "c05-repeat-1-none": {
+    "A": "runs/c05/current/repeat-1",
+    "B": "runs/c05/none/repeat-1"
+  },
+  "c06-repeat-1-none": {
+    "A": "runs/c06/current/repeat-1",
+    "B": "runs/c06/none/repeat-1"
+  },
+  "c07-repeat-1-none": {
+    "A": "runs/c07/none/repeat-1",
+    "B": "runs/c07/current/repeat-1"
+  },
+  "c08-repeat-1-none": {
+    "A": "runs/c08/none/repeat-1",
+    "B": "runs/c08/current/repeat-1"
+  }
+}

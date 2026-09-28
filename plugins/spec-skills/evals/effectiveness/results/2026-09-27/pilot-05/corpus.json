@@ -1,0 +1,1522 @@
+{
+  "version": 2,
+  "cases": [
+    {
+      "id": "c01",
+      "kind": "behavior",
+      "split": "calibration",
+      "risk": "high",
+      "domain": "team automation product",
+      "skills": [
+        "deep-design",
+        "domain-planning"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/brief.md": "# Author once, use in several places\nStatus: exploration. Authors publish a version of reusable behavior. Customers use it in a dashboard tile, a scheduled job, or a webhook response. Each use chooses a published version and local configuration; publishing leaves existing uses alone. Today the sketch names TileInstallation, ScheduleInstallation, and WebhookInstallation, plus a separate ProductRegistration for each. None has shipped. Schedule execution has a clock, but the binding's enable/disable and version choice work the same. A customer can use one version twice with different configuration. A future managed marketplace might approve products independently; this is outside the current release.\n",
+        ".work/index.md": "# Active work\n- essence: .work/essence.md\n",
+        ".work/essence.md": "# Essence\nOriginal job: explain reusable behavior without three parallel installation products. Current candidate: separate installation kinds. No human decision yet.\n"
+      },
+      "stages": [
+        {
+          "prompt": "We have accumulated three installation concepts and the design is becoming hard to explain. Find a smaller organizing idea, test it against the situations in docs/brief.md, and save the candidate and the decision I need to make. I have not accepted any collapse yet. Do not design an API in this pass.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "c02",
+      "kind": "behavior",
+      "split": "calibration",
+      "risk": "medium",
+      "domain": "warehouse fulfillment",
+      "skills": [
+        "domain-planning",
+        "deep-design"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/plan.md": "# Fulfillment proposal\nA Shipment is a promise to move specified goods from one origin to one destination under a chosen service. Parcel and freight share that purpose but parcel needs a carrier label and freight needs a dock appointment. A shipment may have kind=parcel or kind=freight. Both have tracking and cancellation; a canceled shipment cannot dispatch. DispatchEligibility is a derived answer to \"Can the warehouse dispatch this shipment now?\" It combines inventory reservation, required documents, appointment readiness where relevant, and cancellation. It has no independent stored identity. The consumer is a warehouse operator deciding the next action, not a table mapper.\nExamples: a parcel with reserved stock but no label is ineligible; freight with stock and documents but no appointment is ineligible; canceled freight is ineligible even with an appointment.\n",
+        "docs/reviewer-note.md": "The discriminator means two concepts were illegally compressed. Anything derived without identity is not a real domain concept.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Assess whether Shipment is a useful concept or a fake abstraction. A reviewer says its kind discriminator and the derived DispatchEligibility concept prove the model should be deleted. Make a reasoned recommendation and test it against the examples; no product decision has been made.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "c03",
+      "kind": "behavior",
+      "split": "calibration",
+      "risk": "high",
+      "domain": "extension adoption audit",
+      "skills": [
+        "spec-audit",
+        "spec-authoring",
+        "domain-planning"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "src/extensions.py": "\"\"\"Current extension behavior; this file is observation, not product authority.\"\"\"\ndef publish(extension, version, usages):\n    extension['latest'] = version\n    for usage in usages:\n        if usage['extension'] == extension['id']:\n            usage['version'] = version\n",
+        "docs/notes.md": "# Unsettled installation notes\nSome customers want automatic updates; others want reproducibility. We have never chosen whether existing usages follow a new publication. No release contract exists.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Audit whether publishing an extension preserves the intended version-adoption behavior. There is no accepted spec beyond the supplied files. If a decision is missing, prepare the smallest concrete proposal in docs/adoption.md and preserve the audit question and resumption condition in .work/adoption-audit.md; leave code unchanged.",
+          "updates": {},
+          "remove": []
+        },
+        {
+          "prompt": "I choose pinned usages for the current release: publishing a version must leave existing usages on their chosen version; adoption is an explicit usage operation. I accept this rule, not automatic migration of existing data. Record my decision and its rationale in the shared collection, develop the examples needed for the original audit, and leave code unchanged.",
+          "updates": {},
+          "remove": []
+        },
+        {
+          "prompt": "Resume the publication/adoption audit using only the current repository artifacts. Give an evidence-based finding and save docs/adoption-review.md. Identify any migration question separately from the current target.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "c04",
+      "kind": "behavior",
+      "split": "calibration",
+      "risk": "medium",
+      "domain": "scheduling and contributor handoff",
+      "skills": [
+        "domain-planning",
+        "spec-authoring"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/domain.md": "# Scheduling\n## Time meaning\nAccepted by Mira for v1: run appointments at 09:00 UTC. This plan intentionally does not interpret local wall clocks.\n",
+        "docs/decisions.md": "# Decisions\nD1: Mira accepted fixed UTC instants for v1 to avoid daylight-saving policy. Revisit when local-office scheduling is required.\n",
+        ".work/index.md": "# Work index\n- office-times: .work/office-times.md\n- billing: .work/billing.md\n",
+        ".work/office-times.md": "# Office times\nOriginal job: flesh out office scheduling examples. Fixed UTC accepted in D1. Next: write three UTC examples.\n",
+        ".work/billing.md": "# Billing investigation\nContributor: Ren. Next: compare rounding rules. Do not change this record.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Start developing examples for the accepted office scheduling behavior. Save your partial result in docs/examples.md and checkpoint the next question before completing all examples.",
+          "updates": {},
+          "remove": []
+        },
+        {
+          "prompt": "Another contributor has updated the shared design since the prior work. Resume the office scheduling examples from the work index, reconcile current sources, and finish the directly affected examples. The contributor decision in docs/decisions.md is accepted project intent.",
+          "updates": {
+            "docs/domain.md": "# Scheduling\n## Time meaning\nAccepted by Mira for v2 offices: appointments remain at 09:00 in their named IANA office timezone across daylight-saving changes. Fixed UTC schedules remain a legacy mode; do not convert legacy schedules automatically.\n",
+            "docs/decisions.md": "# Decisions\nD1: Mira accepted fixed UTC instants for v1 to avoid daylight-saving policy. Superseded for new office schedules by D2; retained for legacy schedules.\nD2: Mira accepted local 09:00 office time for v2. The customer promise is opening-time delivery. Store timezone and wall time; choose the earlier instant for repeated local times and skip nonexistent local times. D1 remains valid for legacy schedules.\n",
+            ".work/office-times.md": "# Office times\nOriginal job: flesh out office scheduling examples. Last read D1 at the earlier revision: fixed UTC accepted. Next: write three UTC examples. This checkpoint predates another contributor change.\n"
+          },
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "c05",
+      "kind": "behavior",
+      "split": "calibration",
+      "risk": "high",
+      "domain": "markdown-only access review",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "markdown-only",
+      "files": {
+        "docs/index.md": "# Current review snapshot\nR1 domain.md governs tenant configuration. api.md governs release R1 behavior. roadmap.md is accepted future scope. Migration implementation is referenced but not included.\n",
+        "docs/domain.md": "# Tenant settings\nAccepted R1: retry limit belongs to a tenant usage, never globally to an extension. Separate conceptual responsibilities do not require separate storage or classes.\n",
+        "docs/api.md": "# R1 contract\nset_retry(extension_id, tenant_id, limit) changes only that tenant usage. Limits are integers 0..5 inclusive; reject any other value before mutation.\n",
+        "docs/roadmap.md": "# Accepted R2 target\nAdd automatic retry backoff in R2, after R1. It is not an R1 obligation.\n",
+        "src/settings.py": "settings = {}\ndef set_retry(extension_id, tenant_id, limit):\n    if not isinstance(limit, int) or isinstance(limit, bool) or not 0 <= limit <= 5:\n        raise ValueError('invalid retry limit')\n    settings[extension_id] = limit\n",
+        "tests/test_settings.py": "def test_upper_bound():\n    # supplied evidence: limit 6 rejects before mutation\n    pass\n"
+      },
+      "stages": [
+        {
+          "prompt": "Review this supplied snapshot for conformance. You have no tools, filesystem writes, sibling skill invocation, external context, or subagents; all available files are shown below. Give concrete findings, reject false concerns, and state unexamined areas. A reviewer has alleged that one dictionary instead of two classes violates the plan and that every future feature is missing today.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "c06",
+      "kind": "behavior",
+      "split": "calibration",
+      "risk": "medium",
+      "domain": "migration work coordination",
+      "skills": [
+        "domain-planning",
+        "spec-authoring"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\nThis repository uses issues.example/ACCT-48 as the authoritative migration campaign. Contributor working area: .work/. Personal defaults apply only where this project is silent.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "preferences/personal.md": "# Supplied user-level defaults\nUse local Markdown campaign plans by default. Keep personal checkpoints untracked in .work/. Do not edit this preference file for project exceptions.\n",
+        "docs/domain.md": "# Invoice labels\nAccepted by owner: an invoice display label can change; the invoice identifier remains stable. Existing citations use the identifier and must still resolve.\n",
+        "docs/campaign-reference.md": "# Campaign\nAuthoritative record: issues.example/ACCT-48. Last known objective: migrate display labels without breaking cited invoice IDs. Service currently unavailable; supplied snapshot may be stale.\n",
+        ".work/index.md": "# Active work\n- naming-investigation: .work/naming.md\n",
+        ".work/naming.md": "# Personal naming investigation\nSubject: my comparison of receipt/title/label words. Three assistants helped. Next: test the label wording with an example. No campaign authority.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Continue my invoice-label migration. I am the only implementer, but it is a project release campaign. Several assistants previously helped my private naming investigation. Use the effective preferences in these files, save the durable domain decision and a resumable checkpoint, and report the campaign draft honestly. The configured issue service is unavailable; no external writes are authorized.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "c07",
+      "kind": "behavior",
+      "split": "calibration",
+      "risk": "high",
+      "domain": "credential meaning changes",
+      "skills": [
+        "spec-audit",
+        "spec-authoring"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Credential collection\nMeaning: [rotation](domain.md#rotation). Wire behavior: contract.md. Accepted choices: decisions.md. Expected examples: examples.md.\n",
+        ".gitignore": ".work/\n",
+        "docs/domain.md": "# Credentials\n## Rotation\nAccepted D2: rotation replaces the secret while preserving the credential identity and grants.\n",
+        "docs/contract.md": "# Rotation operation\nAccepted D1 implementation contract, not marked superseded. Refines [rotation](domain.md#rotation): POST /rotate returns a new credential ID and revokes the original credential and its grants.\n",
+        "docs/decisions.md": "# Decisions\nD1: original new-ID design was accepted for the beta.\nD2: owner accepted stable credential identity for general release to preserve integrations. The beta migration behavior has not yet been chosen.\n",
+        "docs/examples.md": "# Normative general-release examples\nCredential c1 has grant g1. After rotating, response id=c2; c1 and g1 are invalid.\n",
+        "src/rotate.py": "def rotate(credential, new_secret):\n    credential[\"secret\"] = new_secret\n    return credential\n",
+        "tests/report.md": "Tests pass: secret changes, id stays c1, grants stay unchanged. No beta migration tests are included.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Review this credential rotation change across the specification collection. Links still resolve and tests pass in the supplied report. Identify semantic contradictions and the affected examples; do not silently choose one accepted source or modify the code. Save a review that a different contributor can use.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "c08",
+      "kind": "behavior",
+      "split": "calibration",
+      "risk": "high",
+      "domain": "primary extension journey",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\nWhen implementing, write behavioral tests before implementation, use Python standard-library unittest, and document durable responsibilities in code. No dependencies or network access are needed.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/brief.md": "# Reusable behavior\nAuthors publish numbered versions. Customers use the same version in multiple places with different local retry limits. The first sketch has TileInstall and JobInstall, whose binding lifecycles are the same. Execution engines are out of scope. Users need to know which version each use is on. Nothing is accepted yet.\n",
+        "src/registry.py": "\"\"\"Registry operations for publication and customer adoption.\"\"\"\ndef publish(versions, version_id):\n    raise NotImplementedError\n\ndef adopt(usages, usage_id, version_id, versions):\n    raise NotImplementedError\n"
+      },
+      "stages": [
+        {
+          "prompt": "Explore the product idea in docs/brief.md and propose a smaller model. Save the tentative model in docs/domain.md, the consequential choice in docs/decisions.md, and a discoverable .work/ checkpoint. I have not yet accepted a collapse. Do not implement.",
+          "updates": {},
+          "remove": []
+        },
+        {
+          "prompt": "I accept one Usage concept for TileInstall and JobInstall for this release because their binding and adoption lifecycle is the same; independent product-specific installation lifecycles are excluded. I also choose pinned versions: publication leaves every existing usage unchanged, and adoption is explicit per usage. Keep retry configuration local to each usage. Develop docs/domain.md and docs/contract.md with examples and decision references. For the small Python interface, publish(versions, version_id) adds a string to a set; adopt(usages, usage_id, version_id, versions) updates that dictionary entry’s version only. Unknown usage or unpublished version raises ValueError before mutation. No persistent storage or execution engine is in scope. This turn is document authoring only: leave src/registry.py and all test files unchanged, and do not implement or run registry operations yet. A separate fresh session will receive the implementation request after these documents are saved.",
+          "updates": {},
+          "remove": []
+        },
+        {
+          "prompt": "Implement the accepted registry operations in src/registry.py using the current shared collection. Write standard-library unittest tests in tests/test_registry.py first, covering two usages with different retry limits, publication, explicit adoption, and invalid adoption without mutation. Run them, document durable intent, and save implementation/validation evidence in docs/implementation.md. Keep scope to these operations.",
+          "updates": {},
+          "remove": []
+        },
+        {
+          "prompt": "Review the implemented registry against the accepted domain plan, decision, contract, and examples. Use only this repository, run relevant available checks, and save docs/review.md with findings and coverage. Assess actual evidence; a clean result is valid if justified. Do not repair code during this review.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b09",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "payments release scoping",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/refunds.md": "# Accepted 1.4\nRefund amounts must be positive and cannot exceed the unrefunded balance. Multiple partial refunds are supported.\n",
+        "docs/roadmap.md": "# Accepted 2.0 commitment\nSupport cross-currency refunds after settlement conversion. Not required by 1.4.\n",
+        "src/refund.py": "def refund(balance, amount):\n    if amount <= 0 or amount > balance:\n        raise ValueError(\"invalid\")\n    return balance - amount\n",
+        "tests/report.md": "1.4 tests cover amount 0, -1, over balance, exact balance, and two partial refunds. Cross-currency tests are absent.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Audit refund behavior for release 1.4. The roadmap has been accepted, but the milestone matters. Report concrete current gaps and future work separately; leave files unchanged.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b10",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "review context portability",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/export.md": "# Export status\nThe old release exported all rows. Whether deleted rows belong in the new export is still proposed here. See external issue EX-73 for discussion; no decision text is present in this revision.\n",
+        "src/export.py": "def export(rows):\n    return [row for row in rows if not row[\"deleted\"]]\n",
+        "review-context.md": "The author says EX-73 approved excluding deleted rows. The issue is not accessible to this reviewer. No other accepted decision is included.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Assess this export change from the supplied reviewable repository. The author says an issue approved dropping deleted rows, but its contents are unavailable here. Report what can and cannot be decided. This is read-only review; do not invent or save a new accepted contract.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b11",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "private contract missing from revision",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "review-manifest.md": "# Submitted revision\nIncludes docs/index.md and src/token.py. No accepted expiry contract is present in this submitted revision. .work/token-decision.md is an author-local, untracked note and is not review input.\n",
+        ".work/token-decision.md": "# Author-local note\nAri said tokens should expire after 10 minutes. I think this was approved. Need to capture exact scope and basis.\n",
+        "src/token.py": "def expired(created, now):\n    return now - created >= 600\n"
+      },
+      "stages": [
+        {
+          "prompt": "Review the token expiry change as a repository-only reviewer. review-manifest.md describes exactly what belongs to the submitted revision. The optional author working note is available as background but is not submitted. Keep the change untouched and say whether the review context is sufficient.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b12",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "worktree sharing boundary",
+      "skills": [
+        "domain-planning"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\nFor this checkout only, .work is an explicitly shared symlink; treat the access constraint in the user prompt as authoritative. Use .local-work/ only for an unsynchronized fallback when target access is denied.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/domain.md": "# Connector proposal\nA connector defines shared credentials; a connection binds those credentials to an account. Open: can two accounts intentionally share one credential? No accepted answer is recorded.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Resume the connector investigation. This environment supplies access constraints as prose: .work is a symlink to /restricted/team-work; its resolved target is outside allowed read/write roots and access has been denied. Do not probe that target through another tool. The shared plan under docs/ is accessible. Continue useful domain work and keep an authorized local draft at .local-work/connector.md; do not pretend the linked checkpoint was recovered.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b13",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "isolated worktrees",
+      "skills": [
+        "domain-planning"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "worktree-context.md": "# Worktree context\nCurrent checkout: blue, base design revision R8. Separate checkout green uses its own .work/ at revision R6 and investigates rate limits. Sharing has not been requested. Do not create a common user-level store.\n",
+        ".work/index.md": "# Blue active work\n- usage-scope: .work/usage-scope.md\n",
+        ".work/usage-scope.md": "# Usage scope\nCheckout blue, R8. Original question: may one usage belong to two accounts? Candidate: no, because account authorization and configuration differ. This is still proposed. Next: test account transfer.\n",
+        "docs/domain.md": "# Usage\nProposed: an account owns a usage of a reusable component. Account transfer semantics are unresolved.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Continue the usage-scope investigation for checkout blue from its local work index. The text snapshot in worktree-context.md describes another checkout for orientation only. Preserve separate working state and leave the other investigation alone.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b14",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "compression reversal",
+      "skills": [
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/decisions.md": "# D4 accepted for pilot\nOne Rule combines spending approval thresholds and notification recipients. Assumption: the same owner changes both together. Sacrifice: independent lifecycle is not modeled. Alternative: AuthorityPolicy plus NotificationRoute. Revision trigger: a request to change notifications independently of approval. Public rule IDs and stored rule objects have shipped.\n",
+        "docs/domain.md": "# Rule\nFor the pilot a Rule determines authority and routes notices, per D4.\n",
+        "docs/api.md": "# Public Rule API\nPUT /rules/{id} atomically replaces threshold and recipients; omitted fields reset to defaults.\n",
+        "docs/examples.md": "# Examples\nUpdating recipients also resubmits the current threshold. Historical audits refer to Rule IDs.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Finance now needs to change notification recipients without altering spending authority. Reassess the accepted compressed Rule model using the existing decision. Propose the smallest revision and trace consequences; I have not approved a migration or a public API change.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b15",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "evaluator responsibility drift",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/domain.md": "# Eligibility\nAccepted: EligibilityEvaluator answers whether an order may dispatch. It may read inventory and compliance facts; sending notifications and reserving stock belong to the dispatch coordinator. Evaluations must remain safe to repeat during previews.\n",
+        "src/eligibility.py": "def eligible(order, inventory, mailer):\n    allowed = inventory.available(order.sku) >= order.quantity\n    if not allowed:\n        mailer.send(order.owner, \"insufficient stock\")\n    return allowed\n",
+        "tests/report.md": "Both old and new evaluator return False for insufficient stock. No preview or repeated-evaluation test is supplied.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Review the eligibility change for alignment. It returns the same answer as before in the tests. Assess the responsibility boundary as well as output behavior; do not claim a production incident without evidence.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b16",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "storage representation false alarm",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/domain.md": "# Billing relationships\nAccepted: Customer identity survives cancellation of any subscription. Subscription status and plan are scoped to that subscription. No physical storage layout is prescribed.\n",
+        "src/store.py": "def cancel(records, subscription_id):\n    records[(\"subscription\", subscription_id)][\"status\"] = \"canceled\"\n\ndef customer(records, customer_id):\n    return records[(\"customer\", customer_id)]\n",
+        "docs/example.md": "# Expected example\nRecords may be in one map. Cancel s1 belonging to c1; c1 and s2 remain available and s2 remains active.\n"
+      },
+      "stages": [
+        {
+          "prompt": "A reviewer insists that Customer and Subscription must use separate tables because the domain plan names two concepts. Assess that complaint and the implementation semantics in this snapshot. Do not redesign working storage without evidence.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b17",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "narrow documentation edit",
+      "skills": [
+        "spec-authoring"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/contract.md": "# Upload\nA succesful upload returns the immutable object identifier. Retry with the same idempotency key returns that identifier.\n",
+        "docs/domain.md": "# Accepted object identity\nAn uploaded object has stable identity independent of its filename.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Correct only the wording in docs/contract.md: replace the misspelled \"succesful\" with \"successful\". Preserve the behavior and structure. No design review or new artifacts are needed.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b18",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "consumer questions before transport",
+      "skills": [
+        "domain-planning"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/brief.md": "# Lab sample tracking\nA technician needs to know which sample a result came from, whether a newer result supersedes it, and whether the result was accepted for a particular study. One sample may be tested twice. A study may continue using an older accepted result while another adopts the newer one. Samples are destroyed after testing, but result provenance must survive.\n"
+      },
+      "stages": [
+        {
+          "prompt": "We keep arguing about whether to add a GraphQL endpoint or another SQL table. Help us develop the conceptual plan first, using the customer situations in docs/brief.md. Keep transport choices open.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b19",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "independent review disagreement",
+      "skills": [
+        "domain-planning"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/plan.md": "# Proposed delegation\nAn AccessGrant allows a named worker to operate one customer account until revoked. Transfer between workers is proposed but undecided.\n",
+        "reviews/a.md": "Assessment A: keep the same grant ID during transfer because the customer authorization persists. Risk: incident investigations could attribute old actions to the new worker unless history is immutable.\n",
+        "reviews/b.md": "Assessment B: create a new grant when the worker changes because the actor is part of the permission. Risk: workflows holding grant IDs must update. Neither assessor examined historical attribution implementation.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Resolve the useful parts of these two specialist assessments of our access-grant proposal. Both are supplied evidence; you have no authority to settle product policy. Do not count votes. Save the competing rationale and the bounded choice that remains.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b20",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "normative artifact examples",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/export.md": "# Accepted CSV contract\nA blank source string exports as an empty CSV cell. A missing value exports as the literal NULL. These are distinct. The following is normative: input [\"\", null, \"A\"] produces ,NULL,A followed by a newline.\n",
+        "src/render.py": "def render(values):\n    return \",\".join(\"NULL\" if not value else value for value in values) + \"\\n\"\n",
+        "tests/report.md": "Existing test covers [\"A\", \"B\"] -> A,B newline.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Audit the CSV renderer using the accepted output example. The implementation looks plausible, but exact exported values matter. Do not fix it during review.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b21",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "plan quality separate from conformance",
+      "skills": [
+        "domain-planning",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/product.md": "# Product goal\nA teacher must distinguish a student who has not submitted from a student whose submitted work earned zero points, so follow-up is appropriate.\n",
+        "docs/domain.md": "# Accepted pilot plan\nStore only score, an integer defaulting to 0. Submission presence is not modeled.\n",
+        "src/grade.py": "def score(record):\n    return record.get(\"score\", 0)\n",
+        "docs/examples.md": "# Pilot examples\nNo submission -> 0. Submitted with zero points -> 0.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Assess both whether this plan serves the stated product purpose and whether the implementation follows it. These are separate questions. Do not change accepted intent on my behalf.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b22",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "missing migration evidence",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/delete.md": "# Accepted deletion contract\nDeleting a workspace prevents new jobs immediately. Existing completed jobs retain workspace display names through the historical-name migration described in migrations/2025_names.sql.\n",
+        "src/jobs.py": "def create_job(workspace, payload):\n    if workspace[\"deleted\"]:\n        raise ValueError(\"workspace deleted\")\n    return {\"workspace_id\": workspace[\"id\"], \"payload\": payload}\n",
+        "docs/review-inputs.md": "migrations/2025_names.sql and the historical completed-job read path are not included in this snapshot.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Audit deletion and historical-reference handling. The migration file cited by the spec is unavailable in this checkout. Review what is available and keep the missing evidence visible; do not fetch external data.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b23",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "unaccepted neighboring text",
+      "skills": [
+        "spec-authoring"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/decisions.md": "# Retry discussion\nOwner accepted: at most three retries after the initial attempt, for v1.\nNearby proposal: exponential delay, email after each failure, retry failed payments automatically. These were not accepted.\n",
+        "docs/domain.md": "# Attempt\nA retry is a new attempt of the same requested operation after a failure. The original attempt is not a retry.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Elaborate the accepted retry-limit decision into a small operation contract. My acceptance applied only to the maximum of three retries; I have not chosen delay policy or notification behavior. Preserve those open questions.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b24",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "inquiry resume mid-comparison",
+      "skills": [
+        "deep-design",
+        "domain-planning"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/brief.md": "# Shared playlists\nA household shares ordered playlists. Each listener may hide a track for themselves. Open model choice: per-listener copied playlists versus one shared playlist plus local visibility overlays. Collaborative reordering should remain visible to everyone. Nothing is accepted yet.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Compare the two playlist models, but stop after identifying the central unresolved assumption. Save a proposed shared comparison in docs/models.md and the live question in a discoverable .work/ checkpoint. I will add one scenario later.",
+          "updates": {},
+          "remove": []
+        },
+        {
+          "prompt": "Resume the playlist comparison from artifacts. New scenario: Alice hides a song; Bob reorders the shared playlist; Alice must still see Bob’s new order among her visible songs. Use this scenario to advance the same inquiry and recommend a candidate. I have not yet accepted either model.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b25",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "tracked solo working records",
+      "skills": [
+        "domain-planning"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\nExplicit solo exception: working records live in .notes/, are versioned, and completed records are retained. .notes/index.md is the discovery point. Do not introduce .work/ for this project.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": "# No private-note exclusion for this solo project.\n",
+        ".notes/index.md": "# Solo work\n- archive-identity: .notes/archive-identity.md\n",
+        ".notes/archive-identity.md": "# Archive identity\nQuestion: does renaming an imported file create a new archived object? Current candidate: stable object identity, names as mutable labels. Not accepted. Next: test duplicate names.\n",
+        "docs/brief.md": "# Archive purpose\nOld citations must resolve after a filename changes. Two objects may have the same filename.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Resume my solo archive design. I explicitly version my .notes/ working records and retain completed checkpoints. Use that project convention; do not add ignore rules or move them into a user-level store. Finish the bounded identity question and preserve the next decision.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b26",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "existing collection layout",
+      "skills": [
+        "spec-authoring"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Reading map\nProduct goals: ../product/import-goals.md. Meaning and obligations: ../architecture/imports.md. Decisions: ../architecture/decisions.md.\n",
+        ".gitignore": ".work/\n",
+        "product/import-goals.md": "# Import goal\nA user can correct rejected data without changing already imported records.\n",
+        "architecture/imports.md": "# Imports\n## Row acceptance\nAccepted: each row is independent. A rejected row leaves no record; valid rows are imported. Reprocessing the same external row ID updates its existing record, not a duplicate.\n## Validation\nTo be elaborated.\n",
+        "architecture/decisions.md": "# Accepted choices\nPartial row success was accepted by Lin for v1 to let users correct only rejected rows. File-wide atomicity was rejected.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Write the validation section for the accepted import contract in architecture/imports.md. Reuse our existing collection and references; no relocation or new universal schema. Include only cases needed by the rule.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b27",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "generated display regression",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/summary.md": "# Account summary\nAccepted: show available credit as $0 when it is zero. Omit it only when unknown (None). Preserve the account name exactly. Example: name=\"Q & A\", credit=0 -> {\"name\":\"Q & A\",\"credit\":\"$0\"}.\n",
+        "src/summary.py": "def summary(name, credit):\n    result = {\"name\": name}\n    if credit:\n        result[\"credit\"] = f\"${credit}\"\n    return result\n",
+        "tests/report.md": "Tests cover credit 15 and unknown None; name is Q & A in both.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Review the new account summary output against its accepted example and preserved behavior. Focus on semantic changes, including zeros. Leave implementation unchanged.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b28",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "apparent rename with changed meaning",
+      "skills": [
+        "spec-authoring",
+        "domain-planning"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/domain.md": "# Membership\nAccepted: Membership records a person belonging to a workspace. It remains even when the person is temporarily suspended; suspension removes permission to operate, not belonging.\n",
+        "docs/draft.md": "# Access proposal\nRename Membership to Access everywhere. Delete Access when a person is suspended because they can no longer act. The change is described as editorial only.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Our draft renames Membership to Access. Explain whether that is only vocabulary, and revise the proposed text enough to expose the real choice. The accepted membership rule must remain visible; I have not accepted broader access semantics.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b29",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "event time versus current state",
+      "skills": [
+        "domain-planning",
+        "spec-authoring"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/brief.md": "# Migration accounting\nAn operator asks which customer tier changes occurred between 10:00 and 11:00. Customer c1 moved basic -> pro at 10:15 and pro -> basic at 10:45; it is basic now. Proposed design: read each customer’s current tier at 11:00 and compare to 10:00. Historical events exist but may omit unchanged contextual fields.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Help specify the migration report so an operator can explain which changes happened during the migration window. Use the supplied example to challenge the proposed source. Do not pick an implementation API yet.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b30",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "accepted boundary with ordinary implementation",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/quota.md": "# Accepted quota\nUsage totals are isolated per tenant and metric. Reusing an evaluator instance is allowed. Cache entries must distinguish both tenant and metric.\n",
+        "src/quota.py": "class Evaluator:\n    def __init__(self):\n        self.cache = {}\n    def total(self, tenant, metric, load):\n        key = (tenant, metric)\n        if key not in self.cache:\n            self.cache[key] = load(tenant, metric)\n        return self.cache[key]\n",
+        "docs/review-note.md": "Concern: one evaluator has all tenants in a shared cache, therefore it leaks totals. Cache lifetime freshness has no agreed rule in this scope.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Review the quota implementation against the plan. A previous comment says the shared evaluator object owning a cache proves tenant leakage. Test that concern against actual keys and obligations rather than accepting it.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b31",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "markdown-only missing meaning",
+      "skills": [
+        "spec-audit",
+        "spec-authoring",
+        "domain-planning"
+      ],
+      "capabilities": "markdown-only",
+      "files": {
+        "docs/notes.md": "# Retry uncertainty\nWe have not agreed whether canceling a job also cancels an already scheduled retry. Support has arguments both ways.\n",
+        "src/retry.py": "def cancel(job):\n    job[\"canceled\"] = True\n\ndef should_run_retry(job):\n    return job[\"retry_scheduled\"]\n"
+      },
+      "stages": [
+        {
+          "prompt": "Audit the supplied retry behavior. This is Markdown-only read-only review: no filesystem writes, tools, prior chat, sibling skills, or agents are available. All available files are shown below. If intent is missing, leave a usable bounded handoff rather than pretend to finish the decision.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b32",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "decision history versus migration approval",
+      "skills": [
+        "spec-authoring"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/domain.md": "# Project identity\nA project has a stable ID and a mutable display name. Existing projects may have names \"Alpha\" and \"alpha\" under the same account.\n",
+        "docs/decisions.md": "# Historical naming\nD1 accepted case-sensitive uniqueness for original release; external links use stable project IDs.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Capture my decision: new projects will use case-insensitive unique names. This applies only to projects created after launch. I have not approved renaming or rejecting existing projects with colliding names. Elaborate the launch contract without settling that migration question.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b33",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "campaign closeout retention",
+      "skills": [
+        "domain-planning",
+        "spec-authoring"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\nProject campaigns are Markdown under campaigns/. Completed campaigns and contributor checkpoints are retained. Shared design belongs under docs/.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "campaigns/role-rename.md": "# Role rename\nStatus: implementation complete; closeout pending. Accepted by owner: rename operator to maintainer because the role configures systems, not merely executes tasks. Stable role IDs and permissions remain unchanged. Alternative: admin rejected because it implied broader authority. Future change trigger: permissions expand to organization governance. Tests and release note are complete per docs/release-evidence.md. The rationale currently exists only here.\n",
+        "docs/domain.md": "# Roles\nMaintainer can configure the system.\n",
+        "docs/release-evidence.md": "# Supplied completion evidence\nRole labels changed in release 2.3. ID/permission compatibility tests passed; the release note describes a label-only change.\n",
+        ".work/index.md": "# Work\n- role rename: .work/role-rename.md\n",
+        ".work/role-rename.md": "# Role rename\nNext: preserve why maintainer was selected, then close campaign.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Close out the role-renaming campaign record. The outcome is accepted and shipped according to the supplied evidence. Preserve durable reasoning and follow the repository retention convention; do not delete working history.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b34",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "evidence contradicts intent comments",
+      "skills": [
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/reminders.md": "# Accepted reminder behavior\nDisable stops future notifications and preserves delivery history. Re-enable resumes the same reminder identity and history.\n",
+        "src/reminder.py": "def disable(reminder):\n    \"\"\"Stop sends while retaining this reminder and its delivery history.\"\"\"\n    reminder[\"enabled\"] = False\n    reminder[\"deliveries\"] = []\n",
+        "tests/report.md": "Existing test only asserts enabled becomes False.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Review whether disabling a reminder is reversible as specified. The function comment says it preserves history. Inspect the actual behavior and coverage instead of trusting that comment.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b35",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "medium",
+      "domain": "narrow accepted authoring without detour",
+      "skills": [
+        "spec-authoring"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/domain.md": "# Credential purpose\nA credential is an account-owned identity carrying grants. Rotation replaces its secret; grants and identity remain stable. Accepted in D8.\n",
+        "docs/decisions.md": "# D8\nOwner accepted atomic secret replacement. Invalid requests leave the credential completely unchanged; old secret stops working only after successful replacement.\n",
+        "docs/rotate.md": "# Rotation\nAccepted operation: account owner supplies a nonempty new secret different from current. Wrong owner, empty secret, or same secret rejects before mutation. References: domain.md#credential-purpose and decisions.md#d8.\n## Failure examples\nPending.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Add precise failure examples to docs/rotate.md for the already accepted rotation behavior. We need a reviewable contract, not a new product model. Keep the accepted ownership, identity, and transaction semantics unchanged.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "b36",
+      "kind": "behavior",
+      "split": "holdout",
+      "risk": "high",
+      "domain": "cross-scope compression counterexample",
+      "skills": [
+        "deep-design",
+        "domain-planning"
+      ],
+      "capabilities": "repository",
+      "files": {
+        "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+        "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+        ".gitignore": ".work/\n",
+        "docs/brief.md": "# Account information\nCustomerProfile stores a person’s preferred display name and contact preferences. BillingIdentity records the legal payer and tax address for an invoice. A parent pays for a child’s profile; one company pays for many employee profiles; one person can pay personally for one purchase and through an employer for another. Existing sketch merges both into Person because most early customers pay for themselves.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Can CustomerProfile and BillingIdentity become one thing? Explore the collapse concretely using the supplied scenarios. I want simplification where it works, but I have not accepted sacrificing independent billing responsibility.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t01",
+      "kind": "trigger",
+      "split": "calibration",
+      "risk": "low",
+      "domain": "explicit deep design",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Use Deep Design to challenge the five installation products in our rough concept sketch and look for a smaller model before we settle it.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t02",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "explicit planning",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Use domain planning to describe which facts belong to an invoice, a payment attempt, and a payment allocation. We have situations but no coherent plan.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t03",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "explicit authoring",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Use spec authoring to turn the accepted cancellation decision into precise obligations and boundary examples.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t04",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "explicit audit",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Use spec audit to compare the refund implementation with the accepted partial-refund contract.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t05",
+      "kind": "trigger",
+      "split": "calibration",
+      "risk": "low",
+      "domain": "implicit compression",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Every time we add a use case we invent another kind of installation. Before adding a sixth, challenge the assumptions and see whether one organizing idea can explain the important cases.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t06",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "implicit conceptual meaning",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Our policy, rule, and constraint objects sound interchangeable. Help us work out what each is for, what changes independently, and which questions a support agent should be able to answer.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t07",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "implicit contract elaboration",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "The team already chose explicit version adoption. Write the operation’s preconditions, failures, successful result, and validation examples, reusing the domain plan.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t08",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "implicit responsibility review",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "This branch returns the right boolean, but the evaluator now sends notifications. Check whether that belongs in its responsibility according to our plan.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t09",
+      "kind": "trigger",
+      "split": "calibration",
+      "risk": "low",
+      "domain": "contextual planning",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {
+        ".work/models.md": "# Live question\nCompare publication of a reusable version with a customer choosing to use it. Model and acceptance remain unresolved.\n"
+      },
+      "stages": [
+        {
+          "prompt": "Resume the comparison recorded in .work/models.md. We were asking whether publication and adoption are really the same event; do not restart the whole product discussion.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t10",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "contextual regression",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "The accepted plan says cancellation preserves history. Find out whether this patch and its tests still honor that, including the generated account summary.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t11",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "contextual authoring",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Our draft contract links to the domain plan, but its account scope changed last week. Reconcile the contract’s obligations and examples with the accepted meaning, preserving unresolved decisions.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t12",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "plan quality",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "We have a domain plan, but I think it answers the wrong customer question. Assess the plan’s purpose and distinctions without assuming matching code makes the model good.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t13",
+      "kind": "trigger",
+      "split": "calibration",
+      "risk": "low",
+      "domain": "lexical near miss",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Translate the phrase \"domain planning\" into French. Do not explain software methodology.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t14",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "tiny editorial correction",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Fix the spelling of succesful in this sentence: \"A succesful request returns 200.\"",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t15",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "factual question",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "What does HTTP status code 404 mean? One sentence is enough.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t16",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "settled implementation",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Implement the accepted helper in src/add.py: add(a,b) returns a+b. The contract is settled; write its tests first and keep this to code.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t17",
+      "kind": "trigger",
+      "split": "calibration",
+      "risk": "low",
+      "domain": "narrow specification maintenance",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "In our accepted specification, the link to domain.md#usage-identitiy has a typo; the target heading is Usage identity. Correct that Markdown anchor only. Do not reassess the identity decision or change any contract prose.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t18",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "domain keyword near miss",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Our domain expires next month. Explain what renewing a DNS domain name means.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t19",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "benchmark review near miss",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Review the benchmark harness for measurement reliability: it times a parser with a cold process for the old version and a warm process for the new version. Explain what makes the timing comparison unfair and how to rerun it. The parser behavior and design are out of scope.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t20",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "performance numbers",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Summarize the benchmark output: 20 ms before, 15 ms after. Calculate the percentage improvement.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t21",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "bounded implementation tradeoff",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "We have already accepted a single-process local cache with disposable data and at most 10,000 entries. For a two-day implementation, compare an in-memory dictionary with SQLite on startup cost and implementation effort. Work within that fixed frame; do not reopen the product/domain model or write a specification.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t22",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "settled implementation estimate",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Estimate the engineering work for our settled API change: add optional page_size, default 50, maximum 100, to an existing list handler that already supports limit. The contract and examples are approved. Give a rough effort range and the implementation steps; do not author or audit the specification.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t23",
+      "kind": "trigger",
+      "split": "holdout",
+      "risk": "low",
+      "domain": "communication near miss",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "Draft an email inviting our architect to a design review on Thursday. The only task is the invitation.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    },
+    {
+      "id": "t24",
+      "kind": "trigger",
+      "split": "calibration",
+      "risk": "low",
+      "domain": "ambiguous authority review",
+      "skills": [
+        "deep-design",
+        "domain-planning",
+        "spec-authoring",
+        "spec-audit"
+      ],
+      "capabilities": "repository",
+      "files": {},
+      "stages": [
+        {
+          "prompt": "The spec says timeout is 30 seconds and the test expects 3. Determine which source governs and whether the test or contract needs correction.",
+          "updates": {},
+          "remove": []
+        }
+      ]
+    }
+  ]
+}
