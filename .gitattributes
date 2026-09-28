@@ -4,5 +4,5 @@ plugins/*/hooks/payload-adapter.generated linguist-generated=true
 plugins/*/hooks/cursor-shim.mjs linguist-generated=true
 plugins/*/hooks/cursor-shim.mjs.generated linguist-generated=true
 
-# Preserve whitespace in captured evaluation responses instead of rewriting evidence.
+# Disable Git whitespace-error checks for verbatim captured evaluation responses.
 plugins/spec-skills/evals/effectiveness/results/**/response.md -whitespace
