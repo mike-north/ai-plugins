@@ -1,0 +1,5 @@
+Done. I saved the proposed collapse in [docs/use-binding-candidate.md](<home>/Projects/Dev%20Platform/Technical%20Leadership/scratch/design-specification-plugin/scratch/effectiveness/pilot-03/runs/c01/current/repeat-1/workspace/docs/use-binding-candidate.md) and linked it from [docs/index.md](<home>/Projects/Dev%20Platform/Technical%20Leadership/scratch/design-specification-plugin/scratch/effectiveness/pilot-03/runs/c01/current/repeat-1/workspace/docs/index.md).
+
+The smaller organizing idea is: one customer **Use** of a published behavior version, with an explicit **surface** for tile, schedule, or webhook. The doc stress-tests that against every situation in `docs/brief.md`, marks the collapse as unaccepted, records what it sacrifices, rejects the over-collapse into arbitrary config, and names the decision you need to make.
+
+I also updated [.work/essence.md](<home>/Projects/Dev%20Platform/Technical%20Leadership/scratch/design-specification-plugin/scratch/effectiveness/pilot-03/runs/c01/current/repeat-1/workspace/.work/essence.md) with the live checkpoint. No API was designed.

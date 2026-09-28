@@ -1,0 +1,88 @@
+{
+  "assessment_type": "Unblinded evaluator trace verification; not an independent model grade",
+  "variants": {
+    "current": {
+      "stage_2_source_unchanged": true,
+      "stage_2_test_paths": [],
+      "stage_3_test_commands": [
+        {
+          "command": "/bin/zsh -lc 'python -m unittest tests/test_registry.py'",
+          "exit_code": 127,
+          "result_excerpt": "zsh:1: command not found: python\n"
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 -m unittest tests/test_registry.py'",
+          "exit_code": 1,
+          "result_excerpt": "ImplementedError\n\n----------------------------------------------------------------------\nRan 4 tests in 0.001s\n\nFAILED (errors=4)\n"
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 -m unittest tests/test_registry.py'",
+          "exit_code": 0,
+          "result_excerpt": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nOK\n"
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 -m unittest tests/test_registry.py'",
+          "exit_code": 0,
+          "result_excerpt": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nOK\n"
+        }
+      ],
+      "stage_4_implementation_and_tests_unchanged": true,
+      "stage_4_shared_review_saved": true,
+      "stage_elapsed_seconds": [
+        120.078,
+        189.091,
+        123.697,
+        114.316
+      ]
+    },
+    "none": {
+      "stage_2_source_unchanged": true,
+      "stage_2_test_paths": [],
+      "stage_3_test_commands": [
+        {
+          "command": "/bin/zsh -lc 'python -m unittest tests/test_registry.py'",
+          "exit_code": 127,
+          "result_excerpt": "zsh:1: command not found: python\n"
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 -m unittest tests/test_registry.py'",
+          "exit_code": 1,
+          "result_excerpt": "ImplementedError\n\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nFAILED (errors=4)\n"
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 -m unittest tests/test_registry.py'",
+          "exit_code": 0,
+          "result_excerpt": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nOK\n"
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 -m unittest discover'",
+          "exit_code": 0,
+          "result_excerpt": "\n----------------------------------------------------------------------\nRan 0 tests in 0.000s\n\nOK\n"
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 -m unittest tests/test_registry.py'",
+          "exit_code": 0,
+          "result_excerpt": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nOK\n"
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 -m unittest discover'",
+          "exit_code": 0,
+          "result_excerpt": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nOK\n"
+        }
+      ],
+      "stage_4_implementation_and_tests_unchanged": true,
+      "stage_4_shared_review_saved": true,
+      "stage_elapsed_seconds": [
+        71.613,
+        92.9,
+        111.283,
+        76.799
+      ]
+    }
+  },
+  "semantic_notes": [
+    "Both implementations satisfy the small accepted publish/adopt contract and report successful four-test final runs.",
+    "Current updated accepted decision records; baseline left its existing decision proposed, and the baseline final reviewer reported that inconsistency.",
+    "Both reviewers preserved implementation and test files and saved shared docs/review.md."
+  ]
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "kind": "exists",
+    "path": "docs/domain.md",
+    "passed": true
+  },
+  {
+    "kind": "exists",
+    "path": "docs/decisions.md",
+    "passed": true
+  },
+  {
+    "kind": "exists",
+    "path": "docs/contract.md",
+    "passed": true
+  },
+  {
+    "kind": "exists",
+    "path": "tests/test_registry.py",
+    "passed": true
+  },
+  {
+    "kind": "exists",
+    "path": "docs/implementation.md",
+    "passed": true
+  },
+  {
+    "kind": "exists",
+    "path": "docs/review.md",
+    "passed": true
+  }
+]

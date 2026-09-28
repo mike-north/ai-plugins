@@ -1,0 +1,151 @@
+{
+  "winner": "A",
+  "rationale": "A better preserves the project authority model and existing contributor records. It keeps ACCT-48 as authoritative, places the local campaign draft in .work as an explicitly unsynchronized reconciliation artifact, expands the existing domain document, and keeps the prior private naming investigation discoverable. B captures much of the same semantic intent, but it overwrites .work/index.md and drops the existing naming-investigation entry, and it places the campaign draft in docs/ despite the fixture's stronger project convention that campaign authority is the issue and contributor checkpoints belong in .work.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "continuity": {
+          "score": 3,
+          "evidence": [
+            ".work/index.md after: \"- naming-investigation: .work/naming.md\" remains, with added ACCT-48 draft and checkpoint entries",
+            ".work/acct-48-checkpoint.md: \"Resume implementation or campaign synchronization by first reconciling `.work/acct-48-campaign-draft.md` against the real `issues.example/ACCT-48` record\""
+          ],
+          "explanation": "A preserves the existing private investigation and adds a clear resumable checkpoint without disrupting prior local work."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            ".work/acct-48-campaign-draft.md: \"Status: local draft only; not synchronized to `issues.example/ACCT-48`.\"",
+            ".work/acct-48-campaign-draft.md: \"it is not a competing source of truth\"",
+            ".work/acct-48-checkpoint.md: \"project-specific choice overrides the personal default of local Markdown campaign plans\""
+          ],
+          "explanation": "A correctly treats ACCT-48 as authoritative, marks local work as unsynchronized, and explicitly resolves the project instruction over the personal Markdown default."
+        },
+        "capability": {
+          "score": 3,
+          "evidence": [
+            "docs/domain.md after: expanded durable decision with \"Accepted decision: label and identifier are separate\"",
+            ".work/acct-48-campaign-draft.md: \"Issue tracker update for `ACCT-48`: blocked by unavailable configured issue service and lack of external-write authorization.\""
+          ],
+          "explanation": "A produces the requested repository design material, local checkpoint, and honest campaign draft while respecting the unavailable issue service."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            ".work/acct-48-checkpoint.md: \"`.work/naming.md`: prior private naming investigation... it has no campaign authority.\"",
+            ".work/acct-48-campaign-draft.md: \"Keep the release focused on label migration; do not expand it into a general citation redesign.\""
+          ],
+          "explanation": "A correctly separates the project release campaign from the individual naming investigation and keeps the migration scope bounded."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Classifies the invoice migration as project work and the assisted naming investigation as individual work based on their subject.",
+          "verdict": "pass",
+          "evidence": ".work/acct-48-checkpoint.md identifies ACCT-48 as project campaign work and `.work/naming.md` as a prior private naming investigation with no campaign authority."
+        },
+        {
+          "criterion": "Applies the repository issue-campaign preference rather than personal Markdown default, retains ACCT-48 as authoritative, and labels any local progress draft unsynchronized.",
+          "verdict": "pass",
+          "evidence": ".work/acct-48-checkpoint.md says the project-specific issue authority overrides the personal local Markdown default; .work/acct-48-campaign-draft.md says it is local only and not synchronized."
+        },
+        {
+          "criterion": "Keeps accepted identity/label meaning in repository design material, with the private checkpoint referring to it.",
+          "verdict": "pass",
+          "evidence": "docs/domain.md contains the durable label/identifier decision; .work/acct-48-checkpoint.md refers to docs/domain.md as the governing domain decision."
+        },
+        {
+          "criterion": "Creates or updates a discoverable local checkpoint without changing global/personal defaults or claiming an issue update.",
+          "verdict": "pass",
+          "evidence": ".work/index.md links .work/acct-48-checkpoint.md; preferences/personal.md is unchanged; response and draft state no issue update occurred."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No raw execution trace is available in the blind package, so tool/process compliance cannot be independently verified here."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "continuity": {
+          "score": 1,
+          "evidence": [
+            ".work/index.md before: \"- naming-investigation: .work/naming.md\"",
+            ".work/index.md after: only \"- `invoice-label-migration-checkpoint.md`: Resumable checkpoint...\""
+          ],
+          "explanation": "B creates a checkpoint, but it drops the existing discoverable naming-investigation entry despite the instruction to keep unrelated contributor records intact."
+        },
+        "authority": {
+          "score": 2,
+          "evidence": [
+            "docs/campaign-draft.md: \"The authoritative campaign record is `issues.example/ACCT-48`\"",
+            "docs/campaign-draft.md: \"This draft may be stale until reconciled with the issue record.\"",
+            "docs/index.md lists `campaign-draft.md` under docs/"
+          ],
+          "explanation": "B clearly labels ACCT-48 as authoritative and the draft as stale, but placing a campaign draft in docs/ is a weaker fit for the project convention than keeping contributor progress in .work."
+        },
+        "capability": {
+          "score": 2,
+          "evidence": [
+            "docs/invoice-label-decision.md records label mutability and stable invoice identifiers",
+            ".work/invoice-label-migration-checkpoint.md exists and states no authoritative issue updates were read or written"
+          ],
+          "explanation": "B accomplishes most requested documentation/checkpoint work, but the checkpoint index regression and campaign-draft placement reduce conformance."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "docs/campaign-draft.md: \"This is a project release campaign with one implementer.\"",
+            "docs/campaign-draft.md: \"Previous private naming investigation is treated as non-authoritative\""
+          ],
+          "explanation": "B correctly classifies the migration as project work and the naming investigation as non-authoritative private context, without relying on number of agents."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Classifies the invoice migration as project work and the assisted naming investigation as individual work based on their subject.",
+          "verdict": "pass",
+          "evidence": "docs/campaign-draft.md states the campaign is a project release campaign with one implementer and the private naming investigation is non-authoritative."
+        },
+        {
+          "criterion": "Applies the repository issue-campaign preference rather than personal Markdown default, retains ACCT-48 as authoritative, and labels any local progress draft unsynchronized.",
+          "verdict": "partial",
+          "evidence": "docs/campaign-draft.md retains ACCT-48 authority and marks the draft stale, but B puts the campaign draft in docs/ rather than the contributor working area, creating a less clean separation from authoritative project material."
+        },
+        {
+          "criterion": "Keeps accepted identity/label meaning in repository design material, with the private checkpoint referring to it.",
+          "verdict": "pass",
+          "evidence": "docs/invoice-label-decision.md records the semantic decision; .work/invoice-label-migration-checkpoint.md lists docs/domain.md and the added decision document as effective/repository updates."
+        },
+        {
+          "criterion": "Creates or updates a discoverable local checkpoint without changing global/personal defaults or claiming an issue update.",
+          "verdict": "partial",
+          "evidence": ".work/invoice-label-migration-checkpoint.md exists and preferences/personal.md is unchanged, but .work/index.md was overwritten and no longer discovers the pre-existing .work/naming.md record."
+        }
+      ],
+      "authority_errors": [
+        {
+          "evidence": "docs/campaign-draft.md created as a local campaign draft in docs/",
+          "explanation": "Although labeled non-authoritative, putting local campaign progress in shared docs weakens the repository's issue-as-authority and .work contributor-area convention."
+        }
+      ],
+      "false_alarms": [],
+      "missed_issues": [
+        {
+          "evidence": ".work/index.md after omits the prior `naming-investigation: .work/naming.md` entry",
+          "explanation": "B missed the requirement to keep unrelated contributor records intact and discoverable."
+        }
+      ],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No raw execution trace is available in the blind package, so tool/process compliance cannot be independently verified here."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is discriminating on authority and continuity. One ambiguity is whether a local campaign draft in docs/ is outright unacceptable if it is clearly labeled non-authoritative; the project text strongly favors .work for contributor checkpoints and ACCT-48 for campaign authority, but does not explicitly ban all draft material in docs/. The preservation of .work/index.md is a useful concrete check that separates the candidates."
+}

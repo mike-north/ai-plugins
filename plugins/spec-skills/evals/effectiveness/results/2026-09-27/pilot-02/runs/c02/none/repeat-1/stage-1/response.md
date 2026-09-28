@@ -1,0 +1,5 @@
+Done. I saved the assessment in [docs/shipment-assessment.md](<home>/Projects/Dev%20Platform/Technical%20Leadership/scratch/design-specification-plugin/scratch/effectiveness/pilot-02/runs/c02/none/repeat-1/workspace/docs/shipment-assessment.md) and linked it from [docs/index.md](<home>/Projects/Dev%20Platform/Technical%20Leadership/scratch/design-specification-plugin/scratch/effectiveness/pilot-02/runs/c02/none/repeat-1/workspace/docs/index.md).
+
+Recommendation: keep `Shipment` as a provisional useful abstraction, not a fake one, while tightening its boundaries. The reviewer’s concern is valid as a design smell, but the examples show a shared dispatch decision with parcel/freight-specific readiness inputs. I also called out conditions that would justify splitting or deleting it if later examples undermine the shared lifecycle.
+
+No code tests were run because this was a docs/design assessment; the supplied examples are covered in the assessment table.

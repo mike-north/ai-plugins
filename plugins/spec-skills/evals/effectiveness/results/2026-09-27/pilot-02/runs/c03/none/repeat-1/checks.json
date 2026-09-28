@@ -1,0 +1,17 @@
+[
+  {
+    "kind": "unchanged",
+    "path": "src/extensions.py",
+    "passed": true
+  },
+  {
+    "kind": "exists",
+    "path": "docs/adoption.md",
+    "passed": true
+  },
+  {
+    "kind": "exists",
+    "path": "docs/adoption-review.md",
+    "passed": true
+  }
+]

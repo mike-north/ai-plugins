@@ -1,0 +1,5 @@
+Done. I added the assessment at [docs/shipment-concept-assessment.md](<evaluation-repository>/scratch/effectiveness/pilot-03/runs/c02/prior/repeat-1/workspace/docs/shipment-concept-assessment.md) and linked it from [docs/index.md](<evaluation-repository>/scratch/effectiveness/pilot-03/runs/c02/prior/repeat-1/workspace/docs/index.md).
+
+Recommendation: keep `Shipment`, but narrow it. The discriminator is a design smell, not automatic proof the abstraction is fake. `Shipment` remains useful if it owns the shared movement promise, tracking/cancellation lifecycle, and dispatch question while parcel/freight own their distinct readiness prerequisites. `DispatchEligibility` should stay derived for now, not become a stored domain object.
+
+I verified the examples in the doc: no-label parcel, no-appointment freight, and canceled freight all behave correctly under the constrained `Shipment` model. No code tests were run because this task produced a design assessment, not software changes.

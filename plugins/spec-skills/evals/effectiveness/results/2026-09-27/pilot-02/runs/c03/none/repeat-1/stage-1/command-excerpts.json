@@ -1,0 +1,122 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc \"pwd && rg --files -g '\"'!*node_modules*'\"' -g '\"'!*.git*'\"'\"",
+    "exit_code": 0,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c03/none/repeat-1/workspace\nsrc/extensions.py\nAGENTS.md\ndocs/notes.md\ndocs/index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "0d775194fb3c70bfa2ce53c01fafbc5498d70e816bd95f9bfad4cedf8a0665a3"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc ls",
+    "exit_code": 0,
+    "output_excerpt": "AGENTS.md\ndocs\nsrc\n",
+    "output_truncated": false,
+    "full_output_sha256": "8d076e7c4a13394a839b4b7dc8e0ed0a8c0263ab17d93bddbf7694a456342694"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc 'ls -a'",
+    "exit_code": 0,
+    "output_excerpt": ".\n..\n.git\n.gitignore\nAGENTS.md\ndocs\nsrc\n",
+    "output_truncated": false,
+    "full_output_sha256": "5bd80407b2fa2e49286811b69032ed3c10e784ea0531aaa1b8f794c169c48fff"
+  },
+  {
+    "id": "item_5",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' AGENTS.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+    "output_truncated": false,
+    "full_output_sha256": "88424f7d90b560c9dced34e9f8825ecbcbd005b6921c693c786cff8cf9707346"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+    "output_truncated": false,
+    "full_output_sha256": "7ea01f7466f50e438267782c28f28bb9534264cc1ef43319a704fd63d7e9efbd"
+  },
+  {
+    "id": "item_7",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/notes.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Unsettled installation notes\nSome customers want automatic updates; others want reproducibility. We have never chosen whether existing usages follow a new publication. No release contract exists.\n",
+    "output_truncated": false,
+    "full_output_sha256": "371d790afdedd1149c7d6753d5bd7816b30cc81cbbcb7ad115b3a1a8cfbe2d2d"
+  },
+  {
+    "id": "item_8",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' src/extensions.py\"",
+    "exit_code": 0,
+    "output_excerpt": "\"\"\"Current extension behavior; this file is observation, not product authority.\"\"\"\ndef publish(extension, version, usages):\n    extension['latest'] = version\n    for usage in usages:\n        if usage['extension'] == extension['id']:\n            usage['version'] = version\n",
+    "output_truncated": false,
+    "full_output_sha256": "04a8c15e9628e7e4de8c8cd6347d2456b738f3a91a3ff6b9fb56afeef243d792"
+  },
+  {
+    "id": "item_10",
+    "command": "/bin/zsh -lc 'mkdir -p .work'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_14",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n",
+    "output_truncated": false,
+    "full_output_sha256": "267595be09b3fbeb28c423bdd37c4d29a7621a4bff828be2e4af15efab2ae50e"
+  },
+  {
+    "id": "item_15",
+    "command": "/bin/zsh -lc 'git diff -- docs/adoption.md .work/index.md .work/adoption-audit.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_16",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/adoption.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Version Adoption Proposal\n\n## Status\n\nProposal. There is no accepted release or adoption contract in the supplied files.\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Observed Behavior\n\n`src/extensions.py` currently treats publication as both a catalog update and an adoption event:\n\n- `extension['latest']` is set to the published version.\n- every usage whose `extension` matches the published extension id has `usage['version']` overwritten with the published version.\n\nBecause the supplied notes say the team has not chosen whether existing usages follow a new publication, this behavior cannot be verified as intended.\n\n## Smallest Concrete Proposal\n\nPublishing an extension should only make the new version available by updating the extension's latest version. Existing usages should remain pinned to the version they already reference until an explicit adoption operation updates them.\n\nThis preserves reproducibility for existing usages while still allowing customers or product workflows to opt into automatic updates later through a separate, named policy.\n\n## Proposed Invariant\n\nAfter publishing version `N` for extension `E`:\n\n- `E.latest` is `N`.\n- an existing usage of `E` keeps its previous `version`.\n- a separate adoption decision is required before any existing usage changes to `N`.\n\n## Open Decision\n\nThe team still needs to decide whether to support an automatic-follow policy for selected usages. If that policy is added, it should be explicit per usage or per customer and should not be implied by publication alone.\n",
+    "output_truncated": false,
+    "full_output_sha256": "7b886c0bdfceb307240a3a2f4139b998551c6c95bf447843f9a213b447ce72bc"
+  },
+  {
+    "id": "item_17",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' .work/adoption-audit.md && sed -n '1,80p' .work/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Adoption Audit Checkpoint\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Supplied Evidence\n\n- `docs/notes.md` says customers are split between automatic updates and reproducibility, and that no release contract exists.\n- `src/extensions.py` currently updates `extension['latest']` and also rewrites matching usage versions during publication.\n\n## Finding\n\nThe current publish behavior cannot be confirmed as intended because the supplied files do not contain an accepted adoption contract. The implementation currently adopts the newly published version for all existing usages of the extension.\n\n## Work Completed\n\n- Left code unchanged.\n- Added `docs/adoption.md` with the smallest concrete proposed contract: publication updates availability, while existing usages remain pinned until explicit adoption.\n\n## Resumption Condition\n\nResume this audit when the team accepts, rejects, or revises the proposal in `docs/adoption.md`. If accepted, the next work item is to add tests first for the accepted invariant and then update the publishing behavior to match it.\n# Work Records\n\n- [Adoption audit](adoption-audit.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "9546be8043b2342aeb59c984e03ae02f4927f1df1ef5351fa74f2913792c5111"
+  },
+  {
+    "id": "item_20",
+    "command": "/bin/zsh -lc \"sed -n '1,80p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- [Unsettled installation notes](notes.md)\n- [Version adoption proposal](adoption.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "adfcbd9b51cd194c7cf88f6f05b44a511f6cda6083ed266b82c44d661886e563"
+  },
+  {
+    "id": "item_21",
+    "command": "/bin/zsh -lc 'find .work -maxdepth 1 -type f -print | sort'",
+    "exit_code": 0,
+    "output_excerpt": ".work/adoption-audit.md\n.work/index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "9720f4bf232a8106ce1becd043deb20ff5448119e2f2f6b9e2454a897808b63a"
+  },
+  {
+    "id": "item_22",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n",
+    "output_truncated": false,
+    "full_output_sha256": "267595be09b3fbeb28c423bdd37c4d29a7621a4bff828be2e4af15efab2ae50e"
+  }
+]

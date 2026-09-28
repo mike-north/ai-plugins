@@ -1,0 +1,89 @@
+{
+  "winner": "B",
+  "rationale": "B best matches the task and rubric by selecting only `deep-design` and briefly explaining why adjacent spec capabilities do not apply. A correctly identifies `deep-design` but adds `domain-planning`, which broadens scope beyond the expected route and the user's job.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "routing": {
+          "score": 2,
+          "evidence": [
+            "A/stage-1/response.md: \"Applicable skills: `deep-design`, `domain-planning`\"",
+            "A/stage-1/response.md: \"`deep-design` is the main fit: the request explicitly asks to challenge assumptions and find a smaller organizing model before adding another case.\""
+          ],
+          "explanation": "A correctly selects the primary expected capability, `deep-design`, and gives a relevant reason. However, it also selects `domain-planning`, which is not expected and is not required by the task."
+        },
+        "scope": {
+          "score": 2,
+          "evidence": [
+            "A/stage-1/response.md: \"`domain-planning` also applies because the work is about clarifying concepts, boundaries, and relationships among “installation” cases in ordinary language.\"",
+            "A/stage-1/response.md: \"Not applicable: `spec-audit` or `spec-authoring`\""
+          ],
+          "explanation": "A avoids the more clearly unrelated spec-authoring and spec-audit workflows, but still expands the scope by adding a second capability without a required dependency."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "partial",
+          "evidence": [
+            "A/stage-1/response.md selects `deep-design` with an appropriate explanation.",
+            "A/stage-1/response.md also selects `domain-planning`, despite the hidden expected route being only `deep-design`."
+          ]
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [
+        {
+          "evidence": "A/stage-1/response.md: \"`domain-planning` also applies...\"",
+          "explanation": "This appears to over-route the request beyond the single appropriate capability."
+        }
+      ],
+      "missed_issues": [],
+      "unnecessary_detours": [
+        {
+          "evidence": "A/stage-1/response.md includes `domain-planning` as applicable.",
+          "explanation": "The extra capability is not needed to satisfy the user's request to challenge assumptions and find one organizing idea."
+        }
+      ],
+      "limitations": []
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "routing": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/response.md: \"Applicable skill: `deep-design`\"",
+            "B/stage-1/response.md: \"That matches deep design’s focus on clarifying ambiguous architecture/design problems before adding more features.\""
+          ],
+          "explanation": "B selects exactly the expected capability and gives a concise, task-grounded reason."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/response.md: \"Not selecting `spec-authoring` yet because the user is not asking to draft or revise a formal spec.\"",
+            "B/stage-1/response.md: \"Not selecting `spec-audit` because there is no implementation or artifact being compared against a governing spec.\""
+          ],
+          "explanation": "B stays tightly scoped, rejects unrelated spec workflows, and does not introduce unnecessary extra capabilities."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "pass",
+          "evidence": [
+            "B/stage-1/response.md selects only `deep-design` and explains its fit.",
+            "B/stage-1/response.md briefly explains why `spec-authoring` and `spec-audit` are not applicable."
+          ]
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": []
+    }
+  ],
+  "eval_critique": "The rubric is narrow but discriminating for this trigger-routing task: it rewards choosing `deep-design` without being distracted by nearby specification vocabulary. It does not evaluate whether either response would have actually carried out the design reasoning, only whether capability routing was appropriate."
+}

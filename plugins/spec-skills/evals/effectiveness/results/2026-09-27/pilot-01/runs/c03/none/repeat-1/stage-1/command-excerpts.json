@@ -1,0 +1,114 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc 'find . -maxdepth 3 -name AGENTS.md -print'",
+    "exit_code": 0,
+    "output_excerpt": "./AGENTS.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "2d4039b572e104de871bc719f3883e9a99da161dcb7126d402d00d38ddb42206"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc \"pwd && rg --files -g '\"'!*node_modules*'\"' -g '\"'!*.git*'\"'\"",
+    "exit_code": 0,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-01/runs/c03/none/repeat-1/workspace\nsrc/extensions.py\nAGENTS.md\ndocs/notes.md\ndocs/index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "93ac87b69b0a286b29ef2cd41dfa3b4ea851a5e7fdf2e916f81d04ec18c9c8cd"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' AGENTS.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+    "output_truncated": false,
+    "full_output_sha256": "88424f7d90b560c9dced34e9f8825ecbcbd005b6921c693c786cff8cf9707346"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+    "output_truncated": false,
+    "full_output_sha256": "7ea01f7466f50e438267782c28f28bb9534264cc1ef43319a704fd63d7e9efbd"
+  },
+  {
+    "id": "item_5",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/notes.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Unsettled installation notes\nSome customers want automatic updates; others want reproducibility. We have never chosen whether existing usages follow a new publication. No release contract exists.\n",
+    "output_truncated": false,
+    "full_output_sha256": "371d790afdedd1149c7d6753d5bd7816b30cc81cbbcb7ad115b3a1a8cfbe2d2d"
+  },
+  {
+    "id": "item_7",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' src/extensions.py\"",
+    "exit_code": 0,
+    "output_excerpt": "\"\"\"Current extension behavior; this file is observation, not product authority.\"\"\"\ndef publish(extension, version, usages):\n    extension['latest'] = version\n    for usage in usages:\n        if usage['extension'] == extension['id']:\n            usage['version'] = version\n",
+    "output_truncated": false,
+    "full_output_sha256": "04a8c15e9628e7e4de8c8cd6347d2456b738f3a91a3ff6b9fb56afeef243d792"
+  },
+  {
+    "id": "item_9",
+    "command": "/bin/zsh -lc 'find .work -maxdepth 3 -type f -print'",
+    "exit_code": 1,
+    "output_excerpt": "find: .work: No such file or directory\n",
+    "output_truncated": false,
+    "full_output_sha256": "7506efcb9ace9fd75444b64b4c42152f58c362f38ded146e5a468f6cc79621e6"
+  },
+  {
+    "id": "item_10",
+    "command": "/bin/zsh -lc 'find docs -maxdepth 2 -type f -print'",
+    "exit_code": 0,
+    "output_excerpt": "docs/index.md\ndocs/notes.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "bc1da0659bb86d05ed3bac6de529e747e7e1bc5fc940b84840958b76f9b872e5"
+  },
+  {
+    "id": "item_12",
+    "command": "/bin/zsh -lc 'mkdir -p .work'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_16",
+    "command": "/bin/zsh -lc 'git diff -- docs/index.md docs/adoption.md .work/index.md .work/adoption-audit.md src/extensions.py'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_17",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": " M ../../../../../../../../.claude-plugin/marketplace.json\n M ../../../../../../../../.cursor-plugin/marketplace.json\n M ../../../../../../../../plugins/spec-skills/.claude-plugin/plugin.json\n M ../../../../../../../../plugins/spec-skills/.codex-plugin/plugin.json\n M ../../../../../../../../plugins/spec-skills/.cursor-plugin/plugin.json\n M ../../../../../../../../plugins/spec-skills/README.md\n M ../../../../../../../../plugins/spec-skills/aipm.config.ts\n M ../../../../../../../../plugins/spec-skills/skills/spec-audit/SKILL.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-audit/references/eval-cases.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-audit/references/eval-scorecard.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-audit/references/evidence-and-classification.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-audit/references/traceability-and-regression.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-authoring/SKILL.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-authoring/references/eval-cases.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-authoring/references/eval-scorecard.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-authoring/references/project-adaptation.md\n M ../../../../../../../../plugins/spec-skills/skills/spec-authoring/references/skill-evals.md\n?? ../../../../../../../../plugins/spec-skills/agents/alignment-tracer.md\n?? ../../../../../../../../plugins/spec-skills/agents/domain-assessor.md\n?? ../../../../../../../../plugins/spec-skills/evals/\n?? ../../../../../../../../plugins/spec-skills/skills/deep-design/\n?? ../../../../../../../../plugins/spec-skills/skills/domain-planning/\n?? ../../../../../../../../plugins/spec-skills/skills/spec-audit/assets/\n?? ../../../../../../../../plugins/spec-skills/skills/spec-audit/references/review-inputs.md\n?? ../../../../../../../../plugins/spec-skills/skills/spec-audit/scripts/\n?? ../../../../../../../../tests/spec-skills-review-inputs.test.mjs\n",
+    "output_truncated": false,
+    "full_output_sha256": "d4bcdaf7f8fd509a9a31c031dad4ac47c81b7a822769abfb0eb5824dbe6b38f0"
+  },
+  {
+    "id": "item_19",
+    "command": "/bin/zsh -lc 'git status --short -- .'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_20",
+    "command": "/bin/zsh -lc 'git diff -- src/extensions.py docs/index.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_21",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/adoption.md && sed -n '1,220p' .work/adoption-audit.md && sed -n '1,120p' .work/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Extension Version Adoption Proposal\n\n## Audit Question\n\nDoes publishing a new extension version cause existing usages to adopt that version, and is that behavior intentional?\n\n## Finding\n\nThe supplied product notes do not define an accepted release contract. They explicitly leave open whether existing usages should follow a new publication. The current implementation in `src/extensions.py` automatically rewrites every usage of the published extension to the newly published version, but that source file identifies itself as observation rather than product authority.\n\nBecause the intended behavior is undecided, the implementation cannot currently be audited as preserving intent. It implements automatic adoption, but there is no accepted specification saying automatic adoption is correct.\n\n## Smallest Concrete Proposal\n\nPublishing an extension version should update the extension's `latest` version only. Existing usages should continue to reference the version they already adopted until a separate, explicit adoption action changes them.\n\nThis proposal gives reproducibility a stable default while still allowing automatic updates to be added later as an explicit policy or opt-in mode. Until such a policy exists, publication and adoption remain separate responsibilities.\n\n## Acceptance Criteria\n\n- Publishing version `N` records `N` as the extension's latest published version.\n- Existing usages of that extension remain pinned to their previous versions after publication.\n- Any future automatic adoption behavior must be specified separately, including its scope and opt-in or opt-out rules.\n\n## Unresolved Decision\n\nThe product still needs to decide whether automatic adoption should exist at all. If it does, the contract must say which usages are eligible and who controls that choice.\n# Adoption Audit Checkpoint\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Current Result\n\nThe audit cannot be completed against an accepted specification because the supplied notes say the adoption decision has not been made. The observed code automatically updates matching usages to the newly published version, but the code is explicitly not product authority.\n\n## Resumption Condition\n\nResume implementation audit only after the version-adoption contract is accepted or replaced. The smallest proposal to review is in `docs/adoption.md`: publication updates the extension's latest version, while existing usages remain pinned until an explicit adoption action changes them.\n# Work Records\n\n- [adoption-audit.md](adoption-audit.md) preserves the extension publishing adoption audit checkpoint.\n",
+    "output_truncated": false,
+    "full_output_sha256": "4547b92dfe14e72edb4689e70513a430f8f91d7e06e49b0927d9c348fa723405"
+  }
+]

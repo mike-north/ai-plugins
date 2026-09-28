@@ -1,0 +1,5 @@
+Saved the audit at [docs/adoption-review.md](<home>/Projects/Dev%20Platform/Technical%20Leadership/scratch/design-specification-plugin/scratch/effectiveness/pilot-02/runs/c03/current/repeat-1/workspace/docs/adoption-review.md:1) and linked it from [docs/index.md](<home>/Projects/Dev%20Platform/Technical%20Leadership/scratch/design-specification-plugin/scratch/effectiveness/pilot-02/runs/c03/current/repeat-1/workspace/docs/index.md:7). I also updated the resume checkpoint in `.work/adoption-audit.md`.
+
+Finding: **divergent**. The accepted current-release contract says publish updates only the extension latest pointer; `src/extensions.py` currently rewrites matching existing usages to the new version during publish. I separated the future migration/automatic-update question from the current target in the review.
+
+No tests were run; this was a repository-artifact audit, and the snapshot does not include a test suite.

@@ -1,0 +1,5 @@
+Created [docs/adoption-review.md](<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c03/none/repeat-1/workspace/docs/adoption-review.md) and linked it from [docs/index.md](<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c03/none/repeat-1/workspace/docs/index.md).
+
+Finding: the current `publish` implementation does not meet the accepted current-release target. It updates `extension['latest']`, but also silently rewrites matching existing usages to the new version, while the documented target says existing usages stay pinned until explicit adoption.
+
+I also separated the migration question: whether any existing customer usages should auto-follow future publications is a separate future policy decision, not part of the current target. Verified the new review file exists and is non-empty.

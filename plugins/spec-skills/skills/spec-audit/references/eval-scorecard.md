@@ -17,7 +17,7 @@ Score each dimension from 0 to 2.
 4. Regression awareness
    - did the agent consider preserved behavior, superseded decisions, or downstream drift
 5. Test-awareness
-   - did the audit consider whether tests actually prove the claimed behavior
+   - did the audit consider what relevant behavior the tests actually check and what remains uncertain
 6. Restraint
    - did the agent avoid turning ambiguity into fake certainty or style nits into primary findings
 

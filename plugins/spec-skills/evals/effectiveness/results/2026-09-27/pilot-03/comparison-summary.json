@@ -1,0 +1,559 @@
+{
+  "comparisons": [
+    {
+      "pair": "c01-repeat-1-none",
+      "winner": "runs/c01/current/repeat-1",
+      "rationale": "Both candidates satisfy the core task, preserve uncertainty, avoid API design, and save repository artifacts. B is stronger because it explicitly names the enabling assumption, the sacrificed independent lifecycle, the bounded counterexample, and the rejected over-collapse into arbitrary configuration. A is useful and mostly correct, but it is less explicit about the tradeoff being accepted or rejected and less precise about why schedule execution does not deserve a separate binding lifecycle."
+    },
+    {
+      "pair": "c02-repeat-1-prior",
+      "winner": "runs/c02/current/repeat-1",
+      "rationale": "Both candidates satisfy the core task well: they reject the reviewer’s automatic deletion argument, preserve the parcel/freight distinctions, treat DispatchEligibility as a useful derived answer, and label the result as a recommendation rather than an accepted decision. B is slightly stronger because it more directly frames the reviewer’s objections as risks rather than proofs, keeps product-decision status visible in both the assessment and index, and gives clearer revision triggers without overcommitting to one representation."
+    },
+    {
+      "pair": "c05-repeat-1-none",
+      "winner": "tie",
+      "rationale": "Both outputs correctly identify the tenant-isolation defect, reject the unsupported class/table and R2-backoff allegations, avoid inventing a validation bug, and state that migration/test execution are not verified. Differences are minor: A gives a slightly more explicit tenant-overwrite example and broader unexamined surface; B more explicitly says no tools were used and ties the placeholder test to the tests-first expectation. Neither has a material quality advantage."
+    },
+    {
+      "pair": "t01-repeat-1-prior",
+      "winner": "runs/t01/prior/repeat-1",
+      "rationale": "Both outputs correctly route the job to `deep-design` and avoid performing unrelated work. B is slightly stronger because it clearly distinguishes the requested design-reframing work from spec drafting or auditing, while A introduces `domain-planning` as a possible adjacent next step that is not required by the task."
+    },
+    {
+      "pair": "t05-repeat-1-prior",
+      "winner": "runs/t05/prior/repeat-1",
+      "rationale": "B best matches the task and rubric by selecting only `deep-design` and briefly explaining why adjacent spec capabilities do not apply. A correctly identifies `deep-design` but adds `domain-planning`, which broadens scope beyond the expected route and the user's job."
+    },
+    {
+      "pair": "t09-repeat-1-prior",
+      "winner": "runs/t09/current/repeat-1",
+      "rationale": "B better matches the requested routing and scope. The task asks to resume a focused domain-modeling comparison without restarting the broader product discussion; the hidden rubric expects domain-planning. B selects domain-planning, explains why, keeps deep-design narrowly scoped, and explicitly avoids spec-authoring/spec-audit. A avoids unrelated spec work, but selects only deep-design and misses the expected domain-planning capability."
+    },
+    {
+      "pair": "t13-repeat-1-prior",
+      "winner": "runs/t13/prior/repeat-1",
+      "rationale": "Both outputs correctly avoided triggering an unrelated design/specification workflow and provided a direct French translation. B is slightly stronger because it briefly explains why no listed skill/capability applies, matching the hidden outcome's request to explain routing/dependency briefly without doing unrelated work."
+    },
+    {
+      "pair": "t17-repeat-1-prior",
+      "winner": "runs/t17/prior/repeat-1",
+      "rationale": "A correctly treats the job as a narrow Markdown-anchor typo fix and declines unrelated specification/design capabilities. B also limits scope, but it routes to spec-authoring merely because the file is an accepted specification, which conflicts with the rubric's warning not to force a spec workflow for a simple anchor correction."
+    },
+    {
+      "pair": "t24-repeat-1-prior",
+      "winner": "tie",
+      "rationale": "Both outputs correctly select `spec-audit` as the applicable capability, keep scope narrow, and avoid launching an unrelated design/spec-authoring workflow. A is slightly more explicit about rejecting `deep-design`; B is slightly clearer about the alignment/contradiction nature of the work and when `spec-authoring` might become relevant. No meaningful quality difference is established."
+    }
+  ],
+  "per_case_dimensions": [
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "reasoning",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "continuity",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "reasoning",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c01",
+      "variant": "none",
+      "dimension": "scope",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "current",
+      "dimension": "reasoning",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "prior",
+      "dimension": "authority",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "prior",
+      "dimension": "reasoning",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c02",
+      "variant": "prior",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "c05",
+      "variant": "current",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "current",
+      "dimension": "capability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "current",
+      "dimension": "review",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "current",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "none",
+      "dimension": "authority",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "none",
+      "dimension": "capability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "none",
+      "dimension": "review",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "c05",
+      "variant": "none",
+      "dimension": "traceability",
+      "comparison_baseline": "none",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t01",
+      "variant": "current",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t01",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "t01",
+      "variant": "prior",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t01",
+      "variant": "prior",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t05",
+      "variant": "current",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "t05",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "t05",
+      "variant": "prior",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t05",
+      "variant": "prior",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t09",
+      "variant": "current",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t09",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t09",
+      "variant": "prior",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 1,
+      "sample_stdev": null,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "case": "t09",
+      "variant": "prior",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "t13",
+      "variant": "current",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t13",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t13",
+      "variant": "prior",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t13",
+      "variant": "prior",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t17",
+      "variant": "current",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 1,
+      "sample_stdev": null,
+      "min": 1,
+      "max": 1
+    },
+    {
+      "case": "t17",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 2,
+      "sample_stdev": null,
+      "min": 2,
+      "max": 2
+    },
+    {
+      "case": "t17",
+      "variant": "prior",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t17",
+      "variant": "prior",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t24",
+      "variant": "current",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t24",
+      "variant": "current",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t24",
+      "variant": "prior",
+      "dimension": "routing",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    },
+    {
+      "case": "t24",
+      "variant": "prior",
+      "dimension": "scope",
+      "comparison_baseline": "prior",
+      "n": 1,
+      "mean": 3,
+      "sample_stdev": null,
+      "min": 3,
+      "max": 3
+    }
+  ],
+  "human_preference": "PENDING",
+  "scope": "Pilot sample, not a population reliability estimate"
+}

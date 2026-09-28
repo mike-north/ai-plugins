@@ -1,0 +1,115 @@
+{
+  "method": "Recomputed from original started and completed tool events; original metadata left intact, including absent fields in older driver versions.",
+  "stages": [
+    {
+      "source": "pilot-02/runs/c05/current/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-02/runs/c05/none/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-04/runs/t17/prior/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-04/runs/t17/prior/repeat-3/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-04/runs/t17/prior/repeat-2/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-04/runs/t17/current/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-04/runs/t17/current/repeat-3/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-04/runs/t17/current/repeat-2/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t17/prior/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t17/current/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t05/prior/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t05/current/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t24/prior/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t24/current/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/c05/current/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/c05/none/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t13/prior/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t13/current/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t09/prior/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t09/current/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t01/prior/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    },
+    {
+      "source": "pilot-03/runs/t01/current/repeat-1/stage-1/events.jsonl",
+      "tool_attempts": 0,
+      "commands": 0
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+Recorded the pinned-usage decision and rationale in [docs/adoption.md](<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c03/none/repeat-1/workspace/docs/adoption.md), marking it accepted for the current release.
+
+Added the audit examples in [docs/adoption-examples.md](<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c03/none/repeat-1/workspace/docs/adoption-examples.md), linked them from [docs/index.md](<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c03/none/repeat-1/workspace/docs/index.md), and updated [.work/adoption-audit.md](<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c03/none/repeat-1/workspace/.work/adoption-audit.md) with the current finding.
+
+Code was left unchanged, including [src/extensions.py](<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c03/none/repeat-1/workspace/src/extensions.py). No tests were run because this was documentation-only by request.

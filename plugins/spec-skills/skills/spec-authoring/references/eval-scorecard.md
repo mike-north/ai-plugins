@@ -34,5 +34,5 @@ Record these even if the numeric score is high:
 
 - what the agent read first
 - what important artifact it failed to read, if any
-- whether examples clearly stated what they proved
+- whether examples clearly stated what they checked and their limits
 - whether validation implications were concrete

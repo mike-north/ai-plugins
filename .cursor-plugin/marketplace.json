@@ -176,11 +176,13 @@
     {
       "name": "spec-skills",
       "source": "./plugins/spec-skills",
-      "description": "Two model-invoked skills for software specifications: spec-audit (compare implementations, tests, or outputs against a governing spec and classify gaps) and spec-authoring (draft or revise thorough, testable specs with explicit scope, examples, and validation).",
+      "description": "Connected design and specification work: Deep Design, domain planning, spec authoring, and alignment review with shared decisions, repository artifacts, and resumable handoffs.",
       "tags": [
-        "specs",
-        "skills",
-        "quality"
+        "design",
+        "domain-modeling",
+        "specifications",
+        "review",
+        "continuity"
       ]
     },
     {

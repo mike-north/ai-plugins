@@ -1,0 +1,130 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/brief.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Reusable behavior\nAuthors publish numbered versions. Customers use the same version in multiple places with different local retry limits. The first sketch has TileInstall and JobInstall, whose binding lifecycles are the same. Execution engines are out of scope. Users need to know which version each use is on. Nothing is accepted yet.\n",
+    "output_truncated": false,
+    "full_output_sha256": "c173700d217654d9102ded3f518541c0364fe9e19190d12d3ef3ea648bd19c80"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+    "output_truncated": false,
+    "full_output_sha256": "7ea01f7466f50e438267782c28f28bb9534264cc1ef43319a704fd63d7e9efbd"
+  },
+  {
+    "id": "item_3",
+    "command": "/bin/zsh -lc \"pwd && rg --files -g '\"'!*'\"' -g '\"'!/.git/*'\"'\"",
+    "exit_code": 1,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c08/none/repeat-1/workspace\n",
+    "output_truncated": false,
+    "full_output_sha256": "6fb4492118a866776da86a6d0439ca631ef86c0b542c1bae447ac6df1811af46"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc 'find .work -maxdepth 2 -type f -print | sort'",
+    "exit_code": 0,
+    "output_excerpt": "find: .work: No such file or directory\n",
+    "output_truncated": false,
+    "full_output_sha256": "7506efcb9ace9fd75444b64b4c42152f58c362f38ded146e5a468f6cc79621e6"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"find . -maxdepth 3 -type f -not -path './.git/*' -print | sort\"",
+    "exit_code": 0,
+    "output_excerpt": "./.gitignore\n./AGENTS.md\n./docs/brief.md\n./docs/index.md\n./src/registry.py\n",
+    "output_truncated": false,
+    "full_output_sha256": "5e4d4a47bc2fa8fe7e03c31cf6f06ac79334db18a41880e482b4a1d405d47be8"
+  },
+  {
+    "id": "item_7",
+    "command": "/bin/zsh -lc 'find docs -maxdepth 2 -type f -print | sort'",
+    "exit_code": 0,
+    "output_excerpt": "docs/brief.md\ndocs/index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "28be2031afb7d9bd4dd0910e3526b5142d09703117883132c2c59b0c4479431c"
+  },
+  {
+    "id": "item_8",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n",
+    "output_truncated": false,
+    "full_output_sha256": "267595be09b3fbeb28c423bdd37c4d29a7621a4bff828be2e4af15efab2ae50e"
+  },
+  {
+    "id": "item_10",
+    "command": "/bin/zsh -lc 'mkdir -p .work/checkpoints'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_14",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' .work/index.md && sed -n '1,240p' .work/checkpoints/smaller-model.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Work Index\n\n## Checkpoints\n\n- [Smaller model proposal](checkpoints/smaller-model.md)\n# Checkpoint: Smaller Model Proposal\n\nDate: 2026-09-27\n\n## Request\n\nExplore the product idea in `docs/brief.md` and propose a smaller model without implementing it. Save the tentative model in `docs/domain.md`, the consequential choice in `docs/decisions.md`, and make the work discoverable under `.work/`.\n\n## Completed\n\n- Added a tentative domain model centered on `Behavior`, `BehaviorVersion`, `Use`, and `Place`.\n- Recorded the proposed consequential choice to collapse `TileInstall` and `JobInstall` into `Use` only while their binding lifecycles remain equivalent.\n- Preserved the user's instruction that the collapse has not yet been accepted.\n\n## Follow-Up Questions\n\n- Confirm whether tile and job bindings differ in permissions, ownership, rollback, or user obligations.\n- Decide whether version upgrades mutate a `Use` or create a new historical binding record.\n- Identify whether retry limit is the only local configuration or part of a broader per-use policy surface.\n",
+    "output_truncated": false,
+    "full_output_sha256": "6108163a4a60ca648b7bd519788f706733620cbfbef935c9d026734cbd194f4d"
+  },
+  {
+    "id": "item_15",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/decisions.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Decisions\n\n## Proposed: Collapse TileInstall and JobInstall into Use\n\nStatus: Proposed, not accepted.\n\n### Context\n\nThe brief describes authors publishing numbered versions and customers using the same version in multiple places with different local retry limits. The first sketch contains `TileInstall` and `JobInstall`, but their binding lifecycles are described as the same. Execution engines are out of scope. Users need clear visibility into which version each use is on.\n\n### Consequential Choice\n\nModel the shared lifecycle once as `Use`, with tile and job represented as kinds of local `Place`, unless a later requirement proves that tile and job installs diverge in lifecycle, permissions, ownership, rollback, or user obligations.\n\n### Why This Is Smaller\n\nThe smaller model keeps the product focused on the accepted common behavior: a customer binds a published behavior version into a local context and may set local retry limits. It avoids duplicating install concepts before there is evidence that tile and job installs have different domain meaning.\n\n### Consequences\n\n- Product language can describe one binding lifecycle across multiple place types.\n- Version visibility is attached consistently to every local use.\n- Retry limits remain local configuration, so the same behavior version can be reused with different operational tolerance.\n- Future tile-specific or job-specific behavior would need either place-specific policy or a later split back into separate install concepts.\n\n### Guardrail\n\nThis collapse should not be treated as accepted until stakeholders confirm that tile and job installs share the same lifecycle and semantic obligations beyond the initial sketch.\n",
+    "output_truncated": false,
+    "full_output_sha256": "fbcef410c8bdf9c8ef0f6a82b1058a42006ddf6996b063c287fced4d7dbddf2d"
+  },
+  {
+    "id": "item_16",
+    "command": "/bin/zsh -lc \"sed -n '1,240p' docs/domain.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Tentative Domain Model\n\n## Status\n\nThis model is a proposal for reducing the first sketch. It has not been accepted as the product shape, and the collapse of `TileInstall` and `JobInstall` remains tentative.\n\n## Product Idea\n\nAuthors create reusable behavior and publish it as numbered versions. Customers then use a specific published version in one or more local places, each with its own retry limit. The execution engine is outside this model; the model only tracks authored versions, local uses, and enough version visibility for users to understand what each place is running.\n\n## Smaller Model\n\n### Behavior\n\nA `Behavior` is the reusable thing an author owns and evolves. It gives a stable identity to the authored capability across versions, independent of any customer place where it is used.\n\nKey responsibility:\n\n- Group all numbered versions of the same reusable behavior.\n- Preserve author-level ownership and naming.\n- Avoid carrying execution-engine details.\n\n### Behavior Version\n\nA `BehaviorVersion` is an immutable published revision of a behavior. The version number is the customer-visible handle for what a local use is bound to.\n\nKey responsibility:\n\n- Record the numbered published version.\n- Provide the target that customer uses bind to.\n- Support comparison between local uses of the same behavior.\n\n### Use\n\nA `Use` is a customer's local binding of one behavior version into one place. This is the proposed smaller replacement for separate `TileInstall` and `JobInstall` concepts while their binding lifecycles remain the same.\n\nKey responsibility:\n\n- Point to exactly one `BehaviorVersion`.\n- Belong to exactly one customer-owned local place.\n- Carry local configuration that can differ between places, such as retry limit.\n- Expose the bound version so users know which version that place is on.\n\n### Place\n\nA `Place` is the customer context where a behavior version is used. The current brief names tiles and jobs as distinct places. The proposed model keeps that distinction as place type rather than separate install lifecycle types.\n\nKey responsibility:\n\n- Identify where the customer is using the behavior.\n- Distinguish place categories such as tile or job when the product experience needs that label.\n- Keep local binding lifecycle separate from execution behavior.\n\n## Invariants\n\n- A `Use` binds one local place to one published behavior version.\n- A local retry limit belongs to the `Use`, not to the reusable behavior or its published version.\n- Published versions are numbered and visible wherever a customer reviews a use.\n- Tile and job lifecycles should only remain collapsed if their binding states, transitions, and user obligations stay equivalent.\n- Execution engine behavior is intentionally out of scope for this model.\n\n## Open Questions\n\n- Do tile and job uses need different permissions, review flows, rollback rules, or ownership boundaries?\n- Does a customer ever need to bind multiple behavior versions to the same place at the same time?\n- Are retry limits the only known local override, or is there a broader class of per-use configuration?\n- Should version upgrades be represented as a change to the existing `Use`, or as a replacement use with history?\n",
+    "output_truncated": false,
+    "full_output_sha256": "d44d8109f2d4da34590cbdccaf99454e796e87e6762dab67e72f0d3e5e49825f"
+  },
+  {
+    "id": "item_17",
+    "command": "/bin/zsh -lc 'git diff -- docs/domain.md docs/decisions.md .work/index.md .work/checkpoints/smaller-model.md && git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n",
+    "output_truncated": false,
+    "full_output_sha256": "267595be09b3fbeb28c423bdd37c4d29a7621a4bff828be2e4af15efab2ae50e"
+  },
+  {
+    "id": "item_22",
+    "command": "/bin/zsh -lc \"sed -n '1,160p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n## Product exploration\n\n- [Brief](brief.md)\n- [Tentative domain model](domain.md)\n- [Decisions](decisions.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "50b18a813fd843fba705829e69adb9b0720ebc0364da4899b5b6dac001bcf0ac"
+  },
+  {
+    "id": "item_21",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/decisions.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Decisions\n\n## Proposed: Collapse TileInstall and JobInstall into Use\n\nStatus: Proposed, not accepted.\n\n### Context\n\nThe brief describes authors publishing numbered versions and customers using the same version in multiple places with different local retry limits. The first sketch contains `TileInstall` and `JobInstall`, but their binding lifecycles are described as the same. Execution engines are out of scope. Users need clear visibility into which version each use is on.\n\n### Consequential Choice\n\nModel the shared lifecycle once as `Use`, with tile and job represented as kinds of local `Place`, unless a later requirement proves that tile and job installs diverge in lifecycle, permissions, ownership, rollback, or user obligations.\n\n### Why This Is Smaller\n\nThe smaller model keeps the product focused on the stated common behavior: a customer binds a published behavior version into a local context and may set local retry limits. It avoids duplicating install concepts before there is evidence that tile and job installs have different domain meaning.\n\n### Consequences\n\n- Product language can describe one binding lifecycle across multiple place types.\n- Version visibility is attached consistently to every local use.\n- Retry limits remain local configuration, so the same behavior version can be reused with different operational tolerance.\n- Future tile-specific or job-specific behavior would need either place-specific policy or a later split back into separate install concepts.\n\n### Guardrail\n\nThis collapse should not be treated as accepted until stakeholders confirm that tile and job installs share the same lifecycle and semantic obligations beyond the initial sketch.\n",
+    "output_truncated": false,
+    "full_output_sha256": "b25e274091c20e600d48848a600bae329610c63aee0ee3afeeb5fe4d80213a34"
+  },
+  {
+    "id": "item_23",
+    "command": "/bin/zsh -lc 'find docs .work -maxdepth 3 -type f -print | sort'",
+    "exit_code": 0,
+    "output_excerpt": ".work/checkpoints/smaller-model.md\n.work/index.md\ndocs/brief.md\ndocs/decisions.md\ndocs/domain.md\ndocs/index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "b17f9b9694489c8d72b43ff92736d7295c86ae9d08ccd1e83b4ca093fa04b7dc"
+  },
+  {
+    "id": "item_24",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n",
+    "output_truncated": false,
+    "full_output_sha256": "267595be09b3fbeb28c423bdd37c4d29a7621a4bff828be2e4af15efab2ae50e"
+  }
+]

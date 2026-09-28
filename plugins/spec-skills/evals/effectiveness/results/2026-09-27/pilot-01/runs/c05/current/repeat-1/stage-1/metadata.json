@@ -1,0 +1,30 @@
+{
+  "status": "COMPLETE",
+  "exit_code": 0,
+  "elapsed_seconds": 15.328,
+  "command": [
+    "codex",
+    "exec",
+    "--ignore-user-config",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--json",
+    "--cd",
+    "<evaluation-repository>/scratch/effectiveness/pilot-01/runs/c05/current/repeat-1/workspace",
+    "--output-last-message",
+    "<evaluation-repository>/scratch/effectiveness/pilot-01/runs/c05/current/repeat-1/stage-1/response.md",
+    "-"
+  ],
+  "model_requested": null,
+  "stage_fresh_session": true,
+  "usage": {
+    "input_tokens": 21342,
+    "cached_input_tokens": 12672,
+    "reasoning_output_tokens": 88,
+    "output_tokens": 543
+  },
+  "commands": 0,
+  "tool_items": 0
+}

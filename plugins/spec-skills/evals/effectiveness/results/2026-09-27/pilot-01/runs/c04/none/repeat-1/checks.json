@@ -1,0 +1,12 @@
+[
+  {
+    "kind": "unchanged",
+    "path": ".work/billing.md",
+    "passed": true
+  },
+  {
+    "kind": "exists",
+    "path": "docs/examples.md",
+    "passed": true
+  }
+]

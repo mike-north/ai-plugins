@@ -1,0 +1,11 @@
+{
+  ".gitignore": ".work/\n",
+  "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+  "docs/contract.md": "# Rotation operation\nAccepted D1 implementation contract, not marked superseded. Refines [rotation](domain.md#rotation): POST /rotate returns a new credential ID and revokes the original credential and its grants.\n",
+  "docs/decisions.md": "# Decisions\nD1: original new-ID design was accepted for the beta.\nD2: owner accepted stable credential identity for general release to preserve integrations. The beta migration behavior has not yet been chosen.\n",
+  "docs/domain.md": "# Credentials\n## Rotation\nAccepted D2: rotation replaces the secret while preserving the credential identity and grants.\n",
+  "docs/examples.md": "# Normative general-release examples\nCredential c1 has grant g1. After rotating, response id=c2; c1 and g1 are invalid.\n",
+  "docs/index.md": "# Credential collection\nMeaning: [rotation](domain.md#rotation). Wire behavior: contract.md. Accepted choices: decisions.md. Expected examples: examples.md.\n",
+  "src/rotate.py": "def rotate(credential, new_secret):\n    credential[\"secret\"] = new_secret\n    return credential\n",
+  "tests/report.md": "Tests pass: secret changes, id stays c1, grants stay unchanged. No beta migration tests are included.\n"
+}

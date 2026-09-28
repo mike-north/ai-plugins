@@ -1,0 +1,143 @@
+{
+  "winner": "B",
+  "rationale": "Both candidates satisfy the core task, preserve uncertainty, avoid API design, and save repository artifacts. B is stronger because it explicitly names the enabling assumption, the sacrificed independent lifecycle, the bounded counterexample, and the rejected over-collapse into arbitrary configuration. A is useful and mostly correct, but it is less explicit about the tradeoff being accepted or rejected and less precise about why schedule execution does not deserve a separate binding lifecycle.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "reasoning": {
+          "score": 2,
+          "evidence": [
+            "docs/installation-organizing-candidate.md: \"Tile, schedule, and webhook become use contexts rather than three installation families.\"",
+            "docs/installation-organizing-candidate.md: \"The clock explains when execution happens, but it does not need a separate installation concept for enablement, version selection, or configuration because those remain responsibilities of the use.\""
+          ],
+          "explanation": "A gives a coherent Product/Use collapse and tests the main cases, including schedule, duplicate use, and publish isolation. It is adequate but does not make the enabling assumption and sacrificed lifecycle as explicit as B."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "docs/installation-organizing-candidate.md: \"Status: candidate only... it does not record acceptance of a collapse.\"",
+            "docs/installation-organizing-candidate.md: \"This pass does not design an API, name fields, define persistence tables, choose route shapes, or specify runtime execution contracts.\""
+          ],
+          "explanation": "A correctly preserves the user's authority, does not claim acceptance, and stays out of API design."
+        },
+        "continuity": {
+          "score": 3,
+          "evidence": [
+            "docs/index.md: \"installation-organizing-candidate.md: candidate collapse and decision needed; not yet accepted.\"",
+            ".work/index.md: \"installation organizing candidate: .work/installation-organizing-candidate.md\"",
+            ".work/installation-organizing-candidate.md: \"Current decision: accept or reject the collapse...\""
+          ],
+          "explanation": "A saves the design artifact, updates the docs reading map, and adds a discoverable work checkpoint."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "docs/installation-organizing-candidate.md: \"This pass does not design an API...\"",
+            "docs/installation-organizing-candidate.md: \"A managed marketplace can approve products independently later... outside the current release.\""
+          ],
+          "explanation": "A stays within conceptual design and bounds marketplace approval to a future concern."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Proposes a concrete collapse around a reusable version bound into a usage or equivalent, explains why execution scheduling need not create a separate binding lifecycle.",
+          "verdict": "pass",
+          "evidence": "docs/installation-organizing-candidate.md proposes `Product` and `Use`; scheduled job section says the clock explains execution timing but not separate enablement, version selection, or configuration."
+        },
+        {
+          "criterion": "States the enabling assumption about shared binding/adoption semantics and the sacrificed independent installation lifecycle; tests duplicate uses and publish-without-adoption.",
+          "verdict": "partial",
+          "evidence": "A tests duplicate uses and publish isolation, and implies shared semantics, but does not clearly label the enabling assumption or the sacrificed independent lifecycle."
+        },
+        {
+          "criterion": "Investigates a realistic counterexample such as independent approval lifecycle and bounds the proposal to the current release.",
+          "verdict": "pass",
+          "evidence": "docs/installation-organizing-candidate.md: \"Future marketplace approval... belongs to product availability, not to this release's use model.\""
+        },
+        {
+          "criterion": "Preserves uncertainty and requests human acceptance for the consequential collapse while saving proposed shared meaning and resumable work.",
+          "verdict": "pass",
+          "evidence": "docs/installation-organizing-candidate.md marks status as candidate only and has `Decision Needed`; .work checkpoint records accept/reject decision."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [
+        "Did not explicitly call out the sacrificed independent installation lifecycle, only that separate concepts are replaced."
+      ],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No raw execution trace is available here; assessment is based only on supplied artifacts and final response."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "reasoning": {
+          "score": 3,
+          "evidence": [
+            "docs/use-binding-candidate.md: \"The current release's load-bearing difference is invocation surface, not three independent kinds of customer ownership.\"",
+            "docs/use-binding-candidate.md: \"This sacrifice is acceptable only if surface-specific behavior remains narrow...\"",
+            "docs/use-binding-candidate.md: \"Do not collapse surface away entirely into unstructured configuration.\""
+          ],
+          "explanation": "B gives a precise conceptual model, names the assumption, tests all brief situations, and distinguishes useful collapse from over-collapse."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "docs/use-binding-candidate.md: \"Status: proposed exploration, not accepted.\"",
+            "docs/use-binding-candidate.md: \"Acceptance would settle only the current-release conceptual model. It would not approve an API...\""
+          ],
+          "explanation": "B clearly leaves the consequential decision with the human and avoids claiming acceptance."
+        },
+        "continuity": {
+          "score": 3,
+          "evidence": [
+            "docs/index.md: \"Use binding candidate... proposed, unaccepted compression... includes the pending decision.\"",
+            ".work/essence.md: \"Pending human decision: whether to accept this bounded collapse for the current release.\""
+          ],
+          "explanation": "B saves the artifact, links it from the reading map, and updates the resumable work note with the live state."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "docs/use-binding-candidate.md: \"This is a conceptual collapse only. It does not decide table shape, endpoint shape, class names, or protocol details.\"",
+            "docs/use-binding-candidate.md: \"Future marketplace approval... outside the present release...\""
+          ],
+          "explanation": "B stays tightly scoped to conceptual design and explicitly defers API, storage, and marketplace work."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Proposes a concrete collapse around a reusable version bound into a usage or equivalent, explains why execution scheduling need not create a separate binding lifecycle.",
+          "verdict": "pass",
+          "evidence": "docs/use-binding-candidate.md proposes one customer `Use` of a published behavior version; schedule row says the clock belongs to the scheduled surface while version binding and enablement remain ordinary Use facts."
+        },
+        {
+          "criterion": "States the enabling assumption about shared binding/adoption semantics and the sacrificed independent installation lifecycle; tests duplicate uses and publish-without-adoption.",
+          "verdict": "pass",
+          "evidence": "docs/use-binding-candidate.md has sections `Enabling Assumption`, `Sacrifice`, and stress tests for publishing leaving existing uses alone and using one version twice with different configuration."
+        },
+        {
+          "criterion": "Investigates a realistic counterexample such as independent approval lifecycle and bounds the proposal to the current release.",
+          "verdict": "pass",
+          "evidence": "docs/use-binding-candidate.md discusses future managed marketplace approval as a possible product-level concept outside the current release and adds a revision trigger if marketplace approval enters scope."
+        },
+        {
+          "criterion": "Preserves uncertainty and requests human acceptance for the consequential collapse while saving proposed shared meaning and resumable work.",
+          "verdict": "pass",
+          "evidence": "docs/use-binding-candidate.md says proposed exploration, not accepted; `Decision Needed` asks whether to accept the bounded collapse; .work/essence.md records pending human decision."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No raw execution trace is available here; assessment is based only on supplied artifacts and final response."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is discriminating for this task: it distinguishes a shallow concept-count reduction from a bounded conceptual collapse with preserved human authority. The supplied snapshots are sufficient for quality judging. Capability compliance and claims about actual process cannot be verified from these artifacts alone, as the package notes."
+}

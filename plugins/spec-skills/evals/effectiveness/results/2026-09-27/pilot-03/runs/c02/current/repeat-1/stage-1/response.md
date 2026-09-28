@@ -1,0 +1,5 @@
+Done. I added the assessment at [docs/shipment-concept-assessment.md](<evaluation-repository>/scratch/effectiveness/pilot-03/runs/c02/current/repeat-1/workspace/docs/shipment-concept-assessment.md) and updated [docs/index.md](<evaluation-repository>/scratch/effectiveness/pilot-03/runs/c02/current/repeat-1/workspace/docs/index.md).
+
+Recommendation: keep `Shipment` as a candidate concept for now. The reviewer’s points are real design risks, but a discriminator and derived `DispatchEligibility` do not prove the abstraction is fake. The assessment tests the three supplied examples and concludes they support a shared shipment lifecycle as long as parcel/freight-specific readiness evidence remains visible.
+
+No product decision is marked as accepted; the doc labels this as a reasoned recommendation only.

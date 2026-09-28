@@ -1,0 +1,138 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc 'pwd && rg --files'",
+    "exit_code": 0,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c03/none/repeat-1/workspace\nsrc/extensions.py\nAGENTS.md\ndocs/notes.md\ndocs/index.md\ndocs/adoption.md\ndocs/adoption-examples.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "4b176b9edd51ef8639622190e9b87ef1f49961e854c3991af9f121431e13d531"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n",
+    "output_truncated": false,
+    "full_output_sha256": "267595be09b3fbeb28c423bdd37c4d29a7621a4bff828be2e4af15efab2ae50e"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' AGENTS.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+    "output_truncated": false,
+    "full_output_sha256": "88424f7d90b560c9dced34e9f8825ecbcbd005b6921c693c786cff8cf9707346"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/notes.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Unsettled installation notes\nSome customers want automatic updates; others want reproducibility. We have never chosen whether existing usages follow a new publication. No release contract exists.\n",
+    "output_truncated": false,
+    "full_output_sha256": "371d790afdedd1149c7d6753d5bd7816b30cc81cbbcb7ad115b3a1a8cfbe2d2d"
+  },
+  {
+    "id": "item_5",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/adoption-examples.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Version Adoption Audit Examples\n\nThese examples define the concrete outcomes needed to audit the accepted current-release contract in [Version Adoption Decision](adoption.md). They are intentionally outcome-focused so they can guide tests or implementation review without changing code in this documentation pass.\n\n## Example 1: Publishing Preserves an Existing Usage\n\nGiven extension `spellcheck` has latest version `1.0.0`, and usage `draft-review` references extension `spellcheck` at version `1.0.0`.\n\nWhen version `1.1.0` is published for extension `spellcheck`.\n\nThen extension `spellcheck` has latest version `1.1.0`, and usage `draft-review` still references version `1.0.0`.\n\n## Example 2: Publishing Does Not Affect Other Existing Usages\n\nGiven extension `spellcheck` has latest version `1.0.0`, usage `draft-review` references extension `spellcheck` at version `1.0.0`, and usage `release-notes` references extension `formatter` at version `3.2.0`.\n\nWhen version `1.1.0` is published for extension `spellcheck`.\n\nThen extension `spellcheck` has latest version `1.1.0`, usage `draft-review` still references version `1.0.0`, and usage `release-notes` still references version `3.2.0`.\n\n## Example 3: Explicit Adoption Updates Only the Chosen Usage\n\nGiven extension `spellcheck` has latest version `1.1.0`, usage `draft-review` references extension `spellcheck` at version `1.0.0`, and usage `policy-review` references extension `spellcheck` at version `1.0.0`.\n\nWhen usage `draft-review` explicitly adopts version `1.1.0`.\n\nThen usage `draft-review` references version `1.1.0`, and usage `policy-review` still references version `1.0.0`.\n\n## Example 4: Publication Is Not an Adoption Signal\n\nGiven usage `draft-review` references extension `spellcheck` at version `1.0.0`.\n\nWhen version `1.1.0` is published for extension `spellcheck`, and no explicit adoption operation is requested for usage `draft-review`.\n\nThen usage `draft-review` still references version `1.0.0`.\n\n## Out Of Scope For This Release\n\nThese examples do not define automatic-follow behavior, default version selection for brand-new usages, or customer-level rollout policies. Those behaviors require separate product decisions.\n",
+    "output_truncated": false,
+    "full_output_sha256": "9523bee80a7475def59ed4ead4d486827d1de1255c44132f875d2a4707ee6d10"
+  },
+  {
+    "id": "item_7",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- [Unsettled installation notes](notes.md)\n- [Version adoption decision](adoption.md)\n- [Version adoption audit examples](adoption-examples.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "36c88304e02755968ae023e886c18c4901ca25c511628d5dd10014251933f00a"
+  },
+  {
+    "id": "item_8",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/adoption.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Version Adoption Decision\n\n## Status\n\nAccepted for the current release.\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Observed Behavior\n\n`src/extensions.py` currently treats publication as both a catalog update and an adoption event:\n\n- `extension['latest']` is set to the published version.\n- every usage whose `extension` matches the published extension id has `usage['version']` overwritten with the published version.\n\nBecause the supplied notes say the team has not chosen whether existing usages follow a new publication, this behavior cannot be verified as intended.\n\n## Decision\n\nPublishing an extension should only make the new version available by updating the extension's latest version. Existing usages should remain pinned to the version they already reference until an explicit adoption operation updates them.\n\nThis preserves reproducibility for existing usages while still allowing customers or product workflows to opt into automatic updates later through a separate, named policy.\n\nFor the current release, adoption is a usage-level operation. Publication and adoption are separate product events, so publication must not silently migrate existing customer data.\n\n## Rationale\n\nPinned usages make the release contract predictable: a workflow that was created against version `A` keeps running against version `A` after version `B` is published. That protects reproducibility, makes audit findings explainable, and avoids turning a catalog-management action into a customer-data migration.\n\nExplicit adoption also leaves room for customers who want automatic updates later. Any automatic-follow behavior can be introduced as a named usage or customer policy without changing the meaning of publication for already-pinned usages.\n\n## Proposed Invariant\n\nAfter publishing version `N` for extension `E`:\n\n- `E.latest` is `N`.\n- an existing usage of `E` keeps its previous `version`.\n- a separate adoption decision is required before any existing usage changes to `N`.\n\n## Release Boundary\n\nThis decision covers the current release. It does not decide whether a future release will support an automatic-follow policy for selected usages or customers. If that policy is added later, it should be explicit and should not be implied by publication alone.\n",
+    "output_truncated": false,
+    "full_output_sha256": "479225cfff9cc9a1dd9e2231bcc9806a26ee8f4f772a42d5b51cf76a4bef6e6b"
+  },
+  {
+    "id": "item_9",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' src/extensions.py\"",
+    "exit_code": 0,
+    "output_excerpt": "\"\"\"Current extension behavior; this file is observation, not product authority.\"\"\"\ndef publish(extension, version, usages):\n    extension['latest'] = version\n    for usage in usages:\n        if usage['extension'] == extension['id']:\n            usage['version'] = version\n",
+    "output_truncated": false,
+    "full_output_sha256": "04a8c15e9628e7e4de8c8cd6347d2456b738f3a91a3ff6b9fb56afeef243d792"
+  },
+  {
+    "id": "item_11",
+    "command": "/bin/zsh -lc \"find . -maxdepth 3 -path './.git' -prune -o -print\"",
+    "exit_code": 0,
+    "output_excerpt": ".\n./docs\n./docs/adoption-examples.md\n./docs/adoption.md\n./docs/index.md\n./docs/notes.md\n./.gitignore\n./.work\n./.work/adoption-audit.md\n./.work/index.md\n./AGENTS.md\n./src\n./src/extensions.py\n",
+    "output_truncated": false,
+    "full_output_sha256": "5471fc5f3b44cea2f79b20b0cc86657cd9741ce90d6922a120674df116894562"
+  },
+  {
+    "id": "item_12",
+    "command": "/bin/zsh -lc \"rg -n \\\"publish|adopt|migration|latest|version|usage|release|target|audit\\\" . --glob '\"'!/.git/**'\"'\"",
+    "exit_code": 0,
+    "output_excerpt": "./src/extensions.py:2:def publish(extension, version, usages):\n./src/extensions.py:3:    extension['latest'] = version\n./src/extensions.py:4:    for usage in usages:\n./src/extensions.py:5:        if usage['extension'] == extension['id']:\n./src/extensions.py:6:            usage['version'] = version\n./AGENTS.md:2:Shared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n./docs/notes.md:2:Some customers want automatic updates; others want reproducibility. We have never chosen whether existing usages follow a new publication. No release contract exists.\n./docs/index.md:6:- [Version adoption decision](adoption.md)\n./docs/index.md:7:- [Version adoption audit examples](adoption-examples.md)\n./docs/adoption.md:5:Accepted for the current release.\n./docs/adoption.md:9:Does publishing an extension preserve the intended version-adoption behavior for existing usages?\n./docs/adoption.md:13:`src/extensions.py` currently treats publication as both a catalog update and an adoption event:\n./docs/adoption.md:15:- `extension['latest']` is set to the published version.\n./docs/adoption.md:16:- every usage whose `extension` matches the published extension id has `usage['version']` overwritten with the published version.\n./docs/adoption.md:18:Because the supplied notes say the team has not chosen whether existing usages follow a new publication, this behavior cannot be verified as intended.\n./docs/adoption.md:22:Publishing an extension should only make the new version available by updating the extension's latest version. Existing usages should remain pinned to the version they already reference until an explicit adoption operation updates them.\n./docs/adoption.md:24:This preserves reproducibility for existing usages while still allowing customers or product workflows to opt into automatic updates later through a separate, named policy.\n./docs/adoption.md:26:For the current release, adoption is a usage-level operation. Publication and adoption are separate product events, so publication must not silently migrate existing customer data.\n./docs/adoption.md:30:Pinned usages make the release contract predictable: a workflow that was created against version `A` keeps running against version `A` after version `B` is published. That protects reproducibility, makes audit findings explainable, and avoids turning a catalog-management action into a customer-data migration.\n./docs/adoption.md:32:Explicit adoption also leaves room for customers who want automatic updates later. Any automatic-follow behavior can be introduced as a named usage or customer policy without changing the meaning of publication for already-pinned usages.\n./docs/adoption.md:36:After publishing version `N` for extension `E`:\n./docs/adoption.md:38:- `E.latest` is `N`.\n./docs/adoption.md:39:- an existing usage of `E` keeps its previous `version`.\n./docs/adoption.md:40:- a separate adoption decision is required before any existing usage changes to `N`.\n./docs/adoption.md:44:This decision covers the current release. It does not decide whether a future release will support an automatic-follow policy for selected usages or customers. If that policy is added later, it should be explicit and should not be implied by publication alone.\n./docs/adoption-examples.md:3:These examples define the concrete outcomes needed to audit the accepted current-release contract in [Version Adoption Decision](adoption.md). They are intentionally outcome-focused so they can guide tests or implementation review without changing code in this documentation pass.\n./docs/adoption-examples.md:7:Given extension `spellcheck` has latest version `1.0.0`, and usage `draft-review` references extension `spellcheck` at version `1.0.0`.\n./docs/adoption-examples.md:9:When version `1.1.0` is published for extension `spellcheck`.\n./docs/adoption-examples.md:11:Then extension `spellcheck` has latest version `1.1.0`, and usage `draft-review` still references version `1.0.0`.\n./docs/adoption-examples.md:15:Given extension `spellcheck` has latest version `1.0.0`, usage `draft-review` references extension `spellcheck` at version `1.0.0`, and usage `release-notes` references extension `formatter` at version `3.2.0`.\n./docs/adoption-examples.md:17:When version `1.1.0` is published for extension `spellcheck`.\n./docs/adoption-examples.md:19:Then extension `spellcheck` has latest version `1.1.0`, usage `draft-review` still references version `1.0.0`, and usage `release-notes` still references version `3.2.0`.\n./docs/adoption-examples.md:23:Given extension `spellcheck` has latest version `1.1.0`, usage `draft-review` references extension `spellcheck` at version `1.0.0`, and usage `policy-review` references extension `spellcheck` at version `1.0.0`.\n./docs/adoption-examples.md:25:When usage `draft-review` explicitly adopts version `1.1.0`.\n./docs/adoption-examples.md:27:Then usage `draft-review` references version `1.1.0`, and usage `policy-review` still references version `1.0.0`.\n./docs/adoption-examples.md:31:Given usage `draft-review` references extension `spellcheck` at version `1.0.0`.\n./docs/adoption-examples.md:33:When version `1.1.0` is published for extension `spellcheck`, and no explicit adoption operation is requested for usage `draft-review`.\n./docs/adoption-examples.md:35:Then usage `draft-review` still references version `1.0.0`.\n./docs/adoption-examples.md:39:These examples do not define automatic-follow behavior, default version selection for brand-new ",
+    "output_truncated": true,
+    "full_output_sha256": "02620f13b5a0512ac8dc06f0d10899a27f86dee50a9dcef0d00ed8f9ad526431"
+  },
+  {
+    "id": "item_14",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' .work/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Work Records\n\n- [Adoption audit](adoption-audit.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "c835f0814fa346e2fd45043bc84d2767e4daa722c8b2d89debbf78d46b53f877"
+  },
+  {
+    "id": "item_15",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' .work/adoption-audit.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Adoption Audit Checkpoint\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Supplied Evidence\n\n- `docs/notes.md` says customers are split between automatic updates and reproducibility, and that no release contract exists.\n- `src/extensions.py` currently updates `extension['latest']` and also rewrites matching usage versions during publication.\n\n## Finding\n\nThe accepted current-release contract is that publishing a version makes it available but does not migrate existing usages. Existing usages remain pinned to their chosen version until an explicit usage adoption operation changes them.\n\nThe implementation currently adopts the newly published version for all existing usages of the extension, so it does not match the accepted contract.\n\n## Work Completed\n\n- Left code unchanged.\n- Updated `docs/adoption.md` from proposal to accepted current-release decision.\n- Recorded the rationale for pinned usages: reproducibility, explainable audits, and avoiding silent customer-data migration.\n- Added `docs/adoption-examples.md` with concrete examples for the original audit.\n\n## Resumption Condition\n\nIf implementation work is authorized later, add tests first for the accepted invariant and then update publishing behavior to match it.\n",
+    "output_truncated": false,
+    "full_output_sha256": "3c85e5daff50fdce8b948511ec4f72a603f9e6cf07ebc8d81f3411395f61e863"
+  },
+  {
+    "id": "item_19",
+    "command": "/bin/zsh -lc \"sed -n '1,120p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- [Unsettled installation notes](notes.md)\n- [Version adoption decision](adoption.md)\n- [Version adoption audit examples](adoption-examples.md)\n- [Publication and adoption review](adoption-review.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "c7a4b81e2fa474d6efd65a5e939dd94039dc0ed7256d69a4cf3f362ceb1bd9cd"
+  },
+  {
+    "id": "item_20",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/adoption-review.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Publication and Adoption Review\n\n## Scope\n\nThis review audits the current repository artifacts against the accepted current-release target in [Version adoption decision](adoption.md). It uses only the documents and source present in this repository.\n\n## Current Target\n\nThe current release target separates publication from adoption:\n\n- publishing a version updates the extension catalog's latest version;\n- existing usages stay pinned to their current version;\n- changing an existing usage requires an explicit adoption operation.\n\nThis target is established in [Version adoption decision](adoption.md), whose proposed invariant says that after publishing version `N` for extension `E`, `E.latest` is `N` while an existing usage of `E` keeps its previous `version`.\n\n## Evidence\n\n[src/extensions.py](../src/extensions.py) implements `publish(extension, version, usages)` by setting `extension['latest'] = version`, then iterating over every usage and replacing `usage['version']` with the published version when `usage['extension'] == extension['id']`.\n\n[Version adoption audit examples](adoption-examples.md) gives the expected outcomes for the accepted contract. Example 1 expects `draft-review` to remain on `1.0.0` after `spellcheck` `1.1.0` is published. Example 2 expects unrelated usages to remain unchanged and the matching existing usage to remain pinned. Example 4 states that publication is not an adoption signal when no explicit adoption operation is requested.\n\n[Unsettled installation notes](notes.md) records the original uncertainty: some customers want automatic updates, others want reproducibility, and no release contract previously existed. The accepted decision resolves that uncertainty only for the current release by choosing pinned existing usages and explicit adoption.\n\nThe checkpoint in [.work/adoption-audit.md](../.work/adoption-audit.md) records that code was intentionally left unchanged while the decision and examples were documented.\n\n## Finding\n\nThe implementation does not satisfy the accepted current-release publication/adoption target.\n\n`publish` correctly updates the extension's `latest` value, but it also silently migrates every existing usage for that extension to the newly published version. That behavior contradicts the current-release invariant that existing usages remain pinned until an explicit adoption operation updates them.\n\nThe mismatch is not caused by ambiguity in the current target. The current target is explicit in `docs/adoption.md`, and `docs/adoption-examples.md` provides concrete outcomes that the current `publish` behavior would fail for matching existing usages.\n\n## Current-Target Recommendation\n\nFor the current release, implementation work should make publication a catalog update only. Tests should be written first from the documented outcomes:\n\n- publishing `spellcheck` `1.1.0` updates `spellcheck.latest` to `1.1.0`;\n- a pre-existing `spellcheck` usage at `1.0.0` remains at `1.0.0`;\n- unrelated usages remain unchanged;\n- explicit adoption, when implemented or audited, updates only the chosen usage.\n\n## Separate Migration Question\n\nThe migration question is separate from the current target: should any existing customer usages ever be automatically moved to a newly published version, and under what named policy?\n\nThat question is not answered by the current-release decision. The existing notes show customer demand on both sides, and the accepted decision leaves room for a future automatic-follow policy. Any such policy should be defined as a separate product decision with explicit opt-in or rollout rules, rather than being inferred from publication itself.\n",
+    "output_truncated": false,
+    "full_output_sha256": "8fe3ae84fc283d2a6c8e4241e9fb6a51020612a60b9e8d723da35bb80dbb7101"
+  },
+  {
+    "id": "item_21",
+    "command": "/bin/zsh -lc 'git diff -- docs/adoption-review.md docs/index.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_23",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n",
+    "output_truncated": false,
+    "full_output_sha256": "267595be09b3fbeb28c423bdd37c4d29a7621a4bff828be2e4af15efab2ae50e"
+  },
+  {
+    "id": "item_24",
+    "command": "/bin/zsh -lc \"test -f docs/adoption-review.md && test -s docs/adoption-review.md && printf 'docs/adoption-review.md present\\\\n'\"",
+    "exit_code": 0,
+    "output_excerpt": "docs/adoption-review.md present\n",
+    "output_truncated": false,
+    "full_output_sha256": "73ebfe07c683bbb54e0bbce563bba8e8ff06d6ab224c28395e6a22e9676ffd80"
+  }
+]

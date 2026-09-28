@@ -1,0 +1,8 @@
+{
+  "docs/api.md": "# R1 contract\nset_retry(extension_id, tenant_id, limit) changes only that tenant usage. Limits are integers 0..5 inclusive; reject any other value before mutation.\n",
+  "docs/domain.md": "# Tenant settings\nAccepted R1: retry limit belongs to a tenant usage, never globally to an extension. Separate conceptual responsibilities do not require separate storage or classes.\n",
+  "docs/index.md": "# Current review snapshot\nR1 domain.md governs tenant configuration. api.md governs release R1 behavior. roadmap.md is accepted future scope. Migration implementation is referenced but not included.\n",
+  "docs/roadmap.md": "# Accepted R2 target\nAdd automatic retry backoff in R2, after R1. It is not an R1 obligation.\n",
+  "src/settings.py": "settings = {}\ndef set_retry(extension_id, tenant_id, limit):\n    if not isinstance(limit, int) or isinstance(limit, bool) or not 0 <= limit <= 5:\n        raise ValueError('invalid retry limit')\n    settings[extension_id] = limit\n",
+  "tests/test_settings.py": "def test_upper_bound():\n    # supplied evidence: limit 6 rejects before mutation\n    pass\n"
+}

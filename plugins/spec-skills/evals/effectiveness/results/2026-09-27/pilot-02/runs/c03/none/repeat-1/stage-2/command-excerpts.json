@@ -1,0 +1,154 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc \"pwd && rg --files -g '\"'!*node_modules*'\"' -g '\"'!*.git*'\"'\"",
+    "exit_code": 0,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c03/none/repeat-1/workspace\nsrc/extensions.py\nAGENTS.md\ndocs/notes.md\ndocs/index.md\ndocs/adoption.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "5de0c2cbc83e152c765f527204aa6a4bfa8aeb373712399f1053a090d93e517b"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n",
+    "output_truncated": false,
+    "full_output_sha256": "267595be09b3fbeb28c423bdd37c4d29a7621a4bff828be2e4af15efab2ae50e"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/adoption.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Version Adoption Proposal\n\n## Status\n\nProposal. There is no accepted release or adoption contract in the supplied files.\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Observed Behavior\n\n`src/extensions.py` currently treats publication as both a catalog update and an adoption event:\n\n- `extension['latest']` is set to the published version.\n- every usage whose `extension` matches the published extension id has `usage['version']` overwritten with the published version.\n\nBecause the supplied notes say the team has not chosen whether existing usages follow a new publication, this behavior cannot be verified as intended.\n\n## Smallest Concrete Proposal\n\nPublishing an extension should only make the new version available by updating the extension's latest version. Existing usages should remain pinned to the version they already reference until an explicit adoption operation updates them.\n\nThis preserves reproducibility for existing usages while still allowing customers or product workflows to opt into automatic updates later through a separate, named policy.\n\n## Proposed Invariant\n\nAfter publishing version `N` for extension `E`:\n\n- `E.latest` is `N`.\n- an existing usage of `E` keeps its previous `version`.\n- a separate adoption decision is required before any existing usage changes to `N`.\n\n## Open Decision\n\nThe team still needs to decide whether to support an automatic-follow policy for selected usages. If that policy is added, it should be explicit per usage or per customer and should not be implied by publication alone.\n",
+    "output_truncated": false,
+    "full_output_sha256": "7b886c0bdfceb307240a3a2f4139b998551c6c95bf447843f9a213b447ce72bc"
+  },
+  {
+    "id": "item_5",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- [Unsettled installation notes](notes.md)\n- [Version adoption proposal](adoption.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "adfcbd9b51cd194c7cf88f6f05b44a511f6cda6083ed266b82c44d661886e563"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/notes.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Unsettled installation notes\nSome customers want automatic updates; others want reproducibility. We have never chosen whether existing usages follow a new publication. No release contract exists.\n",
+    "output_truncated": false,
+    "full_output_sha256": "371d790afdedd1149c7d6753d5bd7816b30cc81cbbcb7ad115b3a1a8cfbe2d2d"
+  },
+  {
+    "id": "item_7",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' src/extensions.py\"",
+    "exit_code": 0,
+    "output_excerpt": "\"\"\"Current extension behavior; this file is observation, not product authority.\"\"\"\ndef publish(extension, version, usages):\n    extension['latest'] = version\n    for usage in usages:\n        if usage['extension'] == extension['id']:\n            usage['version'] = version\n",
+    "output_truncated": false,
+    "full_output_sha256": "04a8c15e9628e7e4de8c8cd6347d2456b738f3a91a3ff6b9fb56afeef243d792"
+  },
+  {
+    "id": "item_8",
+    "command": "/bin/zsh -lc 'find .work -maxdepth 2 -type f -print 2>/dev/null | sort'",
+    "exit_code": 0,
+    "output_excerpt": ".work/adoption-audit.md\n.work/index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "9720f4bf232a8106ce1becd043deb20ff5448119e2f2f6b9e2454a897808b63a"
+  },
+  {
+    "id": "item_10",
+    "command": "/bin/zsh -lc \"sed -n '1,240p' .work/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Work Records\n\n- [Adoption audit](adoption-audit.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "c835f0814fa346e2fd45043bc84d2767e4daa722c8b2d89debbf78d46b53f877"
+  },
+  {
+    "id": "item_11",
+    "command": "/bin/zsh -lc \"sed -n '1,280p' .work/adoption-audit.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Adoption Audit Checkpoint\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Supplied Evidence\n\n- `docs/notes.md` says customers are split between automatic updates and reproducibility, and that no release contract exists.\n- `src/extensions.py` currently updates `extension['latest']` and also rewrites matching usage versions during publication.\n\n## Finding\n\nThe current publish behavior cannot be confirmed as intended because the supplied files do not contain an accepted adoption contract. The implementation currently adopts the newly published version for all existing usages of the extension.\n\n## Work Completed\n\n- Left code unchanged.\n- Added `docs/adoption.md` with the smallest concrete proposed contract: publication updates availability, while existing usages remain pinned until explicit adoption.\n\n## Resumption Condition\n\nResume this audit when the team accepts, rejects, or revises the proposal in `docs/adoption.md`. If accepted, the next work item is to add tests first for the accepted invariant and then update the publishing behavior to match it.\n",
+    "output_truncated": false,
+    "full_output_sha256": "3f6da1f90399b0a7240c944a514558d0c87f9c53ac88c651c224cfef6951048d"
+  },
+  {
+    "id": "item_15",
+    "command": "/bin/zsh -lc 'git diff -- src/extensions.py'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_16",
+    "command": "/bin/zsh -lc 'git diff -- docs/index.md docs/adoption.md docs/adoption-examples.md .work/adoption-audit.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_17",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n",
+    "output_truncated": false,
+    "full_output_sha256": "267595be09b3fbeb28c423bdd37c4d29a7621a4bff828be2e4af15efab2ae50e"
+  },
+  {
+    "id": "item_19",
+    "command": "/bin/zsh -lc \"sed -n '1,240p' docs/adoption.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Version Adoption Decision\n\n## Status\n\nAccepted for the current release.\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Observed Behavior\n\n`src/extensions.py` currently treats publication as both a catalog update and an adoption event:\n\n- `extension['latest']` is set to the published version.\n- every usage whose `extension` matches the published extension id has `usage['version']` overwritten with the published version.\n\nBecause the supplied notes say the team has not chosen whether existing usages follow a new publication, this behavior cannot be verified as intended.\n\n## Decision\n\nPublishing an extension should only make the new version available by updating the extension's latest version. Existing usages should remain pinned to the version they already reference until an explicit adoption operation updates them.\n\nThis preserves reproducibility for existing usages while still allowing customers or product workflows to opt into automatic updates later through a separate, named policy.\n\nFor the current release, adoption is a usage-level operation. Publication and adoption are separate product events, so publication must not silently migrate existing customer data.\n\n## Rationale\n\nPinned usages make the release contract predictable: a workflow that was created against version `A` keeps running against version `A` after version `B` is published. That protects reproducibility, makes audit findings explainable, and avoids turning a catalog-management action into a customer-data migration.\n\nExplicit adoption also leaves room for customers who want automatic updates later. Any automatic-follow behavior can be introduced as a named usage or customer policy without changing the meaning of publication for already-pinned usages.\n\n## Proposed Invariant\n\nAfter publishing version `N` for extension `E`:\n\n- `E.latest` is `N`.\n- an existing usage of `E` keeps its previous `version`.\n- a separate adoption decision is required before any existing usage changes to `N`.\n\n## Release Boundary\n\nThis decision covers the current release. It does not decide whether a future release will support an automatic-follow policy for selected usages or customers. If that policy is added later, it should be explicit and should not be implied by publication alone.\n",
+    "output_truncated": false,
+    "full_output_sha256": "479225cfff9cc9a1dd9e2231bcc9806a26ee8f4f772a42d5b51cf76a4bef6e6b"
+  },
+  {
+    "id": "item_20",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/adoption-examples.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Version Adoption Audit Examples\n\nThese examples define the concrete outcomes needed to audit the accepted current-release contract in [Version Adoption Decision](adoption.md). They are intentionally outcome-focused so they can guide tests or implementation review without changing code in this documentation pass.\n\n## Example 1: Publishing Preserves an Existing Usage\n\nGiven extension `spellcheck` has latest version `1.0.0`, and usage `draft-review` references extension `spellcheck` at version `1.0.0`.\n\nWhen version `1.1.0` is published for extension `spellcheck`.\n\nThen extension `spellcheck` has latest version `1.1.0`, and usage `draft-review` still references version `1.0.0`.\n\n## Example 2: Publishing Does Not Affect Other Existing Usages\n\nGiven extension `spellcheck` has latest version `1.0.0`, usage `draft-review` references extension `spellcheck` at version `1.0.0`, and usage `release-notes` references extension `formatter` at version `3.2.0`.\n\nWhen version `1.1.0` is published for extension `spellcheck`.\n\nThen extension `spellcheck` has latest version `1.1.0`, usage `draft-review` still references version `1.0.0`, and usage `release-notes` still references version `3.2.0`.\n\n## Example 3: Explicit Adoption Updates Only the Chosen Usage\n\nGiven extension `spellcheck` has latest version `1.1.0`, usage `draft-review` references extension `spellcheck` at version `1.0.0`, and usage `policy-review` references extension `spellcheck` at version `1.0.0`.\n\nWhen usage `draft-review` explicitly adopts version `1.1.0`.\n\nThen usage `draft-review` references version `1.1.0`, and usage `policy-review` still references version `1.0.0`.\n\n## Example 4: Publication Is Not an Adoption Signal\n\nGiven usage `draft-review` references extension `spellcheck` at version `1.0.0`.\n\nWhen version `1.1.0` is published for extension `spellcheck`, and no explicit adoption operation is requested for usage `draft-review`.\n\nThen usage `draft-review` still references version `1.0.0`.\n\n## Out Of Scope For This Release\n\nThese examples do not define automatic-follow behavior, default version selection for brand-new usages, or customer-level rollout policies. Those behaviors require separate product decisions.\n",
+    "output_truncated": false,
+    "full_output_sha256": "9523bee80a7475def59ed4ead4d486827d1de1255c44132f875d2a4707ee6d10"
+  },
+  {
+    "id": "item_21",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md && sed -n '1,260p' .work/adoption-audit.md && sed -n '1,80p' src/extensions.py\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- [Unsettled installation notes](notes.md)\n- [Version adoption proposal](adoption.md)\n- [Version adoption audit examples](adoption-examples.md)\n# Adoption Audit Checkpoint\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Supplied Evidence\n\n- `docs/notes.md` says customers are split between automatic updates and reproducibility, and that no release contract exists.\n- `src/extensions.py` currently updates `extension['latest']` and also rewrites matching usage versions during publication.\n\n## Finding\n\nThe accepted current-release contract is that publishing a version makes it available but does not migrate existing usages. Existing usages remain pinned to their chosen version until an explicit usage adoption operation changes them.\n\nThe implementation currently adopts the newly published version for all existing usages of the extension, so it does not match the accepted contract.\n\n## Work Completed\n\n- Left code unchanged.\n- Updated `docs/adoption.md` from proposal to accepted current-release decision.\n- Recorded the rationale for pinned usages: reproducibility, explainable audits, and avoiding silent customer-data migration.\n- Added `docs/adoption-examples.md` with concrete examples for the original audit.\n\n## Resumption Condition\n\nIf implementation work is authorized later, add tests first for the accepted invariant and then update publishing behavior to match it.\n\"\"\"Current extension behavior; this file is observation, not product authority.\"\"\"\ndef publish(extension, version, usages):\n    extension['latest'] = version\n    for usage in usages:\n        if usage['extension'] == extension['id']:\n            usage['version'] = version\n",
+    "output_truncated": false,
+    "full_output_sha256": "1e26ce0ade493e6536d542b6e61a3648e414212559fc389e6a1b9ea90a649531"
+  },
+  {
+    "id": "item_25",
+    "command": "/bin/zsh -lc \"sed -n '1,80p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- [Unsettled installation notes](notes.md)\n- [Version adoption decision](adoption.md)\n- [Version adoption audit examples](adoption-examples.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "36c88304e02755968ae023e886c18c4901ca25c511628d5dd10014251933f00a"
+  },
+  {
+    "id": "item_26",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/adoption.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Version Adoption Decision\n\n## Status\n\nAccepted for the current release.\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Observed Behavior\n\n`src/extensions.py` currently treats publication as both a catalog update and an adoption event:\n\n- `extension['latest']` is set to the published version.\n- every usage whose `extension` matches the published extension id has `usage['version']` overwritten with the published version.\n\nBecause the supplied notes say the team has not chosen whether existing usages follow a new publication, this behavior cannot be verified as intended.\n\n## Decision\n\nPublishing an extension should only make the new version available by updating the extension's latest version. Existing usages should remain pinned to the version they already reference until an explicit adoption operation updates them.\n\nThis preserves reproducibility for existing usages while still allowing customers or product workflows to opt into automatic updates later through a separate, named policy.\n\nFor the current release, adoption is a usage-level operation. Publication and adoption are separate product events, so publication must not silently migrate existing customer data.\n\n## Rationale\n\nPinned usages make the release contract predictable: a workflow that was created against version `A` keeps running against version `A` after version `B` is published. That protects reproducibility, makes audit findings explainable, and avoids turning a catalog-management action into a customer-data migration.\n\nExplicit adoption also leaves room for customers who want automatic updates later. Any automatic-follow behavior can be introduced as a named usage or customer policy without changing the meaning of publication for already-pinned usages.\n\n## Proposed Invariant\n\nAfter publishing version `N` for extension `E`:\n\n- `E.latest` is `N`.\n- an existing usage of `E` keeps its previous `version`.\n- a separate adoption decision is required before any existing usage changes to `N`.\n\n## Release Boundary\n\nThis decision covers the current release. It does not decide whether a future release will support an automatic-follow policy for selected usages or customers. If that policy is added later, it should be explicit and should not be implied by publication alone.\n",
+    "output_truncated": false,
+    "full_output_sha256": "479225cfff9cc9a1dd9e2231bcc9806a26ee8f4f772a42d5b51cf76a4bef6e6b"
+  },
+  {
+    "id": "item_27",
+    "command": "/bin/zsh -lc \"sed -n '1,240p' docs/adoption-examples.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Version Adoption Audit Examples\n\nThese examples define the concrete outcomes needed to audit the accepted current-release contract in [Version Adoption Decision](adoption.md). They are intentionally outcome-focused so they can guide tests or implementation review without changing code in this documentation pass.\n\n## Example 1: Publishing Preserves an Existing Usage\n\nGiven extension `spellcheck` has latest version `1.0.0`, and usage `draft-review` references extension `spellcheck` at version `1.0.0`.\n\nWhen version `1.1.0` is published for extension `spellcheck`.\n\nThen extension `spellcheck` has latest version `1.1.0`, and usage `draft-review` still references version `1.0.0`.\n\n## Example 2: Publishing Does Not Affect Other Existing Usages\n\nGiven extension `spellcheck` has latest version `1.0.0`, usage `draft-review` references extension `spellcheck` at version `1.0.0`, and usage `release-notes` references extension `formatter` at version `3.2.0`.\n\nWhen version `1.1.0` is published for extension `spellcheck`.\n\nThen extension `spellcheck` has latest version `1.1.0`, usage `draft-review` still references version `1.0.0`, and usage `release-notes` still references version `3.2.0`.\n\n## Example 3: Explicit Adoption Updates Only the Chosen Usage\n\nGiven extension `spellcheck` has latest version `1.1.0`, usage `draft-review` references extension `spellcheck` at version `1.0.0`, and usage `policy-review` references extension `spellcheck` at version `1.0.0`.\n\nWhen usage `draft-review` explicitly adopts version `1.1.0`.\n\nThen usage `draft-review` references version `1.1.0`, and usage `policy-review` still references version `1.0.0`.\n\n## Example 4: Publication Is Not an Adoption Signal\n\nGiven usage `draft-review` references extension `spellcheck` at version `1.0.0`.\n\nWhen version `1.1.0` is published for extension `spellcheck`, and no explicit adoption operation is requested for usage `draft-review`.\n\nThen usage `draft-review` still references version `1.0.0`.\n\n## Out Of Scope For This Release\n\nThese examples do not define automatic-follow behavior, default version selection for brand-new usages, or customer-level rollout policies. Those behaviors require separate product decisions.\n",
+    "output_truncated": false,
+    "full_output_sha256": "9523bee80a7475def59ed4ead4d486827d1de1255c44132f875d2a4707ee6d10"
+  },
+  {
+    "id": "item_28",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' .work/adoption-audit.md && sed -n '1,80p' src/extensions.py\"",
+    "exit_code": 0,
+    "output_excerpt": "# Adoption Audit Checkpoint\n\n## Audit Question\n\nDoes publishing an extension preserve the intended version-adoption behavior for existing usages?\n\n## Supplied Evidence\n\n- `docs/notes.md` says customers are split between automatic updates and reproducibility, and that no release contract exists.\n- `src/extensions.py` currently updates `extension['latest']` and also rewrites matching usage versions during publication.\n\n## Finding\n\nThe accepted current-release contract is that publishing a version makes it available but does not migrate existing usages. Existing usages remain pinned to their chosen version until an explicit usage adoption operation changes them.\n\nThe implementation currently adopts the newly published version for all existing usages of the extension, so it does not match the accepted contract.\n\n## Work Completed\n\n- Left code unchanged.\n- Updated `docs/adoption.md` from proposal to accepted current-release decision.\n- Recorded the rationale for pinned usages: reproducibility, explainable audits, and avoiding silent customer-data migration.\n- Added `docs/adoption-examples.md` with concrete examples for the original audit.\n\n## Resumption Condition\n\nIf implementation work is authorized later, add tests first for the accepted invariant and then update publishing behavior to match it.\n\"\"\"Current extension behavior; this file is observation, not product authority.\"\"\"\ndef publish(extension, version, usages):\n    extension['latest'] = version\n    for usage in usages:\n        if usage['extension'] == extension['id']:\n            usage['version'] = version\n",
+    "output_truncated": false,
+    "full_output_sha256": "ef422a7f40e33152f538e1b092bafb48e3684f8ea438bbd0209edc5bc8fa9730"
+  }
+]

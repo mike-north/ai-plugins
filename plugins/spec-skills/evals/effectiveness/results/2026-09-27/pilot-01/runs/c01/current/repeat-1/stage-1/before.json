@@ -1,0 +1,8 @@
+{
+  ".gitignore": ".work/\n",
+  ".work/essence.md": "# Essence\nOriginal job: explain reusable behavior without three parallel installation products. Current candidate: separate installation kinds. No human decision yet.\n",
+  ".work/index.md": "# Active work\n- essence: .work/essence.md\n",
+  "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+  "docs/brief.md": "# Author once, use in several places\nStatus: exploration. Authors publish a version of reusable behavior. Customers use it in a dashboard tile, a scheduled job, or a webhook response. Each use chooses a published version and local configuration; publishing leaves existing uses alone. Today the sketch names TileInstallation, ScheduleInstallation, and WebhookInstallation, plus a separate ProductRegistration for each. None has shipped. Schedule execution has a clock, but the binding's enable/disable and version choice work the same. A customer can use one version twice with different configuration. A future managed marketplace might approve products independently; this is outside the current release.\n",
+  "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n"
+}

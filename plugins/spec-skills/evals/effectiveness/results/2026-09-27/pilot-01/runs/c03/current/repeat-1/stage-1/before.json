@@ -1,0 +1,7 @@
+{
+  ".gitignore": ".work/\n",
+  "AGENTS.md": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+  "docs/index.md": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+  "docs/notes.md": "# Unsettled installation notes\nSome customers want automatic updates; others want reproducibility. We have never chosen whether existing usages follow a new publication. No release contract exists.\n",
+  "src/extensions.py": "\"\"\"Current extension behavior; this file is observation, not product authority.\"\"\"\ndef publish(extension, version, usages):\n    extension['latest'] = version\n    for usage in usages:\n        if usage['extension'] == extension['id']:\n            usage['version'] = version\n"
+}

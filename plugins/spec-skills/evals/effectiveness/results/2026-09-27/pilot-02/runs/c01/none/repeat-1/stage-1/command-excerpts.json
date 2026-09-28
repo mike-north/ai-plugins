@@ -1,0 +1,74 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc \"pwd && rg --files -g '\"'!*node_modules*'\"' -g '\"'!*.png'\"' -g '\"'!*.jpg'\"' -g '\"'!*.jpeg'\"' -g '\"'!*.gif'\"'\"",
+    "exit_code": 0,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c01/none/repeat-1/workspace\nAGENTS.md\ndocs/brief.md\ndocs/index.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "3d43a3da1238615c3e42e5f9aefd6e5451f184cf5cb76ec11b13612830733a5c"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n",
+    "output_truncated": false,
+    "full_output_sha256": "bee4bdd2fc991062f11bcac59a01cec4dae8d9b9e37b8a6168c1f01d3bbf1bbc"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' AGENTS.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project conventions\nShared product, domain, specification, decision, and review material belongs in docs/. Reuse docs/index.md as the reading map. Contributor checkpoints live in .work/ with a discoverable .work/index.md. .work/ is already excluded locally; do not change global settings. Keep unrelated contributor records intact. Campaign progress follows the specific convention in this fixture. Current explicit user instructions take precedence. Save meaningful design or review output in the repository; label proposals and unresolved questions honestly. Do not commit, publish, message others, or use external services.\n",
+    "output_truncated": false,
+    "full_output_sha256": "88424f7d90b560c9dced34e9f8825ecbcbd005b6921c693c786cff8cf9707346"
+  },
+  {
+    "id": "item_5",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n",
+    "output_truncated": false,
+    "full_output_sha256": "7ea01f7466f50e438267782c28f28bb9534264cc1ef43319a704fd63d7e9efbd"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/brief.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Author once, use in several places\nStatus: exploration. Authors publish a version of reusable behavior. Customers use it in a dashboard tile, a scheduled job, or a webhook response. Each use chooses a published version and local configuration; publishing leaves existing uses alone. Today the sketch names TileInstallation, ScheduleInstallation, and WebhookInstallation, plus a separate ProductRegistration for each. None has shipped. Schedule execution has a clock, but the binding's enable/disable and version choice work the same. A customer can use one version twice with different configuration. A future managed marketplace might approve products independently; this is outside the current release.\n",
+    "output_truncated": false,
+    "full_output_sha256": "b9a95aedb4424784dc48a2de33de1233012c8ec955d96e14e2cad19a9d725608"
+  },
+  {
+    "id": "item_10",
+    "command": "/bin/zsh -lc \"sed -n '1,240p' docs/installation-collapse-candidate.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Installation collapse candidate\n\nStatus: proposed, not accepted.\n\n## Smaller organizing idea\n\nUse **use** as the organizing idea: a customer has a use of a published version in a specific operating context.\n\nA use is the durable customer-owned binding between:\n\n- a published version of reusable behavior,\n- a local configuration for one customer context,\n- a run context such as dashboard tile, scheduled job, or webhook response,\n- common lifecycle state such as enabled or disabled.\n\nThe run context explains what is special about the situation. The use explains what is shared across all situations: choosing a version, configuring it locally, keeping that version stable, and allowing the same version to appear more than once.\n\nThis candidate intentionally avoids an API design. It is only a vocabulary and responsibility split for deciding whether the current TileInstallation, ScheduleInstallation, WebhookInstallation, and per-context ProductRegistration language should collapse into fewer concepts.\n\n## Why this is smaller\n\nThe current model starts with three installation concepts and then tries to explain why their behavior is similar. This candidate starts with one customer action: \"use this published version here with this configuration.\"\n\nTile, schedule, and webhook become run contexts for a use rather than separate top-level installation concepts. Schedule still has a clock, but the clock belongs to the scheduled run context, not to a separate lifecycle model.\n\nProduct or publication remains author-owned. Use remains customer-owned. That boundary keeps future product approval or marketplace work from being mixed into customer configuration.\n\n## Test against the brief\n\n| Brief situation | Fit with the candidate |\n| --- | --- |\n| Authors publish a version of reusable behavior. | Publication stays author-owned and versioned. A use points at one published version. |\n| Customers use it in a dashboard tile, scheduled job, or webhook response. | Each is the same concept, a use, with a different run context. |\n| Each use chooses a published version and local configuration. | Version choice and local configuration are the core responsibilities of a use. |\n| Publishing leaves existing uses alone. | A use is pinned to its selected published version until the customer changes it. |\n| Schedule execution has a clock, but enable/disable and version choice work the same. | The clock is schedule-specific run context. Enable/disable and version selection remain common use behavior. |\n| A customer can use one version twice with different configuration. | The customer creates two distinct uses that point to the same published version and carry different local configuration. |\n| A future managed marketplace might approve products independently; this is outside the current release. | Product approval can remain a separate author/product concern. It does not have to become part of use lifecycle in this release. |\n\n## Candidate wording\n\n\"Authors publish reusable behavior as versions. Customers create uses of a published version in a particular run context. A use owns the customer's version choice, local configuration, and enabled state. The run context supplies the extra details needed to execute as a tile, schedule, or webhook.\"\n\n## Decision needed\n\nDecide whether to accept the collapse from three installation concepts to one customer-owned **use** concept with run-context-specific details.\n\nAccepting the collapse means the design should stop presenting TileInstallation, ScheduleInstallation, and WebhookInstallation as separate peer concepts. It can still describe tile, schedule, and webhook as different contexts with their own execution details.\n\nNot accepting the collapse means the design should keep separate installation concepts and explicitly justify why their shared behavior is not enough to make them one concept.\n\nThe unresolved naming question is whether the shared concept should be called **use**, **binding**, or **placement**. This note recommends **use** because it is closest to the customer story in the brief and does not sound like an API primitive.\n",
+    "output_truncated": false,
+    "full_output_sha256": "ca6eb6497c3ac5360030b148a1b197ebc9ebc386882f2f9c69db5f4f48f16212"
+  },
+  {
+    "id": "item_11",
+    "command": "/bin/zsh -lc \"sed -n '1,80p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- [brief.md](brief.md): current exploration brief and situations the design must explain.\n- [installation-collapse-candidate.md](installation-collapse-candidate.md): proposed smaller organizing idea for the installation concepts and the decision still open.\n",
+    "output_truncated": false,
+    "full_output_sha256": "fe6acf7b3a4dc5ee6660c4d9421047a046a692888ba9d77a0aef2d4291a58bb2"
+  },
+  {
+    "id": "item_12",
+    "command": "/bin/zsh -lc 'git diff -- docs/index.md docs/installation-collapse-candidate.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_14",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n",
+    "output_truncated": false,
+    "full_output_sha256": "bee4bdd2fc991062f11bcac59a01cec4dae8d9b9e37b8a6168c1f01d3bbf1bbc"
+  }
+]

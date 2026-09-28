@@ -1,0 +1,145 @@
+{
+  "winner": "B",
+  "rationale": "Both candidates correctly identified the core semantic contradiction, preserved the code, treated passing tests as limited evidence, and highlighted the unresolved beta migration boundary. B is slightly stronger because it saved the review in docs/ and linked it from docs/index.md, matching the repository convention that shared review material belongs in docs/ and making the artifact more discoverable for a future contributor. A's substantive analysis is also strong, but its review lives only under .work/, which is less aligned with the supplied project conventions.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "traceability": {
+          "score": 3,
+          "evidence": [
+            ".work/credential-rotation-spec-review.md: cites docs/domain.md:3 as D2 preserving credential identity and grants",
+            ".work/credential-rotation-spec-review.md: cites docs/contract.md:2 as returning a new credential ID and revoking original grants",
+            ".work/credential-rotation-spec-review.md: identifies docs/examples.md:2 as the affected example"
+          ],
+          "explanation": "The review traces the contradiction across domain, contract, decisions, examples, and the supplied test report with specific file references."
+        },
+        "review": {
+          "score": 3,
+          "evidence": [
+            ".work/credential-rotation-spec-review.md: 'These statements cannot all be true for one general-release operation.'",
+            ".work/credential-rotation-spec-review.md: 'The supplied passing report therefore should not be treated as proof that the specification collection is coherent.'"
+          ],
+          "explanation": "It gives a useful semantic review, separates test evidence from specification coherence, and lists concrete open questions for follow-up."
+        },
+        "authority": {
+          "score": 2,
+          "evidence": [
+            "AGENTS.md: 'Shared product, domain, specification, decision, and review material belongs in docs/.'",
+            "A/stage-1/after.json: saved review at .work/credential-rotation-spec-review.md rather than docs/"
+          ],
+          "explanation": "The content respects source authority and does not choose a winner between accepted sources, but the artifact location is weaker than the repository convention for shared review material."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "A/stage-1/after.json: src/rotate.py unchanged",
+            ".work/credential-rotation-spec-review.md: 'This is a semantic observation, not a proposed edit.'",
+            ".work/credential-rotation-spec-review.md: asks what beta migration behavior should be chosen rather than declaring it accepted"
+          ],
+          "explanation": "It stays within the requested review scope, avoids code changes, and leaves unresolved migration behavior unresolved."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Detects that contract and normative example still encode new-ID semantics despite valid links and D2 stable identity.",
+          "verdict": "pass",
+          "evidence": ".work/credential-rotation-spec-review.md says contract returns a new credential ID and revokes original grants, and examples.md:2 uses id=c2 with c1/g1 invalid."
+        },
+        {
+          "criterion": "Traces the stable identity decision into preserved grants, examples, operation output, and the unresolved beta migration boundary.",
+          "verdict": "pass",
+          "evidence": ".work/credential-rotation-spec-review.md contrasts stable-ID interpretation with new-ID interpretation and asks what beta migration behavior is chosen."
+        },
+        {
+          "criterion": "Distinguishes code alignment with D2 from contradictions in the collection rather than treating all accepted prose as mutually consistent.",
+          "verdict": "pass",
+          "evidence": ".work/credential-rotation-spec-review.md says tests align with D2 but contradict the contract and normative example."
+        },
+        {
+          "criterion": "Recommends deliberate reconciliation with preserved D1 rationale and a bounded migration decision; does not claim the passing test report proves all conformance.",
+          "verdict": "pass",
+          "evidence": ".work/credential-rotation-spec-review.md asks whether contract should remain beta-only or be superseded, and states the passing report does not prove the collection is coherent."
+        }
+      ],
+      "authority_errors": [
+        "Saved shared review output in .work/credential-rotation-spec-review.md despite AGENTS.md saying shared review material belongs in docs/."
+      ],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No independent test execution is shown, but the task supplied a test report and asked for semantic review."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "traceability": {
+          "score": 3,
+          "evidence": [
+            "docs/credential-rotation-review.md: cites docs/domain.md, docs/decisions.md, tests/report.md, docs/contract.md, and docs/examples.md",
+            "docs/credential-rotation-review.md: identifies the c1/g1 example as affected"
+          ],
+          "explanation": "The review cleanly traces all relevant sources and explains how they conflict."
+        },
+        "review": {
+          "score": 3,
+          "evidence": [
+            "docs/credential-rotation-review.md: 'passing tests for the D2 path do not resolve the normative contradiction'",
+            "docs/credential-rotation-review.md: 'Separate the beta migration question from the general-release rotation contract.'"
+          ],
+          "explanation": "It provides actionable findings and follow-up without overclaiming or choosing a source silently."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "docs/credential-rotation-review.md created as review material under docs/",
+            "docs/index.md updated with 'Review notes: [credential rotation specification review](credential-rotation-review.md).'",
+            "src/rotate.py unchanged"
+          ],
+          "explanation": "It follows the repository convention for shared review material and preserves the implementation and unresolved decisions."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "docs/credential-rotation-review.md: 'It does not modify code or choose between contradictory accepted sources.'",
+            "docs/credential-rotation-review.md: says beta migration is intentionally unresolved",
+            "B/stage-1/after.json: src/rotate.py unchanged"
+          ],
+          "explanation": "It stays focused on semantic contradictions, affected examples, and bounded follow-up."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Detects that contract and normative example still encode new-ID semantics despite valid links and D2 stable identity.",
+          "verdict": "pass",
+          "evidence": "docs/credential-rotation-review.md says contract requires a new credential ID and revoked grants, while examples.md shows c1/g1 becoming id=c2 and invalid."
+        },
+        {
+          "criterion": "Traces the stable identity decision into preserved grants, examples, operation output, and the unresolved beta migration boundary.",
+          "verdict": "pass",
+          "evidence": "docs/credential-rotation-review.md ties D2 to stable identity and grants, identifies operation output conflict, and discusses unchosen beta migration behavior."
+        },
+        {
+          "criterion": "Distinguishes code alignment with D2 from contradictions in the collection rather than treating all accepted prose as mutually consistent.",
+          "verdict": "pass",
+          "evidence": "docs/credential-rotation-review.md states tests pass for id staying c1 and grants unchanged, but this does not resolve the contract/example contradiction."
+        },
+        {
+          "criterion": "Recommends deliberate reconciliation with preserved D1 rationale and a bounded migration decision; does not claim the passing test report proves all conformance.",
+          "verdict": "pass",
+          "evidence": "docs/credential-rotation-review.md recommends explicitly superseding, scoping, or retaining D1 and separating beta migration until accepted."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No independent test execution is shown, but the review explicitly records this and the task supplied the report as evidence."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is well targeted for the seeded semantic contradiction. The strongest differentiator here is repository convention compliance and discoverability of the saved review; both outputs otherwise satisfy the core behavioral outcomes. Trace compliance, actual tool usage, and whether tests were run would require the separate unblinded audit described in instructions.md."
+}

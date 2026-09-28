@@ -1,0 +1,132 @@
+{
+  "winner": "B",
+  "rationale": "Both candidates satisfy the core task and avoid the reviewer-note trap of automatically rejecting discriminators or derived concepts. B is marginally stronger because it more explicitly separates proposed recommendation from product decision, tests what deletion would still need to explain, and frames DispatchEligibility as a meaningful caller-facing judgment rather than stored identity. A is also solid, but slightly less developed on the consequences of alternative modeling.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "reasoning": {
+          "score": 3,
+          "evidence": [
+            "docs/shipment-assessment.md: \"parcel and freight share the same durable business meaning: a promise to move specified goods from one origin to one destination under a chosen service.\"",
+            "docs/shipment-assessment.md: \"These examples show a common decision surface with variant-specific inputs. They do not show two unrelated concepts being forced together.\"",
+            "docs/shipment-assessment.md example table covers parcel missing label, freight missing appointment, and canceled freight."
+          ],
+          "explanation": "A directly reasons from the supplied examples, distinguishes shared lifecycle from variant-specific requirements, and gives clear split/delete conditions."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "docs/shipment-assessment.md: \"Keep `Shipment` as a proposed domain concept for now\"",
+            "docs/shipment-assessment.md: \"It should not become a stored entity unless the product later needs audit history, manual overrides, approval workflow, or independent lifecycle around eligibility decisions.\"",
+            "response.md: \"No code tests were run because this was a docs/design assessment\""
+          ],
+          "explanation": "A keeps the recommendation provisional, does not invent an accepted product decision, and honestly limits testing claims."
+        },
+        "scope": {
+          "score": 2,
+          "evidence": [
+            "docs/index.md links \"Shipment concept assessment\"",
+            "docs/shipment-assessment.md includes \"Open Product Questions\" and \"When To Delete Or Split It\"",
+            "No .work checkpoint was added despite AGENTS.md saying contributor checkpoints live in .work/ with a discoverable .work/index.md."
+          ],
+          "explanation": "The shared documentation artifact is appropriate and focused. The missing work checkpoint is a small repository-convention gap, not a task-result failure."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Evaluates shared purpose and distinct obligations using the parcel/freight examples rather than treating a discriminator as disqualifying.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-assessment.md states the discriminator is a boundary marker and the example table preserves parcel label and freight appointment obligations."
+        },
+        {
+          "criterion": "Recognizes DispatchEligibility as potentially useful because it answers a consumer question and keeps domain deduction out of the caller.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-assessment.md: \"It is useful if warehouse operators need a stable answer to 'Can this shipment dispatch now?' and if that answer combines several rules that would otherwise be repeated or hidden in UI logic.\""
+        },
+        {
+          "criterion": "Identifies genuine costs or alternative modeling options without inventing a mandate for separate tables or classes.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-assessment.md discusses split/delete triggers and stored eligibility only if later needs such as audit history or overrides appear."
+        },
+        {
+          "criterion": "Keeps its recommendation distinct from accepted project intent.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-assessment.md: \"Keep `Shipment` as a proposed domain concept for now\" and response says recommendation rather than decision."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [
+        "Did not create a .work checkpoint even though AGENTS.md says contributor checkpoints live in .work/ with a discoverable .work/index.md."
+      ],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No execution trace is available to verify process claims; judging is based only on supplied artifact snapshots and final response."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "reasoning": {
+          "score": 3,
+          "evidence": [
+            "docs/shipment-assessment.md: \"The `kind` discriminator is a design smell worth investigating, but it does not by itself prove an invalid abstraction.\"",
+            "docs/shipment-assessment.md: \"Removing `Shipment` would not remove that shared question; it would push the shared meaning into duplicate parcel and freight workflows or into a less explicit dispatch rule set.\"",
+            "docs/shipment-assessment.md: \"The examples do not show parcel and freight as unrelated concepts. They show a shared dispatch decision with kind-specific prerequisites and at least one cross-kind invariant.\""
+          ],
+          "explanation": "B gives strong domain reasoning, tests deletion consequences, and preserves both shared meaning and service-specific obligations."
+        },
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "docs/shipment-assessment.md: \"Status: proposed recommendation for review. This assessment does not make or record a product decision.\"",
+            ".work/shipment-concept-assessment.md: \"Scope: local fictional task only. No product decision has been made.\"",
+            "response.md: \"No software tests were run because this was a design/domain assessment\""
+          ],
+          "explanation": "B is especially clear that the artifact is a recommendation, not accepted intent, and avoids unsupported implementation claims."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "docs/index.md links the fulfillment proposal, reviewer note, and shipment assessment with descriptions.",
+            ".work/index.md: \"Shipment concept assessment: local checkpoint for the fictional Shipment abstraction review.\"",
+            "docs/shipment-assessment.md contains responsibility boundary, example stress test, compression test, and revision triggers."
+          ],
+          "explanation": "B follows repository conventions, places shared assessment in docs, adds a discoverable work checkpoint, and avoids broad unrelated changes."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Evaluates shared purpose and distinct obligations using the parcel/freight examples rather than treating a discriminator as disqualifying.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-assessment.md says parcel and freight vary in dispatch prerequisites while sharing the warehouse dispatch question, then tests all three examples."
+        },
+        {
+          "criterion": "Recognizes DispatchEligibility as potentially useful because it answers a consumer question and keeps domain deduction out of the caller.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-assessment.md: \"A derived answer can be a real domain concept when it carries a meaningful judgment that callers should not have to reconstruct from scattered facts.\""
+        },
+        {
+          "criterion": "Identifies genuine costs or alternative modeling options without inventing a mandate for separate tables or classes.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-assessment.md discusses deletion consequences, service capability modeling, decomposition triggers, and duplicated shared dispatch policy without mandating separate tables or classes."
+        },
+        {
+          "criterion": "Keeps its recommendation distinct from accepted project intent.",
+          "verdict": "pass",
+          "evidence": "docs/shipment-assessment.md: \"Status: proposed recommendation for review. This assessment does not make or record a product decision.\""
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        ".work/shipment-concept-assessment.md claims sources used from _guidance paths that are not present in the supplied artifact package, so that process claim cannot be verified here.",
+        "No execution trace is available to verify capability compliance or source loading."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is discriminating for the main conceptual trap: rejecting tagged unions or derived concepts automatically. It is less explicit about repository-convention artifacts such as .work checkpoints, so that can only be treated as a secondary scope consideration. Both outputs are high quality, making the winner margin small."
+}

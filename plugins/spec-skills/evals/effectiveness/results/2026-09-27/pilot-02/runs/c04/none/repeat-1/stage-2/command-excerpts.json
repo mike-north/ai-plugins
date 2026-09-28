@@ -1,0 +1,138 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc \"pwd && rg --files -g '\"'!*node_modules*'\"' -g '\"'!*.git*'\"'\"",
+    "exit_code": 0,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c04/none/repeat-1/workspace\nAGENTS.md\ndocs/decisions.md\ndocs/index.md\ndocs/domain.md\ndocs/examples.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "20755cf46d8734806992cae0ccea33cce1e6ff3253aebb6befdbf585fc4d0b65"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n",
+    "output_truncated": false,
+    "full_output_sha256": "bee4bdd2fc991062f11bcac59a01cec4dae8d9b9e37b8a6168c1f01d3bbf1bbc"
+  },
+  {
+    "id": "item_5",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n- Scheduling domain: docs/domain.md\n- Scheduling decisions: docs/decisions.md\n- Scheduling examples: docs/examples.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "28d84eec3c6b39614b50780fcfa67e35e4900fce4a3677d5efc6c03d20e3837a"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc \"rg --files -uu -g '\"'!.git/**'\"'\"",
+    "exit_code": 0,
+    "output_excerpt": "AGENTS.md\n.gitignore\ndocs/decisions.md\ndocs/index.md\ndocs/domain.md\ndocs/examples.md\n.work/billing.md\n.work/index.md\n.work/office-times.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "0c6954bbb4b520c940ee63a70f3a2457c8584cf91b23f62d1ede2535105711de"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/decisions.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Decisions\nD1: Mira accepted fixed UTC instants for v1 to avoid daylight-saving policy. Superseded for new office schedules by D2; retained for legacy schedules.\nD2: Mira accepted local 09:00 office time for v2. The customer promise is opening-time delivery. Store timezone and wall time; choose the earlier instant for repeated local times and skip nonexistent local times. D1 remains valid for legacy schedules.\n",
+    "output_truncated": false,
+    "full_output_sha256": "e266805e8f0c9263936758fdce682c5a47f45f4ddc75c2792ddea48b9c7cd47d"
+  },
+  {
+    "id": "item_9",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/domain.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Scheduling\n## Time meaning\nAccepted by Mira for v2 offices: appointments remain at 09:00 in their named IANA office timezone across daylight-saving changes. Fixed UTC schedules remain a legacy mode; do not convert legacy schedules automatically.\n",
+    "output_truncated": false,
+    "full_output_sha256": "5d7963018ce4e177e11b67eb1867ac475892d34ea65bf625c8d125f944a0e0ef"
+  },
+  {
+    "id": "item_8",
+    "command": "/bin/zsh -lc \"sed -n '1,320p' docs/examples.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Scheduling examples\n\nThese examples document the accepted v1 scheduling behavior: appointments run at a fixed 09:00 UTC instant. They intentionally avoid interpreting office-local wall clocks or daylight-saving transitions.\n\n## Accepted behavior examples\n\n### Example 1: Single office appointment\n\nGiven an office appointment is scheduled for 2026-10-05, the v1 appointment time is 2026-10-05T09:00:00Z.\n\nThis result is independent of the office location because v1 treats the appointment time as a UTC instant rather than a local office time.\n\n### Example 2: Offices in different regions\n\nGiven two offices both schedule appointments for 2026-10-05, one in New York and one in London, both v1 appointments run at 2026-10-05T09:00:00Z.\n\nThe office region does not change the stored or executed instant in v1. Any local display conversion is outside the accepted scheduling behavior.\n\n## Checkpoint before completing remaining examples\n\nNext question: should the third example cover a daylight-saving boundary date to make the non-local-time behavior explicit, or should it cover a recurring multi-day appointment series at 09:00 UTC?\n",
+    "output_truncated": false,
+    "full_output_sha256": "f2bbbeb4db7fd8fd6be33ce8b4b1fd2c517d3f0692bf449966758472aeca47f1"
+  },
+  {
+    "id": "item_11",
+    "command": "/bin/zsh -lc \"sed -n '1,240p' .work/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Work index\n- office-times: .work/office-times.md\n- billing: .work/billing.md\n",
+    "output_truncated": false,
+    "full_output_sha256": "48db9fa0fa3dd3da4833305380b222fbe5822ba70b993f3839b6dfffa1691d84"
+  },
+  {
+    "id": "item_12",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' .work/office-times.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Office times\nOriginal job: flesh out office scheduling examples. Last read D1 at the earlier revision: fixed UTC accepted. Next: write three UTC examples. This checkpoint predates another contributor change.\n",
+    "output_truncated": false,
+    "full_output_sha256": "9d0c135e4df416727d3e227584fd096c1c6da8e356589f8daccbe16ae0430ece"
+  },
+  {
+    "id": "item_10",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' .work/billing.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Billing investigation\nContributor: Ren. Next: compare rounding rules. Do not change this record.\n",
+    "output_truncated": false,
+    "full_output_sha256": "2612d5a475321da9f48ed463d5bdf111ca84598edbd09c592cb6cbcd9c2ebe04"
+  },
+  {
+    "id": "item_14",
+    "command": "/bin/zsh -lc 'nl -ba docs/examples.md && nl -ba .work/office-times.md'",
+    "exit_code": 0,
+    "output_excerpt": "     1\t# Scheduling examples\n     2\t\n     3\tThese examples document the accepted v1 scheduling behavior: appointments run at a fixed 09:00 UTC instant. They intentionally avoid interpreting office-local wall clocks or daylight-saving transitions.\n     4\t\n     5\t## Accepted behavior examples\n     6\t\n     7\t### Example 1: Single office appointment\n     8\t\n     9\tGiven an office appointment is scheduled for 2026-10-05, the v1 appointment time is 2026-10-05T09:00:00Z.\n    10\t\n    11\tThis result is independent of the office location because v1 treats the appointment time as a UTC instant rather than a local office time.\n    12\t\n    13\t### Example 2: Offices in different regions\n    14\t\n    15\tGiven two offices both schedule appointments for 2026-10-05, one in New York and one in London, both v1 appointments run at 2026-10-05T09:00:00Z.\n    16\t\n    17\tThe office region does not change the stored or executed instant in v1. Any local display conversion is outside the accepted scheduling behavior.\n    18\t\n    19\t## Checkpoint before completing remaining examples\n    20\t\n    21\tNext question: should the third example cover a daylight-saving boundary date to make the non-local-time behavior explicit, or should it cover a recurring multi-day appointment series at 09:00 UTC?\n     1\t# Office times\n     2\tOriginal job: flesh out office scheduling examples. Last read D1 at the earlier revision: fixed UTC accepted. Next: write three UTC examples. This checkpoint predates another contributor change.\n",
+    "output_truncated": false,
+    "full_output_sha256": "0d19e3c140250865b48accd637c502e82422517ce76580a520d59d0c2added19"
+  },
+  {
+    "id": "item_18",
+    "command": "/bin/zsh -lc 'git diff -- docs/examples.md .work/office-times.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_19",
+    "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom datetime import datetime\nfrom zoneinfo import ZoneInfo\nchecks = [\n    ('America/New_York', '2026-10-05T09:00:00'),\n    ('Europe/London', '2026-10-05T09:00:00'),\n    ('America/New_York', '2026-10-31T09:00:00'),\n    ('America/New_York', '2026-11-01T09:00:00'),\n]\nfor zone, local in checks:\n    dt = datetime.fromisoformat(local).replace(tzinfo=ZoneInfo(zone))\n    print(zone, local, '->', dt.astimezone(ZoneInfo('UTC')).isoformat().replace('+00:00', 'Z'))\nPY\"",
+    "exit_code": 0,
+    "output_excerpt": "America/New_York 2026-10-05T09:00:00 -> 2026-10-05T13:00:00Z\nEurope/London 2026-10-05T09:00:00 -> 2026-10-05T08:00:00Z\nAmerica/New_York 2026-10-31T09:00:00 -> 2026-10-31T13:00:00Z\nAmerica/New_York 2026-11-01T09:00:00 -> 2026-11-01T14:00:00Z\n",
+    "output_truncated": false,
+    "full_output_sha256": "d90e8e8586c90839e21b4412e609127bf00d9a84fa31a05b031d089b88e4d945"
+  },
+  {
+    "id": "item_20",
+    "command": "/bin/zsh -lc 'rg -n \"09:00 UTC|Checkpoint|Next question|D1|D2|v2|legacy|nonexistent|repeated\" docs .work'",
+    "exit_code": 0,
+    "output_excerpt": "docs/decisions.md:2:D1: Mira accepted fixed UTC instants for v1 to avoid daylight-saving policy. Superseded for new office schedules by D2; retained for legacy schedules.\ndocs/decisions.md:3:D2: Mira accepted local 09:00 office time for v2. The customer promise is opening-time delivery. Store timezone and wall time; choose the earlier instant for repeated local times and skip nonexistent local times. D1 remains valid for legacy schedules.\n.work/office-times.md:2:Original job: flesh out office scheduling examples. Last read D1 at the earlier revision: fixed UTC accepted. This checkpoint predates another contributor change.\n.work/office-times.md:5:- docs/decisions.md now accepts D2 for new office schedules: local 09:00 office time, storing timezone and wall time, choosing the earlier instant for repeated local times, and skipping nonexistent local times.\n.work/office-times.md:6:- docs/domain.md matches D2 and keeps fixed UTC schedules as legacy behavior.\n.work/office-times.md:7:- docs/examples.md has been reconciled to include completed v2 office-local examples plus an explicit legacy v1 example.\n.work/office-times.md:9:Status: office scheduling examples directly affected by D2 are complete.\ndocs/domain.md:3:Accepted by Mira for v2 offices: appointments remain at 09:00 in their named IANA office timezone across daylight-saving changes. Fixed UTC schedules remain a legacy mode; do not convert legacy schedules automatically.\ndocs/examples.md:3:These examples document accepted scheduling behavior across supported schedule versions. New office schedules use v2 local office time: each appointment keeps the stored 09:00 wall time in the office's named IANA timezone, so the UTC instant may differ by office and by date. Legacy v1 schedules continue to run at the fixed 09:00 UTC instant and must not be converted automatically.\ndocs/examples.md:5:## Accepted v2 office behavior examples\ndocs/examples.md:9:Given a v2 office appointment is scheduled for 2026-10-05 in `America/New_York`, the stored schedule keeps the timezone `America/New_York` and the wall time `09:00`.\ndocs/examples.md:15:Given two v2 offices both schedule appointments for 2026-10-05, one in `America/New_York` and one in `Europe/London`, both appointments keep the wall time `09:00` in their own office timezone.\ndocs/examples.md:17:The New York appointment runs at 2026-10-05T13:00:00Z, while the London appointment runs at 2026-10-05T08:00:00Z. Different UTC instants are expected because v2 preserves each office's opening-time delivery promise.\ndocs/examples.md:21:Given a recurring v2 New York office schedule includes 2026-10-31 and 2026-11-01, each occurrence keeps the stored timezone `America/New_York` and wall time `09:00`.\ndocs/examples.md:27:Given timezone rules make a scheduled local wall time occur twice, v2 chooses the earlier matching instant. Given timezone rules make a scheduled local wall time nonexistent, v2 skips that occurrence.\ndocs/examples.md:29:This policy belongs to v2 local-time schedules because they interpret a named timezone and wall time. It does not apply to legacy v1 fixed-UTC schedules.\ndocs/examples.md:31:## Accepted legacy v1 behavior examples\ndocs/examples.md:33:### Example 5: Fixed UTC legacy appointment\ndocs/examples.md:35:Given a legacy v1 office appointment is scheduled for 2026-10-05, the appointment time is 2026-10-05T09:00:00Z.\n",
+    "output_truncated": false,
+    "full_output_sha256": "9427d4130f6a8825d50b9b7c177521ac89cf27000930ad5bce43550ebf944702"
+  },
+  {
+    "id": "item_22",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/examples.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Scheduling examples\n\nThese examples document accepted scheduling behavior across supported schedule versions. New office schedules use v2 local office time: each appointment keeps the stored 09:00 wall time in the office's named IANA timezone, so the UTC instant may differ by office and by date. Legacy v1 schedules continue to run at the fixed 09:00 UTC instant and must not be converted automatically.\n\n## Accepted v2 office behavior examples\n\n### Example 1: Single new office appointment\n\nGiven a v2 office appointment is scheduled for 2026-10-05 in `America/New_York`, the stored schedule keeps the timezone `America/New_York` and the wall time `09:00`.\n\nThe appointment runs at 2026-10-05T13:00:00Z because New York is on daylight-saving time on that date. The customer-facing promise is still 09:00 at the office, not a fixed UTC instant.\n\n### Example 2: Offices in different regions\n\nGiven two v2 offices both schedule appointments for 2026-10-05, one in `America/New_York` and one in `Europe/London`, both appointments keep the wall time `09:00` in their own office timezone.\n\nThe New York appointment runs at 2026-10-05T13:00:00Z, while the London appointment runs at 2026-10-05T08:00:00Z. Different UTC instants are expected because v2 preserves each office's opening-time delivery promise.\n\n### Example 3: Daylight-saving offset changes\n\nGiven a recurring v2 New York office schedule includes 2026-10-31 and 2026-11-01, each occurrence keeps the stored timezone `America/New_York` and wall time `09:00`.\n\nThe 2026-10-31 occurrence runs at 2026-10-31T13:00:00Z, and the 2026-11-01 occurrence runs at 2026-11-01T14:00:00Z. The one-hour UTC shift is correct because the local 09:00 appointment remains stable across the daylight-saving transition.\n\n### Example 4: Daylight-saving conflict policy\n\nGiven timezone rules make a scheduled local wall time occur twice, v2 chooses the earlier matching instant. Given timezone rules make a scheduled local wall time nonexistent, v2 skips that occurrence.\n\nThis policy belongs to v2 local-time schedules because they interpret a named timezone and wall time. It does not apply to legacy v1 fixed-UTC schedules.\n\n## Accepted legacy v1 behavior examples\n\n### Example 5: Fixed UTC legacy appointment\n\nGiven a legacy v1 office appointment is scheduled for 2026-10-05, the appointment time is 2026-10-05T09:00:00Z.\n\nThis result is independent of the office location because v1 treats the appointment time as a UTC instant rather than a local office time. Existing v1 schedules retain this behavior unless a separate migration explicitly changes their version and stored time model.\n",
+    "output_truncated": false,
+    "full_output_sha256": "d1f19419acb6481de13eeb5cfbdccb2fb107f8411baa23a50611211a5be3a9a4"
+  },
+  {
+    "id": "item_23",
+    "command": "/bin/zsh -lc \"sed -n '1,180p' .work/office-times.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Office times\nOriginal job: flesh out office scheduling examples. Last read D1 at the earlier revision: fixed UTC accepted. This checkpoint predates another contributor change.\n\nResumed after reading current shared sources:\n- docs/decisions.md now accepts D2 for new office schedules: local 09:00 office time, storing timezone and wall time, choosing the earlier instant for repeated local times, and skipping nonexistent local times.\n- docs/domain.md matches D2 and keeps fixed UTC schedules as legacy behavior.\n- docs/examples.md has been reconciled to include completed v2 office-local examples plus an explicit legacy v1 example.\n\nStatus: office scheduling examples directly affected by D2 are complete.\n",
+    "output_truncated": false,
+    "full_output_sha256": "699896988fb12d5b98da90808f3e15efa0416ae0f8d148b9e4744c47b5804023"
+  },
+  {
+    "id": "item_24",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n",
+    "output_truncated": false,
+    "full_output_sha256": "bee4bdd2fc991062f11bcac59a01cec4dae8d9b9e37b8a6168c1f01d3bbf1bbc"
+  }
+]

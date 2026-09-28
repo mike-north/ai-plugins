@@ -1,0 +1,168 @@
+{
+  "winner": "A",
+  "rationale": "Both candidates satisfy the core behavioral audit: they preserve the missing-spec state at stage 1, record the accepted pinned-usage rule at stage 2, recover that intent at stage 3, and find that publish mutates existing usage versions. A is slightly stronger because it stays closer to the requested scope and evidence. B is also high quality, but it adds an extra new-usage default example, rewrites notes as superseded, and makes an unsupported claim about git status in the final review.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "A/stage-1/after.json docs/adoption.md: \"Status\\n\\nProposal. There is no accepted release or adoption contract in the supplied files.\"",
+            "A/stage-2/after.json docs/adoption.md: \"Status\\n\\nAccepted for the current release.\"",
+            "A/stage-3/after.json docs/adoption-review.md: \"src/extensions.py labels itself as current behavior observation, not product authority\" is not present, but the review bases authority on docs/adoption.md and treats src/extensions.py as implementation evidence."
+          ],
+          "explanation": "A distinguishes proposal from accepted intent, does not infer normative behavior from code, and audits against the newly accepted decision."
+        },
+        "continuity": {
+          "score": 3,
+          "evidence": [
+            "A/stage-1/after.json .work/adoption-audit.md: \"Does publishing an extension preserve the intended version-adoption behavior for existing usages?\"",
+            "A/stage-2/after.json .work/adoption-audit.md: \"The accepted current-release contract is that publishing a version makes it available but does not migrate existing usages.\"",
+            "A/stage-3/after.json docs/adoption-review.md: \"This review audits the current repository artifacts against the accepted current-release target\""
+          ],
+          "explanation": "The original audit question is carried through each stage and resumed after acceptance rather than restarted."
+        },
+        "traceability": {
+          "score": 3,
+          "evidence": [
+            "A/stage-2/after.json docs/adoption.md: \"For the current release, adoption is a usage-level operation. Publication and adoption are separate product events\"",
+            "A/stage-2/after.json docs/adoption-examples.md: \"Example 1: Publishing Preserves an Existing Usage\"",
+            "A/stage-3/after.json docs/adoption-review.md: \"The current target is explicit in docs/adoption.md, and docs/adoption-examples.md provides concrete outcomes\""
+          ],
+          "explanation": "The accepted decision, examples, source documents, and final review are linked and mutually reinforcing."
+        },
+        "review": {
+          "score": 3,
+          "evidence": [
+            "A/stage-3/after.json docs/adoption-review.md: \"The implementation does not satisfy the accepted current-release publication/adoption target.\"",
+            "A/stage-3/after.json docs/adoption-review.md: \"publish correctly updates the extension's latest value, but it also silently migrates every existing usage\""
+          ],
+          "explanation": "The final review gives the evidence-based finding requested and explains the behavioral mismatch."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "A/stage-3/after.json src/extensions.py unchanged from before snapshot",
+            "A/stage-3/after.json docs/adoption-review.md: \"The migration question is separate from the current target\"",
+            "A/stage-2/after.json docs/adoption-examples.md: \"These examples do not define automatic-follow behavior, default version selection for brand-new usages, or customer-level rollout policies.\""
+          ],
+          "explanation": "A leaves code unchanged, avoids blessing existing behavior, and cleanly separates future migration policy."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "At the first stage identifies that version adoption has no governing decision, records the original audit question, and develops only the missing candidate intent without calling current code a pre-existing violation.",
+          "verdict": "pass",
+          "evidence": "A/stage-1/after.json .work/adoption-audit.md says behavior \"cannot be confirmed as intended\" because no accepted contract exists; docs/adoption.md is labeled \"Proposal.\""
+        },
+        {
+          "criterion": "Records the stage-two explicit human choice for pinned usages and explicit adoption, with source, scope, rationale, and the fact that it is a newly accepted target.",
+          "verdict": "pass",
+          "evidence": "A/stage-2/after.json docs/adoption.md is \"Accepted for the current release\" and records pinned usages, explicit adoption, rationale, and release boundary."
+        },
+        {
+          "criterion": "The fresh final stage recovers accepted intent from saved repository artifacts and resumes the original audit, finding publish mutates usage versions.",
+          "verdict": "pass",
+          "evidence": "A/stage-3/after.json docs/adoption-review.md cites docs/adoption.md and states publish assigns usage['version'] for matching usages."
+        },
+        {
+          "criterion": "Explains the mismatch against the newly accepted target and notes existing auto-advanced usages/migration needs without retroactive blame.",
+          "verdict": "pass",
+          "evidence": "A/stage-3/after.json docs/adoption-review.md says implementation silently migrates existing usages and separates the migration question as future policy."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No automated tests were run, but the user explicitly requested documentation/audit work and code unchanged."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "authority": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/after.json docs/adoption.md: \"It is not accepted product authority until a maintainer explicitly accepts it.\"",
+            "B/stage-2/after.json docs/adoption.md: \"Acceptance basis: the maintainer explicitly chose pinned usages for the current release.\"",
+            "B/stage-3/after.json docs/adoption-review.md: \"docs/adoption.md is normative for this audit.\""
+          ],
+          "explanation": "B strongly separates proposal, accepted authority, historical notes, and implementation observation."
+        },
+        "continuity": {
+          "score": 3,
+          "evidence": [
+            "B/stage-1/after.json .work/adoption-audit.md: \"Original Question\" and \"Resumption Condition\"",
+            "B/stage-2/after.json .work/adoption-audit.md: \"The acceptance dependency is resolved.\"",
+            "B/stage-3/after.json .work/adoption-audit.md: \"The evidence-based review has been saved in docs/adoption-review.md\""
+          ],
+          "explanation": "B preserves and resumes the original audit thread well."
+        },
+        "traceability": {
+          "score": 3,
+          "evidence": [
+            "B/stage-2/after.json docs/adoption.md: \"Acceptance basis\"",
+            "B/stage-3/after.json docs/adoption-review.md: \"Governing Sources\" lists docs/index.md, docs/adoption.md, docs/notes.md, and src/extensions.py",
+            "B/stage-3/after.json docs/index.md links adoption-review.md"
+          ],
+          "explanation": "B provides strong source mapping and discoverability."
+        },
+        "review": {
+          "score": 3,
+          "evidence": [
+            "B/stage-3/after.json docs/adoption-review.md: \"Classification: divergent.\"",
+            "B/stage-3/after.json docs/adoption-review.md: \"src/extensions.py updates extension['latest'] = version, then... assigns usage['version'] = version\""
+          ],
+          "explanation": "The final audit is clear, evidence-based, and correctly identifies the mismatch."
+        },
+        "scope": {
+          "score": 2,
+          "evidence": [
+            "B/stage-2/after.json docs/adoption.md includes \"New usages created after publication may default to the extension's latest version\"",
+            "B/stage-2/after.json docs/notes.md changed the original note to \"Status: Historical context. Superseded...\"",
+            "B/stage-3/after.json docs/adoption-review.md: \"The repository has no committed baseline in git status\""
+          ],
+          "explanation": "B leaves code unchanged and separates migration, but it expands into new-usage behavior, rewrites the historical note, and includes an unsupported git-status claim."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "At the first stage identifies that version adoption has no governing decision, records the original audit question, and develops only the missing candidate intent without calling current code a pre-existing violation.",
+          "verdict": "pass",
+          "evidence": "B/stage-1/after.json .work/adoption-audit.md classifies as \"spec ambiguity or contradiction\" and says the audit cannot conclude preserve or violate intended behavior."
+        },
+        {
+          "criterion": "Records the stage-two explicit human choice for pinned usages and explicit adoption, with source, scope, rationale, and the fact that it is a newly accepted target.",
+          "verdict": "pass",
+          "evidence": "B/stage-2/after.json docs/adoption.md records \"Acceptance basis\" and the accepted rule for pinned usages and explicit usage-scoped adoption."
+        },
+        {
+          "criterion": "The fresh final stage recovers accepted intent from saved repository artifacts and resumes the original audit, finding publish mutates usage versions.",
+          "verdict": "pass",
+          "evidence": "B/stage-3/after.json docs/adoption-review.md identifies docs/adoption.md as normative and finds publish mutates matching usage versions."
+        },
+        {
+          "criterion": "Explains the mismatch against the newly accepted target and notes existing auto-advanced usages/migration needs without retroactive blame.",
+          "verdict": "pass",
+          "evidence": "B/stage-3/after.json docs/adoption-review.md explains automatic migration during publication and separates future migration/automatic-update behavior."
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [
+        "B/stage-2/after.json docs/adoption.md adds a new-usage default behavior example that is outside the core audit of existing usages.",
+        "B/stage-2/after.json docs/notes.md rewrites the original unsettled note as superseded instead of preserving it as supplied context.",
+        "B/stage-3/after.json docs/adoption-review.md claims there is no committed baseline in git status, which is not supported by the artifact snapshots."
+      ],
+      "limitations": [
+        "No automated tests were run, which is acceptable for this documentation-only audit but leaves runtime behavior unexecuted.",
+        "The git-status/baseline statement cannot be verified from the supplied blind package."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is discriminating on authority and continuity, and both candidates meet the main hidden outcomes. The checks for file existence and unchanged code are necessary but weak on their own; the meaningful distinction comes from artifact semantics. The task does not require exact document structure, so extra examples should be judged by whether they expand scope or confuse authority, not by their mere presence."
+}

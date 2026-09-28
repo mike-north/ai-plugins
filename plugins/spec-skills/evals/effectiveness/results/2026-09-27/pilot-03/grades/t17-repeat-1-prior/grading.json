@@ -1,0 +1,85 @@
+{
+  "winner": "A",
+  "rationale": "A correctly treats the job as a narrow Markdown-anchor typo fix and declines unrelated specification/design capabilities. B also limits scope, but it routes to spec-authoring merely because the file is an accepted specification, which conflicts with the rubric's warning not to force a spec workflow for a simple anchor correction.",
+  "grades": [
+    {
+      "label": "A",
+      "dimensions": {
+        "routing": {
+          "score": 3,
+          "evidence": [
+            "A/stage-1/response.md: \"Applicable skill: **none**\"",
+            "A/stage-1/response.md: \"This is a narrow editing request to fix one Markdown anchor typo.\""
+          ],
+          "explanation": "Correctly selects no special capability for a simple typo-level anchor correction and explains why specification/design capabilities are unnecessary."
+        },
+        "scope": {
+          "score": 3,
+          "evidence": [
+            "A/stage-1/response.md: \"It explicitly says not to reassess the decision or change contract prose\"",
+            "A/stage-1/after.json: {}"
+          ],
+          "explanation": "Keeps the response tightly scoped to the requested anchor correction and avoids unrelated reassessment or workflow expansion."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "pass",
+          "evidence": [
+            "A/stage-1/response.md selects none and briefly explains that spec-audit, spec-authoring, and deep-design are unnecessary for the narrow anchor typo."
+          ]
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [],
+      "missed_issues": [],
+      "unnecessary_detours": [],
+      "limitations": [
+        "No actual edited file artifact is supplied, so implementation correctness of the anchor change cannot be assessed; this comparison is limited to routing/scope response quality."
+      ]
+    },
+    {
+      "label": "B",
+      "dimensions": {
+        "routing": {
+          "score": 1,
+          "evidence": [
+            "B/stage-1/response.md: \"Applicable skill: `spec-authoring`\"",
+            "B/stage-1/response.md: \"Reason: the request is a narrow revision to an accepted specification document\""
+          ],
+          "explanation": "Identifies the task as narrow but still routes to spec-authoring based on the presence of a specification document, which is the kind of over-triggering the rubric discourages."
+        },
+        "scope": {
+          "score": 2,
+          "evidence": [
+            "B/stage-1/response.md: \"No `deep-design`, `domain-planning`, or `spec-audit` is needed because the user explicitly says not to reassess the identity decision or contract prose.\"",
+            "B/stage-1/after.json: {}"
+          ],
+          "explanation": "Avoids most unrelated work and respects the no-reassessment constraint, but the unnecessary spec-authoring route is a scope expansion for this narrow typo fix."
+        }
+      },
+      "outcomes": [
+        {
+          "criterion": "Select the capability or capabilities appropriate to this user job; explain any required dependency briefly without performing unrelated work.",
+          "verdict": "partial",
+          "evidence": [
+            "B/stage-1/response.md correctly rejects deep-design, domain-planning, and spec-audit, but incorrectly selects spec-authoring for a simple Markdown anchor correction."
+          ]
+        }
+      ],
+      "authority_errors": [],
+      "false_alarms": [
+        "B/stage-1/response.md treats the accepted specification context as sufficient reason to invoke `spec-authoring`, despite the task being only an anchor typo correction."
+      ],
+      "missed_issues": [],
+      "unnecessary_detours": [
+        "B/stage-1/response.md: selecting `spec-authoring` is an unnecessary capability detour for this narrow maintenance request."
+      ],
+      "limitations": [
+        "No actual edited file artifact is supplied, so implementation correctness of the anchor change cannot be assessed; this comparison is limited to routing/scope response quality."
+      ]
+    }
+  ],
+  "eval_critique": "The rubric is narrow and appropriate for evaluating routing behavior, but because no file artifacts are supplied, it cannot evaluate whether the Markdown anchor was actually corrected. The expected_routes field is empty, which strongly favors recognizing that no special capability is required."
+}

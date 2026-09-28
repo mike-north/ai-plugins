@@ -1,0 +1,154 @@
+[
+  {
+    "id": "item_1",
+    "command": "/bin/zsh -lc 'pwd && rg --files'",
+    "exit_code": 0,
+    "output_excerpt": "<evaluation-repository>/scratch/effectiveness/pilot-02/runs/c08/none/repeat-1/workspace\nsrc/registry.py\nAGENTS.md\ndocs/decisions.md\ndocs/brief.md\ndocs/index.md\ndocs/domain.md\ndocs/contract.md\ntests/test_registry.py\n",
+    "output_truncated": false,
+    "full_output_sha256": "7fa79d5bff2e12d6785ecdef0b131c590bf0e8ecebe7b07cae540ed41e10510f"
+  },
+  {
+    "id": "item_2",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n?? tests/\n",
+    "output_truncated": false,
+    "full_output_sha256": "edae5944c3f10db02fb746add00d1c2f625e152d9a56cf1b38fecb004c31f0b8"
+  },
+  {
+    "id": "item_4",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n## Product exploration\n\n- [Brief](brief.md)\n- [Domain model](domain.md)\n- [Registry contract](contract.md)\n- [Decisions](decisions.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "9e3e34c3c5b1c5f52762a5b9ad8368213da2eafd79f4bde7e51521a25bbab01e"
+  },
+  {
+    "id": "item_5",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/contract.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Registry Contract\n\n## Status\n\nAccepted for this release. This contract implements the choices recorded in [Decisions](decisions.md): one shared `Usage` concept for tile and job places, pinned versions, explicit per-usage adoption, and local retry configuration.\n\n## Scope\n\nThe registry contract is an in-memory interface for publication and adoption. It does not define persistent storage, execution behavior, scheduling, retries at runtime, authorization, or separate tile/job installation lifecycles.\n\n## Data Shape\n\nThe Python interface uses caller-owned mutable collections:\n\n```python\nversions = {\"v1\"}\nusages = {\n    \"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2},\n    \"job-nightly\": {\"version\": \"v1\", \"retry_limit\": 5},\n}\n```\n\n`versions` is the set of published version identifiers. `usages` is a dictionary keyed by usage id. Each usage dictionary stores its adopted version under `version` and may store local configuration such as `retry_limit`.\n\n## publish(versions, version_id)\n\nAdds `version_id` as a string to the `versions` set.\n\nExpected behavior:\n\n- Mutates `versions` by adding `version_id`.\n- Does not inspect or mutate any usage.\n- Leaves every existing usage pinned to its current version.\n- Has no persistent side effects.\n\nExample:\n\n```python\npublish(versions, \"v2\")\n\nassert versions == {\"v1\", \"v2\"}\nassert usages[\"tile-home\"][\"version\"] == \"v1\"\nassert usages[\"job-nightly\"][\"version\"] == \"v1\"\n```\n\n## adopt(usages, usage_id, version_id, versions)\n\nUpdates exactly one existing usage so its `version` entry points to `version_id`.\n\nExpected behavior:\n\n- Raises `ValueError` if `usage_id` is not present in `usages`.\n- Raises `ValueError` if `version_id` is not present in `versions`.\n- Performs both validations before mutation.\n- Mutates only `usages[usage_id][\"version\"]` on success.\n- Preserves local retry configuration on the adopted usage.\n- Does not mutate other usages or the published version set.\n- Has no persistent side effects.\n\nExample:\n\n```python\nadopt(usages, \"job-nightly\", \"v2\", versions)\n\nassert usages[\"tile-home\"] == {\"version\": \"v1\", \"retry_limit\": 2}\nassert usages[\"job-nightly\"] == {\"version\": \"v2\", \"retry_limit\": 5}\nassert versions == {\"v1\", \"v2\"}\n```\n\n## Error Examples\n\nUnknown usage:\n\n```python\nadopt(usages, \"missing\", \"v2\", versions)\n# raises ValueError and leaves usages unchanged\n```\n\nUnpublished version:\n\n```python\nadopt(usages, \"tile-home\", \"v3\", versions)\n# raises ValueError and leaves usages unchanged\n```\n",
+    "output_truncated": false,
+    "full_output_sha256": "9e2afd72b3426ff1b59b54c07c2a278357a42fbb725a68cbf39b4f3be4f9ddd6"
+  },
+  {
+    "id": "item_7",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' src/registry.py\"",
+    "exit_code": 0,
+    "output_excerpt": "\"\"\"In-memory registry operations for release-scoped version adoption.\n\nThe module intentionally models only the domain contract accepted for this\nrelease: publication records available version identifiers, and each customer\nusage pins itself to a version through an explicit adoption step. Persistence,\nexecution, and product-specific installation lifecycles belong outside this\nsmall interface.\n\"\"\"\n\n\ndef publish(versions, version_id):\n    \"\"\"Record a published version identifier in the caller-owned version set.\n\n    ``versions`` represents the release's known published versions. Publishing\n    is additive and has no reference to usages, preserving the invariant that\n    existing tile and job usages remain pinned until each usage explicitly\n    adopts another published version.\n    \"\"\"\n    versions.add(version_id)\n\n\ndef adopt(usages, usage_id, version_id, versions):\n    \"\"\"Pin one known usage to one already-published version.\n\n    ``usages`` is a caller-owned mapping keyed by usage id. Each usage value is\n    expected to keep its current version under the ``\"version\"`` key and may\n    carry local configuration such as retry limits. Adoption changes only that\n    version binding; local retry configuration and unrelated usages are outside\n    the mutation boundary.\n\n    Raises:\n        ValueError: if the usage is unknown or the target version has not been\n            published. Both validations happen before mutation so failed\n            adoption leaves all usage state unchanged.\n    \"\"\"\n    if usage_id not in usages:\n        raise ValueError(f\"unknown usage: {usage_id}\")\n    if version_id not in versions:\n        raise ValueError(f\"unpublished version: {version_id}\")\n\n    usages[usage_id][\"version\"] = version_id\n",
+    "output_truncated": false,
+    "full_output_sha256": "d60ca54330a551dfcc6a69143fa607561133642b369d0e62b99eae09372b8865"
+  },
+  {
+    "id": "item_6",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/domain.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Domain Model\n\n## Status\n\nAccepted for this release. Decision reference: [Decisions](decisions.md), \"Accepted: One Usage Lifecycle for Tile and Job Places\" and \"Accepted: Pinned Versions with Explicit Adoption\".\n\n## Product Idea\n\nAuthors publish reusable behavior as named or numbered versions. Customers bind one published version into each local place where they want that behavior to run. Every local binding is a `Usage`, whether the place is a tile or a job, because tile and job binding and adoption lifecycles are the same for this release.\n\nIndependent product-specific installation lifecycles are excluded. Execution engines, persistent storage, and runtime behavior are also outside this model.\n\n## Concepts\n\n### Behavior\n\nA `Behavior` is the reusable authored capability that can be published over time. It gives authors a stable identity for related versions without carrying customer-specific configuration or execution details.\n\nResponsibilities:\n\n- Group versions that represent revisions of the same reusable capability.\n- Preserve the author-level identity that customers choose to use.\n- Stay separate from local retry policy and runtime execution.\n\n### Version\n\nA `Version` is a published identifier for a behavior revision. Versions are pinned: publishing a new version only makes that identifier available; it does not move existing usages.\n\nResponsibilities:\n\n- Represent a published behavior revision that a usage may adopt.\n- Serve as the visible answer to \"which version is this usage on?\"\n- Remain independent of local usage configuration.\n\n### Usage\n\nA `Usage` is a customer's local binding of one place to one published version. It replaces separate `TileInstall` and `JobInstall` concepts for this release because those installs share one binding and adoption lifecycle.\n\nResponsibilities:\n\n- Point to exactly one currently adopted published version.\n- Belong to one local place, such as a tile or a job.\n- Carry local retry configuration for that one binding.\n- Adopt another published version only through an explicit per-usage action.\n\n### Place\n\nA `Place` is the customer-owned context where behavior is used. Tile and job are place types, not separate install lifecycle types, in this release.\n\nResponsibilities:\n\n- Identify where a behavior version is bound.\n- Preserve product language such as tile or job when useful to customers.\n- Avoid introducing separate lifecycle rules unless a later release accepts product-specific installation lifecycles.\n\n## Invariants\n\n- A usage binds one place to one published version at a time.\n- Publication never changes the version of an existing usage.\n- Adoption is explicit per usage and changes only that usage's version.\n- A usage cannot adopt an unpublished version.\n- Unknown usages cannot be adopted.\n- Retry configuration is local to each usage and is not shared through the behavior or version.\n- Tile and job places share the same usage lifecycle for this release.\n- Persistent storage and execution engines are out of scope.\n\n## Examples\n\n### Publication Does Not Move Existing Usages\n\nBefore publication:\n\n```python\nversions = {\"v1\"}\nusages = {\n    \"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2},\n    \"job-nightly\": {\"version\": \"v1\", \"retry_limit\": 5},\n}\n```\n\nAfter publishing `v2`, `versions` contains `{\"v1\", \"v2\"}`. Both usages still point to `v1` until each usage explicitly adopts `v2`.\n\n### Adoption Is Per Usage\n\nIf `job-nightly` adopts `v2`, only that usage changes:\n\n```python\nusages = {\n    \"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2},\n    \"job-nightly\": {\"version\": \"v2\", \"retry_limit\": 5},\n}\n```\n\nThe tile remains pinned to `v1`, and each usage keeps its own retry limit.\n",
+    "output_truncated": false,
+    "full_output_sha256": "4d05e5e4a95b2aba93e538b32862ebbdcd087e93be17fd1cd42624578ce79437"
+  },
+  {
+    "id": "item_8",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/brief.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Reusable behavior\nAuthors publish numbered versions. Customers use the same version in multiple places with different local retry limits. For this release, TileInstall and JobInstall share one Usage concept because their binding and adoption lifecycles are the same. Publication leaves existing usages pinned until adoption is explicit per usage. Execution engines are out of scope. Users need to know which version each usage is on.\n",
+    "output_truncated": false,
+    "full_output_sha256": "e8c0deceb701af23a11ab0eef6e9ee2b4a4c76a6643e3c636bb2bdbfa2167bc3"
+  },
+  {
+    "id": "item_9",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/decisions.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Decisions\n\n## Accepted: One Usage Lifecycle for Tile and Job Places\n\nStatus: Accepted for this release.\n\n### Context\n\nThe brief describes authors publishing versions and customers using the same version in multiple places with different local retry limits. The first sketch had `TileInstall` and `JobInstall`, but their binding and adoption lifecycle is the same for the current release.\n\n### Decision\n\nUse one `Usage` concept for both tile and job places. Tile and job remain place types, not independent installation lifecycle types.\n\n### Consequences\n\n- Product language can describe one binding and adoption lifecycle across tile and job places.\n- Every usage exposes the version it is pinned to.\n- Retry configuration remains local to each usage.\n- Product-specific installation lifecycles are excluded from this release.\n- A future release may introduce separate lifecycle concepts only if tile and job behavior diverges in state, transitions, permissions, ownership, rollback, or user obligations.\n\n## Accepted: Pinned Versions with Explicit Adoption\n\nStatus: Accepted for this release.\n\n### Context\n\nUsers need to know which version each local usage is on. Publication should make a new version available without unexpectedly changing running customer places.\n\n### Decision\n\nVersions are pinned per usage. Publishing a version leaves every existing usage unchanged. Adoption is explicit per usage and updates only that usage's version binding.\n\n### Consequences\n\n- Publication is safe for existing usages because it only adds a version identifier.\n- Customers can adopt a new version for one usage while leaving other usages on older versions.\n- Unknown usages and unpublished versions are rejected before adoption mutates state.\n- The small Python interface remains in-memory and does not imply persistent storage or an execution engine.\n",
+    "output_truncated": false,
+    "full_output_sha256": "e10b727293b698988ed1f982578b781eb0a936e07f52d06de5a257c51c50e808"
+  },
+  {
+    "id": "item_10",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' tests/test_registry.py\"",
+    "exit_code": 0,
+    "output_excerpt": "\"\"\"Behavioral contract tests for release-scoped publication and adoption.\"\"\"\n\nimport unittest\n\nfrom src.registry import adopt, publish\n\n\nclass PublishTests(unittest.TestCase):\n    \"\"\"Publication records released versions without changing customer uses.\"\"\"\n\n    def test_publish_adds_version_to_existing_set(self):\n        versions = {\"v1\"}\n\n        publish(versions, \"v2\")\n\n        self.assertEqual(versions, {\"v1\", \"v2\"})\n\n    def test_publish_does_not_mutate_usages_because_adoption_is_explicit(self):\n        versions = {\"v1\"}\n        usages = {\n            \"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2},\n            \"job-nightly\": {\"version\": \"v1\", \"retry_limit\": 5},\n        }\n\n        publish(versions, \"v2\")\n\n        self.assertEqual(usages[\"tile-home\"][\"version\"], \"v1\")\n        self.assertEqual(usages[\"job-nightly\"][\"version\"], \"v1\")\n\n\nclass AdoptTests(unittest.TestCase):\n    \"\"\"Adoption pins one known usage to one published version.\"\"\"\n\n    def test_adopt_updates_only_the_selected_usage_version(self):\n        versions = {\"v1\", \"v2\"}\n        usages = {\n            \"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2},\n            \"job-nightly\": {\"version\": \"v1\", \"retry_limit\": 5},\n        }\n\n        adopt(usages, \"job-nightly\", \"v2\", versions)\n\n        self.assertEqual(usages[\"tile-home\"], {\"version\": \"v1\", \"retry_limit\": 2})\n        self.assertEqual(usages[\"job-nightly\"], {\"version\": \"v2\", \"retry_limit\": 5})\n\n    def test_adopt_rejects_unknown_usage_before_mutation(self):\n        versions = {\"v1\", \"v2\"}\n        usages = {\"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2}}\n        original = usages.copy()\n\n        with self.assertRaises(ValueError):\n            adopt(usages, \"missing\", \"v2\", versions)\n\n        self.assertEqual(usages, original)\n\n    def test_adopt_rejects_unpublished_version_before_mutation(self):\n        versions = {\"v1\"}\n        usages = {\"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2}}\n        original = {\"tile-home\": usages[\"tile-home\"].copy()}\n\n        with self.assertRaises(ValueError):\n            adopt(usages, \"tile-home\", \"v2\", versions)\n\n        self.assertEqual(usages, original)\n\n\nif __name__ == \"__main__\":\n    unittest.main()\n",
+    "output_truncated": false,
+    "full_output_sha256": "746f552586033f6923a83d49c5525da9196d51cd4b5b316b2c0be0e01c1e93a3"
+  },
+  {
+    "id": "item_12",
+    "command": "/bin/zsh -lc 'python -m unittest tests/test_registry.py'",
+    "exit_code": 127,
+    "output_excerpt": "zsh:1: command not found: python\n",
+    "output_truncated": false,
+    "full_output_sha256": "5e4e795afaf7b2ac3694348801079911c9a51af17a801a9a9ee5368403a2d58a"
+  },
+  {
+    "id": "item_14",
+    "command": "/bin/zsh -lc 'python3 -m unittest tests/test_registry.py'",
+    "exit_code": 0,
+    "output_excerpt": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.000s\n\nOK\n",
+    "output_truncated": false,
+    "full_output_sha256": "888a0c0ed615e57d32cf72be501b0c355f33b8613c81dfdaa99db33d7959487e"
+  },
+  {
+    "id": "item_18",
+    "command": "/bin/zsh -lc 'python3 -m unittest tests/test_registry.py'",
+    "exit_code": 0,
+    "output_excerpt": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.000s\n\nOK\n",
+    "output_truncated": false,
+    "full_output_sha256": "888a0c0ed615e57d32cf72be501b0c355f33b8613c81dfdaa99db33d7959487e"
+  },
+  {
+    "id": "item_23",
+    "command": "/bin/zsh -lc 'git diff -- src/registry.py tests/test_registry.py docs/index.md docs/implementation.md'",
+    "exit_code": 0,
+    "output_excerpt": "",
+    "output_truncated": false,
+    "full_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "id": "item_24",
+    "command": "/bin/zsh -lc 'python3 -m unittest tests/test_registry.py'",
+    "exit_code": 0,
+    "output_excerpt": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.000s\n\nOK\n",
+    "output_truncated": false,
+    "full_output_sha256": "888a0c0ed615e57d32cf72be501b0c355f33b8613c81dfdaa99db33d7959487e"
+  },
+  {
+    "id": "item_26",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' tests/test_registry.py\"",
+    "exit_code": 0,
+    "output_excerpt": "\"\"\"Behavioral contract tests for the accepted in-memory registry contract.\n\nThese tests encode the release specification in docs/contract.md: publication\nonly expands the shared version collection, while adoption is an explicit\nper-usage operation that preserves local retry configuration and rejects\ninvalid requests before changing caller-owned state.\n\"\"\"\n\nimport unittest\n\nfrom src.registry import adopt, publish\n\n\nclass PublishTests(unittest.TestCase):\n    \"\"\"Publication records released versions without changing customer uses.\"\"\"\n\n    def test_publish_adds_version_to_existing_set(self):\n        versions = {\"v1\"}\n\n        publish(versions, \"v2\")\n\n        self.assertEqual(versions, {\"v1\", \"v2\"})\n\n    def test_publish_does_not_mutate_usages_because_adoption_is_explicit(self):\n        \"\"\"Publishing a version must not implicitly move any pinned usage.\"\"\"\n        versions = {\"v1\"}\n        usages = {\n            \"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2},\n            \"job-nightly\": {\"version\": \"v1\", \"retry_limit\": 5},\n        }\n\n        publish(versions, \"v2\")\n\n        self.assertEqual(usages[\"tile-home\"][\"version\"], \"v1\")\n        self.assertEqual(usages[\"job-nightly\"][\"version\"], \"v1\")\n\n\nclass AdoptTests(unittest.TestCase):\n    \"\"\"Adoption pins one known usage to one published version.\"\"\"\n\n    def test_adopt_updates_only_the_selected_usage_version(self):\n        \"\"\"Different usages keep independent retry limits during adoption.\"\"\"\n        versions = {\"v1\", \"v2\"}\n        usages = {\n            \"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2},\n            \"job-nightly\": {\"version\": \"v1\", \"retry_limit\": 5},\n        }\n\n        adopt(usages, \"job-nightly\", \"v2\", versions)\n\n        self.assertEqual(usages[\"tile-home\"], {\"version\": \"v1\", \"retry_limit\": 2})\n        self.assertEqual(usages[\"job-nightly\"], {\"version\": \"v2\", \"retry_limit\": 5})\n\n    def test_adopt_rejects_unknown_usage_before_mutation(self):\n        versions = {\"v1\", \"v2\"}\n        usages = {\n            \"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2},\n            \"job-nightly\": {\"version\": \"v1\", \"retry_limit\": 5},\n        }\n        original_usages = {\n            usage_id: usage.copy() for usage_id, usage in usages.items()\n        }\n        original_versions = versions.copy()\n\n        with self.assertRaises(ValueError):\n            adopt(usages, \"missing\", \"v2\", versions)\n\n        self.assertEqual(usages, original_usages)\n        self.assertEqual(versions, original_versions)\n\n    def test_adopt_rejects_unpublished_version_before_mutation(self):\n        versions = {\"v1\"}\n        usages = {\n            \"tile-home\": {\"version\": \"v1\", \"retry_limit\": 2},\n            \"job-nightly\": {\"version\": \"v1\", \"retry_limit\": 5},\n        }\n        original_usages = {\n            usage_id: usage.copy() for usage_id, usage in usages.items()\n        }\n        original_versions = versions.copy()\n\n        with self.assertRaises(ValueError):\n            adopt(usages, \"tile-home\", \"v2\", versions)\n\n        self.assertEqual(usages, original_usages)\n        self.assertEqual(versions, original_versions)\n\n\nif __name__ == \"__main__\":\n    unittest.main()\n",
+    "output_truncated": false,
+    "full_output_sha256": "1451d21b2903ce8b966d74aa424050b1dc2fc791e7f1f54893c0ab2d40478942"
+  },
+  {
+    "id": "item_27",
+    "command": "/bin/zsh -lc \"sed -n '1,260p' docs/implementation.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Registry Implementation Evidence\n\n## Scope\n\nThis implementation keeps the accepted registry operations limited to the\nin-memory contract in [contract.md](contract.md). The shared `versions` set is\nthe collection of published version identifiers, and the shared `usages`\nmapping is the collection of local tile or job usages that pin exactly one\nversion while keeping local retry configuration.\n\n## Implemented Behavior\n\n- `publish(versions, version_id)` mutates only the caller-owned `versions` set\n  by adding the supplied version identifier.\n- Publication does not inspect or mutate usages, preserving the durable intent\n  that existing places stay pinned until explicit adoption.\n- `adopt(usages, usage_id, version_id, versions)` validates that the usage\n  exists and that the target version has been published before changing state.\n- Successful adoption mutates only `usages[usage_id][\"version\"]`, so other\n  usages and local retry limits remain independent.\n- Invalid adoption raises `ValueError` and leaves both shared collections\n  unchanged.\n\n## Validation\n\nBehavioral unittest coverage in `tests/test_registry.py` exercises:\n\n- publication into the shared version collection;\n- publication leaving two usages pinned despite different retry limits;\n- explicit adoption of one usage while preserving both retry limits;\n- unknown usage adoption without mutation;\n- unpublished version adoption without mutation.\n\nLocal validation command:\n\n```sh\npython3 -m unittest tests/test_registry.py\n```\n\nResult:\n\n```text\nRan 5 tests in 0.000s\n\nOK\n```\n",
+    "output_truncated": false,
+    "full_output_sha256": "28df9ab4c5d72408a7e20503a4bf11ff77c4f3dbde9bffad6c007972d94de76a"
+  },
+  {
+    "id": "item_28",
+    "command": "/bin/zsh -lc \"sed -n '1,80p' docs/index.md\"",
+    "exit_code": 0,
+    "output_excerpt": "# Project reading map\n\nRead the files under docs/ relevant to this task.\n\n## Product exploration\n\n- [Brief](brief.md)\n- [Domain model](domain.md)\n- [Registry contract](contract.md)\n- [Decisions](decisions.md)\n- [Implementation evidence](implementation.md)\n",
+    "output_truncated": false,
+    "full_output_sha256": "cbb9946d5764782b550bccb32d2081537da024c715554ca98dae4af800ae2b71"
+  },
+  {
+    "id": "item_29",
+    "command": "/bin/zsh -lc 'git status --short'",
+    "exit_code": 0,
+    "output_excerpt": "?? .gitignore\n?? AGENTS.md\n?? docs/\n?? src/\n?? tests/\n",
+    "output_truncated": false,
+    "full_output_sha256": "edae5944c3f10db02fb746add00d1c2f625e152d9a56cf1b38fecb004c31f0b8"
+  },
+  {
+    "id": "item_30",
+    "command": "/bin/zsh -lc \"sed -n '1,220p' src/registry.py\"",
+    "exit_code": 0,
+    "output_excerpt": "\"\"\"In-memory registry operations for release-scoped version adoption.\n\nThe module intentionally models only the domain contract accepted for this\nrelease: publication records available version identifiers, and each customer\nusage pins itself to a version through an explicit adoption step. Persistence,\nexecution, and product-specific installation lifecycles belong outside this\nsmall interface.\n\"\"\"\n\n\ndef publish(versions, version_id):\n    \"\"\"Record a published version identifier in the caller-owned version set.\n\n    ``versions`` represents the release's known published versions. Publishing\n    is additive and has no reference to usages, preserving the invariant that\n    existing tile and job usages remain pinned until each usage explicitly\n    adopts another published version.\n    \"\"\"\n    versions.add(version_id)\n\n\ndef adopt(usages, usage_id, version_id, versions):\n    \"\"\"Pin one known usage to one already-published version.\n\n    ``usages`` is a caller-owned mapping keyed by usage id. Each usage value is\n    expected to keep its current version under the ``\"version\"`` key and may\n    carry local configuration such as retry limits. Adoption changes only that\n    version binding; local retry configuration and unrelated usages are outside\n    the mutation boundary.\n\n    Raises:\n        ValueError: if the usage is unknown or the target version has not been\n            published. Both validations happen before mutation so failed\n            adoption leaves all usage state unchanged.\n    \"\"\"\n    if usage_id not in usages:\n        raise ValueError(f\"unknown usage: {usage_id}\")\n    if version_id not in versions:\n        raise ValueError(f\"unpublished version: {version_id}\")\n\n    usages[usage_id][\"version\"] = version_id\n",
+    "output_truncated": false,
+    "full_output_sha256": "d60ca54330a551dfcc6a69143fa607561133642b369d0e62b99eae09372b8865"
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "pilot-01": {
+    "chains": 8,
+    "stages": 14,
+    "complete_stages": 14,
+    "cases": [
+      "c01",
+      "c03",
+      "c04",
+      "c05"
+    ]
+  },
+  "pilot-02": {
+    "chains": 16,
+    "stages": 28,
+    "complete_stages": 28,
+    "cases": [
+      "c01",
+      "c02",
+      "c03",
+      "c04",
+      "c05",
+      "c06",
+      "c07",
+      "c08"
+    ]
+  },
+  "pilot-03": {
+    "chains": 18,
+    "stages": 18,
+    "complete_stages": 18,
+    "cases": [
+      "c01",
+      "c02",
+      "c05",
+      "t01",
+      "t05",
+      "t09",
+      "t13",
+      "t17",
+      "t24"
+    ]
+  },
+  "pilot-04": {
+    "chains": 6,
+    "stages": 6,
+    "complete_stages": 6,
+    "cases": [
+      "t17"
+    ]
+  },
+  "pilot-05": {
+    "chains": 2,
+    "stages": 8,
+    "complete_stages": 8,
+    "cases": [
+      "c08"
+    ]
+  }
+}
