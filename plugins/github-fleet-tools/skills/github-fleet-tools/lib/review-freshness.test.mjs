@@ -279,6 +279,45 @@ function answers({ choice, probabilities, confidence, beyond, mechanical = 0.05 
   };
 }
 
+describe("THRESHOLDS — the calibrated policy values (see references/review-freshness.md)", () => {
+  it("pins the thread-path and mechanical-path thresholds", () => {
+    expect(THRESHOLDS).toEqual({
+      minConfidence: 0.85,
+      maxNewChangeProbability: 0.1,
+      maxBeyond: 0.45,
+      minMechanicalConfidence: 0.9,
+      minMechanicalNoul: 0.8,
+    });
+  });
+
+  const threadAnswer = (over) =>
+    answers({
+      choice: "thread_1",
+      probabilities: { thread_1: 0.95, mechanical: 0.02, new_change: 0.03 },
+      confidence: 0.95,
+      beyond: 0.1,
+      ...over,
+    });
+
+  it("refuses a thread mapping at confidence 0.84", () => {
+    expect(evaluateHunk(threadAnswer({ confidence: 0.84 })).verdict).toBe("needs_review");
+  });
+
+  it("refuses P(new change) of 0.1", () => {
+    const probabilities = { thread_1: 0.88, mechanical: 0.02, new_change: 0.1 };
+    expect(evaluateHunk(threadAnswer({ probabilities })).verdict).toBe("needs_review");
+  });
+
+  it("refuses scope creep of 0.45", () => {
+    expect(evaluateHunk(threadAnswer({ beyond: 0.45 })).verdict).toBe("needs_review");
+  });
+
+  it("passes just inside every threshold", () => {
+    const probabilities = { thread_1: 0.89, mechanical: 0.02, new_change: 0.09 };
+    expect(evaluateHunk(threadAnswer({ confidence: 0.85, probabilities, beyond: 0.44 })).verdict).toBe("covered");
+  });
+});
+
 describe("evaluateHunk — the asymmetric policy", () => {
   it("covered: confidently maps to a thread and stays in scope", () => {
     const v = evaluateHunk(

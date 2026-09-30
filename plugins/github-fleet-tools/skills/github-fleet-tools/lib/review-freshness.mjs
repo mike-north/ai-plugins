@@ -49,9 +49,9 @@ export const MODEL = "jev-1.13.0";
  *   `new_change` as the top answer never passes.
  */
 export const THRESHOLDS = Object.freeze({
-  minConfidence: 0.7,
-  maxNewChangeProbability: 0.2,
-  maxBeyond: 0.5,
+  minConfidence: 0.85,
+  maxNewChangeProbability: 0.1,
+  maxBeyond: 0.45,
   minMechanicalConfidence: 0.9,
   minMechanicalNoul: 0.8,
 });
