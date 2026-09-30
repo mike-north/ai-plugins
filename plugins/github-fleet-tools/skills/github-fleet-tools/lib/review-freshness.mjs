@@ -12,8 +12,9 @@
  *     (`parseFilePatch`);
  *   - the TypeSafe System One request asked about each hunk
  *     (`buildJudgementRequest`): a Choice ("which review thread does this change
- *     carry out?", plus `mechanical` and `new_change`) and a Noul ("does it go
- *     beyond what the feedback asked for?"), both over the same state;
+ *     carry out?", plus `mechanical` and `new_change`) and two Nouls ("does it go
+ *     beyond what the feedback asked for?", "is it purely mechanical?"), all over
+ *     the same state (the hunk, the review threads, and the push's other hunks);
  *   - the asymmetric policy that turns those answers into a per-hunk verdict
  *     (`evaluateHunk`): a hunk is `covered` only when every signal confidently
  *     says so; any doubt means `needs_review`.
@@ -31,18 +32,26 @@
 export const MODEL = "jev-1.13.0";
 
 /**
- * Policy thresholds. A hunk is `covered` only if ALL hold:
- *   - the Choice's top answer is a review thread or `mechanical` (not `new_change`);
- *   - Choice confidence ≥ `minConfidence`;
- *   - P(`new_change`) < `maxNewChangeProbability` (a real minority chance that the
- *     edit is new work is enough to ask for a review);
- *   - the "goes beyond the feedback" Noul < `maxBeyond`.
- * See SKILL.md "Review freshness → Calibration" for the evidence behind the values.
+ * Policy thresholds, calibrated against `MODEL` (evidence: SKILL.md, "Review
+ * freshness → Calibration"). A hunk is `covered` only if every signal agrees:
+ *
+ *   Answers a review thread (the Choice's top answer is a thread):
+ *     - Choice confidence ≥ `minConfidence`;
+ *     - P(`new_change`) < `maxNewChangeProbability`;
+ *     - the "goes beyond the feedback" Noul < `maxBeyond`.
+ *   Mechanical (the Choice's top answer is `mechanical`) — two independent
+ *   confirmations, since no thread bounds what the edit may do:
+ *     - Choice confidence ≥ `minMechanicalConfidence`;
+ *     - the "purely mechanical" Noul ≥ `minMechanicalNoul`;
+ *     - P(`new_change`) < `maxNewChangeProbability`.
+ *   `new_change` as the top answer never passes.
  */
 export const THRESHOLDS = Object.freeze({
-  minConfidence: 0.6,
+  minConfidence: 0.7,
   maxNewChangeProbability: 0.2,
   maxBeyond: 0.5,
+  minMechanicalConfidence: 0.9,
+  minMechanicalNoul: 0.8,
 });
 
 /**
@@ -56,6 +65,7 @@ export const LIMITS = Object.freeze({
   maxCommentsPerThread: 6,
   maxCommentChars: 1500,
   maxRequestTokens: 24000,
+  maxSiblingChars: 6000,
 });
 
 /**
@@ -191,15 +201,18 @@ const CONTEXT =
   "edits. `change` is one hunk (unified diff: `-` lines removed, `+` lines added, other lines " +
   "unchanged context) of those later edits, in file `change.file`. `review_threads` lists the " +
   "reviewer's feedback threads: where each was left (`file`, `line`) and its comments, the first " +
-  "being the reviewer's request and any later ones the discussion.";
+  "being the reviewer's request and any later ones the discussion. `other_changes`, when present, " +
+  "are the other hunks pushed at the same time, shown only as context for `change`.";
 
 /**
- * Build the System One request for one hunk: shared state (the hunk and every
- * review thread) with two independent questions over it.
+ * Build the System One request for one hunk: shared state (the hunk, every
+ * review thread, and the push's other hunks as context) with three independent
+ * questions over it.
  * @param {FileHunk} hunk
  * @param {readonly ReviewThread[]} threads
+ * @param {readonly { file: string, patch: string }[]} [siblings] the push's other hunks, as context
  */
-export function buildJudgementRequest(hunk, threads) {
+export function buildJudgementRequest(hunk, threads, siblings = []) {
   const reviewThreads = threads.map((t) => ({
     thread: t.id,
     file: t.path,
@@ -230,7 +243,11 @@ export function buildJudgementRequest(hunk, threads) {
   };
 
   return {
-    state: { change: { file: hunk.file, patch: hunk.patch }, review_threads: reviewThreads },
+    state: {
+      change: { file: hunk.file, patch: hunk.patch },
+      review_threads: reviewThreads,
+      ...(siblings.length ? { other_changes: siblings } : {}),
+    },
     questions: {
       addresses: {
         type: /** @type {const} */ ("choice"),
@@ -254,24 +271,38 @@ export function buildJudgementRequest(hunk, threads) {
             "Every edit in the change is what a review comment asked for, a direct minimal consequence of it (such as updating a test or doc to match the requested fix), or purely mechanical.",
         },
       },
+      mechanical: {
+        type: /** @type {const} */ ("noul"),
+        instructions: {
+          context: CONTEXT,
+          question: "Is `change` purely mechanical, leaving behavior and meaning exactly as they were?",
+        },
+        criteria: {
+          true: "Only formatting, whitespace, line wrapping, import ordering, regenerated or lock-file output, or spelling fixes: nothing new for a reader to review.",
+          false:
+            "It changes logic, values, control flow, error handling, public API, or test assertions, or it adds, removes, or rewords what comments or documentation say.",
+        },
+      },
     },
   };
 }
 
 /**
  * @typedef {{ verdict: "covered" | "needs_review", addresses: string, confidence: number,
- *   pNew: number | undefined, beyond: number, reasons: string[] }} HunkJudgement
+ *   pNew: number | undefined, beyond: number, mechanical: number | undefined, reasons: string[] }} HunkJudgement
  */
 
 /**
- * Apply the asymmetric policy to one hunk's answers.
+ * Apply the asymmetric policy to one hunk's answers (see `THRESHOLDS`). Any
+ * missing signal counts against the hunk.
  * @param {{ addresses: { choice: string, probabilities: Record<string, number>, confidence: number },
- *   beyond: { noul: number } }} answers
+ *   beyond: { noul: number }, mechanical?: { noul: number } }} answers
  * @returns {HunkJudgement}
  */
 export function evaluateHunk(answers) {
   const { choice, probabilities, confidence } = answers.addresses;
   const beyond = answers.beyond.noul;
+  const mechanical = answers.mechanical?.noul;
   const pNew = probabilities.new_change;
   const t = THRESHOLDS;
   /** @type {string[]} */
@@ -280,16 +311,25 @@ export function evaluateHunk(answers) {
   if (pNew === undefined) reasons.push("no probability reported for a new change");
   else if (pNew >= t.maxNewChangeProbability && choice !== "new_change")
     reasons.push(`possibly a new change (p ${pNew.toFixed(2)} ≥ ${t.maxNewChangeProbability})`);
-  if (confidence < t.minConfidence)
-    reasons.push(`low confidence in which feedback it answers (${confidence.toFixed(2)} < ${t.minConfidence})`);
-  if (beyond >= t.maxBeyond)
-    reasons.push(`goes beyond what the review feedback asked for (${beyond.toFixed(2)} ≥ ${t.maxBeyond})`);
+  if (choice === "mechanical") {
+    if (confidence < t.minMechanicalConfidence)
+      reasons.push(`not confidently mechanical (${confidence.toFixed(2)} < ${t.minMechanicalConfidence})`);
+    if (mechanical === undefined) reasons.push("no judgement of whether the edit is purely mechanical");
+    else if (mechanical < t.minMechanicalNoul)
+      reasons.push(`may change behavior or meaning (purely mechanical ${mechanical.toFixed(2)} < ${t.minMechanicalNoul})`);
+  } else if (choice !== "new_change") {
+    if (confidence < t.minConfidence)
+      reasons.push(`low confidence in which feedback it answers (${confidence.toFixed(2)} < ${t.minConfidence})`);
+    if (beyond >= t.maxBeyond)
+      reasons.push(`goes beyond what the review feedback asked for (${beyond.toFixed(2)} ≥ ${t.maxBeyond})`);
+  }
   return {
     verdict: reasons.length === 0 ? "covered" : "needs_review",
     addresses: choice,
     confidence,
     pNew,
     beyond,
+    mechanical,
     reasons,
   };
 }

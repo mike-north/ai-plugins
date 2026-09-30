@@ -15,8 +15,8 @@
  *      deterministically flag what cannot be judged (binary files, paths where
  *      the reviewed change conflicted with the new base, oversized diffs).
  *   3. Judge each remaining hunk with TypeSafe (one System One request per hunk,
- *      state = the hunk + the reviewer's review threads) and apply the
- *      asymmetric policy in `review-freshness.mjs`.
+ *      state = the hunk, the reviewer's review threads, and the push's other
+ *      hunks as context) and apply the asymmetric policy in `review-freshness.mjs`.
  *
  * Usage (from inside a clone of the PR's repository):
  *   review-freshness-gate.mjs --pr N --reviewed R --head H --base B [--reviewer-re RE]
@@ -329,8 +329,15 @@ async function main() {
   const { threads, truncated } = fetchReviewThreads(args.pr, reviewerRe);
   if (truncated) lines.push(`  note: only the first ${LIMITS.maxThreads} review threads were considered`);
 
+  /** The push's other hunks, as context: full text when small, else just their headers. */
+  const siblingsOf = (/** @type {import("./review-freshness.mjs").FileHunk} */ hunk) => {
+    const others = toJudge.filter((h) => h !== hunk);
+    const size = others.reduce((n, h) => n + h.patch.length, 0);
+    return others.map((h) => ({ file: h.file, patch: size <= LIMITS.maxSiblingChars ? h.patch : h.header }));
+  };
+
   const judged = await mapLimit(toJudge, CONCURRENCY, async (hunk) => {
-    const request = buildJudgementRequest(hunk, threads);
+    const request = buildJudgementRequest(hunk, threads, siblingsOf(hunk));
     const longestQuestion = Math.max(...Object.values(request.questions).map((q) => JSON.stringify(q).length));
     if (estimateTokens(JSON.stringify(request.state)) + estimateTokens("x".repeat(longestQuestion)) > LIMITS.maxRequestTokens) {
       return { hunk, oversized: true };
@@ -354,7 +361,8 @@ async function main() {
     const j = /** @type {import("./review-freshness.mjs").HunkJudgement} */ (judgement);
     const scores =
       `addresses ${j.addresses}${threadLabel(j.addresses)} · confidence ${j.confidence.toFixed(2)} · ` +
-      `p(new change) ${j.pNew === undefined ? "?" : j.pNew.toFixed(2)} · beyond ${j.beyond.toFixed(2)}`;
+      `p(new change) ${j.pNew === undefined ? "?" : j.pNew.toFixed(2)} · beyond ${j.beyond.toFixed(2)}` +
+      `${j.mechanical === undefined ? "" : ` · mechanical ${j.mechanical.toFixed(2)}`}`;
     if (j.verdict === "covered") lines.push(`  ${where} — covered: ${scores}`);
     else {
       needs++;

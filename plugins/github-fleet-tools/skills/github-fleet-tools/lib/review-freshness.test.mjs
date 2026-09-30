@@ -197,6 +197,25 @@ describe("buildJudgementRequest", () => {
     expect(q.criteria).toHaveProperty("false");
   });
 
+  it("asks an independent Noul whose 'yes' means the change is purely mechanical", () => {
+    const q = req.questions.mechanical;
+    expect(q.type).toBe("noul");
+    expect(JSON.stringify(q.instructions)).toContain("`change`");
+    expect(q.criteria).toHaveProperty("true");
+    expect(q.criteria).toHaveProperty("false");
+  });
+
+  it("omits other_changes when the hunk was pushed alone", () => {
+    expect(req.state).not.toHaveProperty("other_changes");
+  });
+
+  it("includes the push's other hunks as context when given", () => {
+    const sib = [{ file: "README.md", patch: "@@ -1 +1 @@\n-teh\n+the" }];
+    const r = buildJudgementRequest(HUNK, THREADS, sib);
+    expect(r.state.other_changes).toEqual(sib);
+    expect(JSON.stringify(r.questions.addresses.instructions)).toContain("`other_changes`");
+  });
+
   it("with no review threads, still offers exactly 'mechanical' and 'new_change'", () => {
     const bare = buildJudgementRequest(HUNK, []);
     expect(Object.keys(bare.questions.addresses.criteria).sort()).toEqual([
@@ -224,10 +243,11 @@ describe("estimateTokens", () => {
 });
 
 /** Build Choice/Noul answers in the HTTP API's answer shape. */
-function answers({ choice, probabilities, confidence, beyond }) {
+function answers({ choice, probabilities, confidence, beyond, mechanical = 0.05 }) {
   return {
     addresses: { type: "choice", choice, probabilities, confidence },
     beyond: { type: "noul", noul: beyond },
+    ...(mechanical === undefined ? {} : { mechanical: { type: "noul", noul: mechanical } }),
   };
 }
 
@@ -246,16 +266,59 @@ describe("evaluateHunk — the asymmetric policy", () => {
     expect(v.addresses).toBe("thread_1");
   });
 
-  it("covered: confidently mechanical", () => {
+  it("covered: confidently mechanical on both independent signals, whatever the scope Noul says", () => {
     const v = evaluateHunk(
       answers({
         choice: "mechanical",
-        probabilities: { mechanical: 0.92, new_change: 0.08 },
-        confidence: 0.8,
-        beyond: 0.15,
+        probabilities: { mechanical: 0.97, new_change: 0.03 },
+        confidence: THRESHOLDS.minMechanicalConfidence,
+        beyond: 0.7,
+        mechanical: THRESHOLDS.minMechanicalNoul,
       }),
     );
     expect(v.verdict).toBe("covered");
+    expect(v.mechanical).toBe(THRESHOLDS.minMechanicalNoul);
+  });
+
+  it("needs review: labelled mechanical, but not confidently enough", () => {
+    const v = evaluateHunk(
+      answers({
+        choice: "mechanical",
+        probabilities: { mechanical: 0.86, new_change: 0.14 },
+        confidence: THRESHOLDS.minMechanicalConfidence - 0.01,
+        beyond: 0.1,
+        mechanical: 0.95,
+      }),
+    );
+    expect(v.verdict).toBe("needs_review");
+    expect(v.reasons.join(" ")).toMatch(/not confidently mechanical/);
+  });
+
+  it("needs review: labelled mechanical, but the independent Noul says it changes meaning", () => {
+    const v = evaluateHunk(
+      answers({
+        choice: "mechanical",
+        probabilities: { mechanical: 0.97, new_change: 0.03 },
+        confidence: 0.95,
+        beyond: 0.1,
+        mechanical: THRESHOLDS.minMechanicalNoul - 0.01,
+      }),
+    );
+    expect(v.verdict).toBe("needs_review");
+    expect(v.reasons.join(" ")).toMatch(/behavior or meaning/);
+  });
+
+  it("needs review: labelled mechanical with no mechanical judgement at all", () => {
+    const v = evaluateHunk(
+      answers({
+        choice: "mechanical",
+        probabilities: { mechanical: 0.97, new_change: 0.03 },
+        confidence: 0.95,
+        beyond: 0.1,
+        mechanical: undefined,
+      }),
+    );
+    expect(v.verdict).toBe("needs_review");
   });
 
   it("needs review: classified as a new change", () => {

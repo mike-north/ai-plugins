@@ -229,7 +229,11 @@ export function markerJudge(body) {
     status: 200,
     body: {
       model: "jev-1.13.0",
-      answers: { addresses, beyond: { type: "noul", noul: beyond } },
+      answers: {
+        addresses,
+        beyond: { type: "noul", noul: beyond },
+        mechanical: { type: "noul", noul: 0.05 },
+      },
       usage: { input_tokens: 100, output_tokens: 0 },
     },
   };

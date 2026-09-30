@@ -376,10 +376,26 @@ describe("model-judged freshness", () => {
     expect(r.code).toBe(3);
     expect(merged(r)).toBe(false);
     expect(stub.requests).toHaveLength(2);
+    // Each hunk is judged with the other hunk of the same push as context.
+    for (const req of stub.requests) {
+      expect(req.body.state.other_changes).toHaveLength(1);
+      expect(req.body.state.other_changes[0].patch).not.toBe(req.body.state.change.patch);
+    }
     expect(r.stderr).toMatch(/a fresh Copilot review is needed/);
     expect(r.stderr).toMatch(/new change/);
     expect(r.stderr).toMatch(/covered/);
     expect(r.stderr).toContain("gh pr edit 7 --add-reviewer @copilot");
+  });
+
+  it("sends only the headers of sibling hunks when their full text exceeds the context budget (bug: headers were dropped)", async () => {
+    const { base, reviewed } = seedReviewedBranch(sb);
+    const big = Array.from({ length: 200 }, (_, i) => `line ${i}: ${"x".repeat(40)}`).join("\n") + "\n";
+    const head = sb.commit({ "src/app.js": FIXED_GREET, "notes/big.txt": big }, "fix + big file");
+    sb.git("push", "-q", "origin", "feat");
+    await runGhMerge(sb, { fixture: fixtureFor({ head, reviewed, baseOid: base }), env: withStub() });
+    const forFix = stub.requests.find((q) => q.body.state.change.file === "src/app.js");
+    expect(forFix).toBeDefined();
+    expect(forFix.body.state.other_changes).toEqual([{ file: "notes/big.txt", patch: "@@ -0,0 +1,200 @@" }]);
   });
 
   it("refuses scope creep on a hunk that does map to a thread", async () => {
