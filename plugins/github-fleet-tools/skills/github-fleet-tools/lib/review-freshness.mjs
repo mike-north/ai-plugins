@@ -7,7 +7,9 @@
  * review, or does it need a fresh one? This module owns the parts of that
  * decision that are data and policy rather than plumbing:
  *
- *   - which paths are exempt as generated/mechanical output (`isIgnoredPath`);
+ *   - which paths are exempt as generated/mechanical output: none unless a
+ *     committed config at the base commit names them (`parseFreshnessConfig`,
+ *     `narrowIgnorePatterns`, `isIgnoredPath`);
  *   - how a per-file unified diff splits into independently judged hunks
  *     (`parseFilePatch`);
  *   - the TypeSafe System One request asked about each hunk
@@ -69,39 +71,66 @@ export const LIMITS = Object.freeze({
 });
 
 /**
- * Paths whose post-review changes are generated or mechanical by convention and
- * never need a reviewer: API Extractor reports, generated API docs, changesets,
- * and package-manager lockfiles. Override with `PLEF_FRESHNESS_IGNORE`.
+ * Built-in exemptions: none. Which paths hold generated/mechanical output (API
+ * reports, generated docs, lockfiles, …) is a per-repository decision, and
+ * exempting a path loosens the gate — so it is opened only by a committed
+ * config (`FRESHNESS_CONFIG_PATH`) that a human reviews, read at the PR's BASE
+ * commit so a PR cannot exempt its own edits.
  */
-export const DEFAULT_IGNORE_PATTERNS = Object.freeze([
-  "api-report/",
-  "docs/api/",
-  ".changeset/",
-  "pnpm-lock.yaml",
-  "package-lock.json",
-  "npm-shrinkwrap.json",
-  "yarn.lock",
-  "bun.lock",
-  "bun.lockb",
-  "Cargo.lock",
-  "Gemfile.lock",
-  "poetry.lock",
-  "uv.lock",
-  "go.sum",
-]);
+export const DEFAULT_IGNORE_PATTERNS = Object.freeze(/** @type {string[]} */ ([]));
+
+/** Repository-relative path of the committed gh-merge configuration. */
+export const FRESHNESS_CONFIG_PATH = ".github/gh-merge.json";
 
 /**
- * Parse a comma-separated ignore override. Unset or blank keeps the defaults;
- * anything else REPLACES them (so a repo can also narrow the exemptions).
+ * Parse and validate the committed config's text, returning its exempt path
+ * patterns. The only accepted shape is `{ "ignorePaths"?: string[] }`; anything
+ * else — invalid JSON, another shape, an unknown key, an empty or catch-all
+ * pattern — throws, and the gate refuses (fail closed).
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function parseFreshnessConfig(text) {
+  const bad = (/** @type {string} */ why) => new Error(`invalid ${FRESHNESS_CONFIG_PATH} at the base commit: ${why}`);
+  /** @type {unknown} */
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw bad("not valid JSON");
+  }
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw bad("expected a JSON object");
+  const unknown = Object.keys(data).filter((k) => k !== "ignorePaths");
+  if (unknown.length) throw bad(`unknown key(s) ${unknown.map((k) => `"${k}"`).join(", ")}`);
+  const raw = /** @type {{ ignorePaths?: unknown }} */ (data).ignorePaths;
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw)) throw bad('"ignorePaths" must be an array of path patterns');
+  const patterns = raw.map((p) => {
+    if (typeof p !== "string" || p.trim() === "") throw bad('"ignorePaths" entries must be non-empty strings');
+    return p.trim();
+  });
+  const catchAll = findCatchAllPattern(patterns);
+  if (catchAll) throw bad(`pattern "${catchAll}" is a catch-all that would exempt ordinary source everywhere`);
+  return patterns;
+}
+
+/**
+ * Apply the `PLEF_FRESHNESS_IGNORE` environment override, which can only NARROW
+ * the committed exemptions: the result keeps just the committed patterns the
+ * override also names. Unset or blank leaves the committed list unchanged.
+ * @param {readonly string[]} committed
  * @param {string | undefined} raw
  * @returns {string[]}
  */
-export function parseIgnorePatterns(raw) {
-  if (raw === undefined || raw.trim() === "") return [...DEFAULT_IGNORE_PATTERNS];
-  return raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+export function narrowIgnorePatterns(committed, raw) {
+  if (raw === undefined || raw.trim() === "") return [...committed];
+  const named = new Set(
+    raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
+  return committed.filter((p) => named.has(p));
 }
 
 /** Translate a glob (`**`, `*`, `?`) into a regex source; `/` is the only separator. */
@@ -143,8 +172,8 @@ export function isIgnoredPath(path, patterns) {
 
 /**
  * Patterns that would exempt ordinary source everywhere (`*`, `**`, `*\/`, …).
- * The ignore override exists to name generated output, not to switch the guard
- * off, so such a pattern is refused. Returns the first offender, if any.
+ * Exemptions exist to name generated output, not to switch the guard off, so
+ * such a pattern is refused. Returns the first offender, if any.
  * @param {readonly string[]} patterns
  * @returns {string | undefined}
  */

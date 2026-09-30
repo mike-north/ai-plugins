@@ -17,7 +17,9 @@ import {
   DEFAULT_IGNORE_PATTERNS,
   THRESHOLDS,
   LIMITS,
-  parseIgnorePatterns,
+  parseFreshnessConfig,
+  narrowIgnorePatterns,
+  FRESHNESS_CONFIG_PATH,
   isIgnoredPath,
   findCatchAllPattern,
   parseFilePatch,
@@ -26,59 +28,85 @@ import {
   estimateTokens,
 } from "./review-freshness.mjs";
 
-describe("ignored (generated/mechanical) paths", () => {
-  it("defaults cover API reports, generated API docs, changesets, and lockfiles", () => {
-    const p = DEFAULT_IGNORE_PATTERNS;
+describe("exempt (generated/mechanical) paths — only a human-reviewed committed config opens them", () => {
+  it("exempts nothing by default", () => {
+    expect(DEFAULT_IGNORE_PATTERNS).toEqual([]);
+    expect(isIgnoredPath("pnpm-lock.yaml", DEFAULT_IGNORE_PATTERNS)).toBe(false);
+  });
+
+  it("reads the committed config's ignorePaths", () => {
+    expect(FRESHNESS_CONFIG_PATH).toBe(".github/gh-merge.json");
+    const p = parseFreshnessConfig('{"ignorePaths": ["api-report/", "pnpm-lock.yaml"]}');
+    expect(p).toEqual(["api-report/", "pnpm-lock.yaml"]);
+  });
+
+  it("matches directory, basename, and anchored patterns", () => {
+    const p = ["api-report/", "docs/api/", "pnpm-lock.yaml", "src/**/*.gen.ts"];
     expect(isIgnoredPath("api-report/core.api.md", p)).toBe(true);
     expect(isIgnoredPath("packages/core/api-report/core.api.md", p)).toBe(true);
     expect(isIgnoredPath("docs/api/core.md", p)).toBe(true);
-    expect(isIgnoredPath(".changeset/brave-owls-sing.md", p)).toBe(true);
-    expect(isIgnoredPath("pnpm-lock.yaml", p)).toBe(true);
-    expect(isIgnoredPath("packages/x/package-lock.json", p)).toBe(true);
-    expect(isIgnoredPath("yarn.lock", p)).toBe(true);
-  });
-
-  it("does not exempt ordinary source, docs, or manifests", () => {
-    const p = DEFAULT_IGNORE_PATTERNS;
-    expect(isIgnoredPath("src/index.ts", p)).toBe(false);
-    expect(isIgnoredPath("docs/guide.md", p)).toBe(false);
-    expect(isIgnoredPath("package.json", p)).toBe(false);
-    // A directory pattern matches whole path segments only.
-    expect(isIgnoredPath("my-api-report/x.md", p)).toBe(false);
-    expect(isIgnoredPath("src/docs/apiary.ts", p)).toBe(false);
-  });
-
-  it("an explicit override replaces the defaults", () => {
-    const p = parseIgnorePatterns("generated/, *.snap");
-    expect(p).toEqual(["generated/", "*.snap"]);
-    expect(isIgnoredPath("pkg/generated/types.ts", p)).toBe(true);
-    expect(isIgnoredPath("src/__snapshots__/a.test.ts.snap", p)).toBe(true);
-    expect(isIgnoredPath("pnpm-lock.yaml", p)).toBe(false);
-  });
-
-  it("an unset or blank override keeps the defaults", () => {
-    expect(parseIgnorePatterns(undefined)).toEqual(DEFAULT_IGNORE_PATTERNS);
-    expect(parseIgnorePatterns("  ")).toEqual(DEFAULT_IGNORE_PATTERNS);
-  });
-
-  it("supports ** across directories and anchored path globs", () => {
-    const p = parseIgnorePatterns("src/**/*.gen.ts");
+    expect(isIgnoredPath("packages/x/pnpm-lock.yaml", p)).toBe(true);
     expect(isIgnoredPath("src/a/b/c.gen.ts", p)).toBe(true);
     expect(isIgnoredPath("src/c.gen.ts", p)).toBe(true);
+    // Directory patterns match whole path segments only; anchored globs stay anchored.
+    expect(isIgnoredPath("my-api-report/x.md", p)).toBe(false);
+    expect(isIgnoredPath("src/docs/apiary.ts", p)).toBe(false);
     expect(isIgnoredPath("lib/src/c.gen.ts", p)).toBe(false);
     expect(isIgnoredPath("src/c.ts", p)).toBe(false);
   });
+
+  describe("an invalid config fails closed", () => {
+    for (const [label, text] of [
+      ["not JSON", "{ignorePaths:"],
+      ["not an object", '["api-report/"]'],
+      ["ignorePaths not an array", '{"ignorePaths": "api-report/"}'],
+      ["a non-string entry", '{"ignorePaths": ["api-report/", 3]}'],
+      ["an empty entry", '{"ignorePaths": [" "]}'],
+      ["an unknown key", '{"ignorePaths": [], "ignore": ["x/"]}'],
+      ["a catch-all pattern", '{"ignorePaths": ["**"]}'],
+    ]) {
+      it(label, () => {
+        expect(() => parseFreshnessConfig(text)).toThrow(/gh-merge\.json/);
+      });
+    }
+  });
+
+  it("an empty config object exempts nothing", () => {
+    expect(parseFreshnessConfig("{}")).toEqual([]);
+  });
 });
 
-describe("findCatchAllPattern — the override names generated paths, it cannot switch the guard off", () => {
+describe("narrowIgnorePatterns — the environment can only remove exemptions", () => {
+  const CONFIG = ["api-report/", "pnpm-lock.yaml"];
+
+  it("unset or blank keeps the committed list", () => {
+    expect(narrowIgnorePatterns(CONFIG, undefined)).toEqual(CONFIG);
+    expect(narrowIgnorePatterns(CONFIG, "  ")).toEqual(CONFIG);
+  });
+
+  it("keeps only committed patterns the environment also names", () => {
+    expect(narrowIgnorePatterns(CONFIG, "api-report/")).toEqual(["api-report/"]);
+  });
+
+  it("never adds a pattern the committed config lacks", () => {
+    expect(narrowIgnorePatterns(CONFIG, "pnpm-lock.yaml, src/, **")).toEqual(["pnpm-lock.yaml"]);
+    expect(narrowIgnorePatterns([], "api-report/")).toEqual([]);
+  });
+
+  it("a value naming nothing committed removes every exemption", () => {
+    expect(narrowIgnorePatterns(CONFIG, "none")).toEqual([]);
+  });
+});
+
+describe("findCatchAllPattern — exemptions name generated paths, they cannot switch the guard off", () => {
   it("flags patterns that would exempt ordinary source everywhere", () => {
     for (const p of ["*", "**", "**/*", "*/", "**/"]) {
       expect(findCatchAllPattern(["api-report/", p])).toBe(p);
     }
   });
 
-  it("accepts the defaults and ordinary narrow patterns", () => {
-    expect(findCatchAllPattern(DEFAULT_IGNORE_PATTERNS)).toBeUndefined();
+  it("accepts ordinary narrow patterns", () => {
+    expect(findCatchAllPattern(["api-report/", "docs/api/", ".changeset/", "pnpm-lock.yaml"])).toBeUndefined();
     expect(findCatchAllPattern(["generated/", "*.snap", "src/**/*.gen.ts"])).toBeUndefined();
   });
 });

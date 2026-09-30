@@ -11,7 +11,8 @@
  *      `git merge-tree`, and diff the result against H. Rebases and merges from
  *      the base branch therefore contribute nothing; only the PR's own post-
  *      review edits remain.
- *   2. Deterministically set aside edits in generated/mechanical paths, and
+ *   2. Deterministically set aside edits in generated/mechanical paths named by
+ *      the committed config at the base commit (`.github/gh-merge.json`), and
  *      deterministically flag what cannot be judged (binary files, paths where
  *      the reviewed change conflicted with the new base, oversized diffs).
  *   3. Judge each remaining hunk with TypeSafe (one System One request per hunk,
@@ -30,7 +31,7 @@
  *   TYPESAFE_API_KEY       required only when a hunk needs a model judgement
  *   TYPESAFE_BASE_URL      API root (default https://api.typesafe.ai)
  *   PLEF_TYPESAFE_MAX_RETRIES  retries for transient API errors (default 2)
- *   PLEF_FRESHNESS_IGNORE  comma list of generated/mechanical path patterns (replaces defaults)
+ *   PLEF_FRESHNESS_IGNORE  comma list that can only NARROW the committed exempt patterns
  *   PLEF_GIT_REMOTE        remote to fetch missing commits from (default "origin")
  *   GH                     gh binary (default "gh")
  */
@@ -42,10 +43,11 @@ import {
   buildJudgementRequest,
   estimateTokens,
   evaluateHunk,
-  findCatchAllPattern,
+  FRESHNESS_CONFIG_PATH,
   isIgnoredPath,
+  narrowIgnorePatterns,
   parseFilePatch,
-  parseIgnorePatterns,
+  parseFreshnessConfig,
 } from "./review-freshness.mjs";
 import { createSystemOneClient } from "./typesafe-client.mjs";
 
@@ -127,6 +129,21 @@ function ensureCommits(/** @type {string[]} */ shas) {
 }
 
 /**
+ * The exempt path patterns committed at `base` (none if the config is absent).
+ * Read from the base commit, never the head, so a PR cannot exempt its own edits.
+ */
+function readCommittedExemptions(/** @type {string} */ base) {
+  const spec = `${base}:${FRESHNESS_CONFIG_PATH}`;
+  if (spawnSync("git", ["cat-file", "-e", spec], { stdio: "ignore" }).status !== 0) return [];
+  const text = git(["show", spec], `could not read ${FRESHNESS_CONFIG_PATH} at the base commit`).stdout;
+  try {
+    return parseFreshnessConfig(text);
+  } catch (err) {
+    throw new GateError(err instanceof Error ? err.message : String(err));
+  }
+}
+
+/**
  * Parse `git diff -z --name-status` output.
  * @returns {{ status: string, path: string, oldPath: string | null }[]}
  */
@@ -205,13 +222,6 @@ async function mapLimit(/** @type {any[]} */ items, /** @type {number} */ limit,
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const ignore = parseIgnorePatterns(ENV.PLEF_FRESHNESS_IGNORE);
-  const catchAll = findCatchAllPattern(ignore);
-  if (catchAll) {
-    throw new GateError(
-      `PLEF_FRESHNESS_IGNORE pattern "${catchAll}" would exempt ordinary source files everywhere; name the generated paths instead`,
-    );
-  }
   let reviewerRe;
   try {
     reviewerRe = new RegExp(args.reviewerRe, "i");
@@ -225,6 +235,7 @@ async function main() {
     );
   }
   ensureCommits([args.reviewed, args.head, args.base]);
+  const ignore = narrowIgnorePatterns(readCommittedExemptions(args.base), ENV.PLEF_FRESHNESS_IGNORE);
 
   const baseR = git(["merge-base", args.reviewed, args.base], "could not find where the reviewed commit forked from the base").stdout.trim();
   const baseH = git(["merge-base", args.head, args.base], "could not find where the head forked from the base").stdout.trim();
@@ -252,13 +263,13 @@ async function main() {
   /** @type {import("./review-freshness.mjs").FileHunk[]} */
   const toJudge = [];
 
+  // A conflict is never exempt, whatever the ignore list says: its resolution is
+  // hand-made code that no reviewer has seen.
   for (const path of conflicted) {
-    if (isIgnoredPath(path, ignore)) ignoredPaths.push(path);
-    else
-      deterministic.push({
-        label: path,
-        reasons: ["the reviewed change conflicts with the new base here, so the resolution was never reviewed"],
-      });
+    deterministic.push({
+      label: path,
+      reasons: ["the reviewed change conflicts with the new base here, so the resolution was never reviewed"],
+    });
   }
   for (const f of changed) {
     if (conflicted.has(f.path)) continue;

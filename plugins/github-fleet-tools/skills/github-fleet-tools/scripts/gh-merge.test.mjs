@@ -236,16 +236,16 @@ describe("deterministic freshness (no model call)", () => {
     expect(merged(r)).toBe(true);
   });
 
-  it("passes changes confined to generated/mechanical paths", async () => {
-    const { base, reviewed } = seedReviewedBranch(sb);
-    const head = sb.commit(
-      {
-        "pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
-        "api-report/app.api.md": "## API Report\n",
-        ".changeset/quiet-owls.md": "---\n'app': patch\n---\n\nGreet by name.\n",
-      },
-      "regenerate",
-    );
+  const GENERATED = {
+    "pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
+    "api-report/app.api.md": "## API Report\n",
+    ".changeset/quiet-owls.md": "---\n'app': patch\n---\n\nGreet by name.\n",
+  };
+  const EXEMPT = { ignorePaths: ["pnpm-lock.yaml", "api-report/", ".changeset/"] };
+
+  it("passes changes confined to paths the base commit's config exempts", async () => {
+    const { base, reviewed } = seedReviewedBranch(sb, { config: EXEMPT });
+    const head = sb.commit(GENERATED, "regenerate");
     sb.git("push", "-q", "origin", "feat");
     const r = await runGhMerge(sb, {
       fixture: fixtureFor({ head, reviewed, baseOid: base }),
@@ -256,29 +256,76 @@ describe("deterministic freshness (no model call)", () => {
     expect(stub.requests).toHaveLength(0);
   });
 
-  it("honours an explicit ignore override (which replaces the defaults)", async () => {
+  it("exempts nothing without a committed config (generated files are judged like any edit)", async () => {
     const { base, reviewed } = seedReviewedBranch(sb);
+    const head = sb.commit(GENERATED, "regenerate");
+    sb.git("push", "-q", "origin", "feat");
+    const r = await runGhMerge(sb, {
+      fixture: fixtureFor({ head, reviewed, baseOid: base }),
+      env: { TYPESAFE_API_KEY: undefined },
+    });
+    expect(r.code).toBe(3);
+    expect(r.stderr).toMatch(/TYPESAFE_API_KEY is not set/);
+  });
+
+  it("ignores a config the PR itself adds (only the base commit's config counts)", async () => {
+    const { base, reviewed } = seedReviewedBranch(sb);
+    const head = sb.commit(
+      { ".github/gh-merge.json": JSON.stringify(EXEMPT), "pnpm-lock.yaml": "x\n" },
+      "exempt my own edits",
+    );
+    sb.git("push", "-q", "origin", "feat");
+    const r = await runGhMerge(sb, {
+      fixture: fixtureFor({ head, reviewed, baseOid: base }),
+      env: { TYPESAFE_API_KEY: undefined },
+    });
+    expect(r.code).toBe(3);
+    expect(merged(r)).toBe(false);
+  });
+
+  it("lets the environment narrow the committed exemptions", async () => {
+    const { base, reviewed } = seedReviewedBranch(sb, { config: EXEMPT });
     const head = sb.commit({ "pnpm-lock.yaml": "lockfileVersion: '9.0'\n" }, "lock");
     sb.git("push", "-q", "origin", "feat");
     const r = await runGhMerge(sb, {
       fixture: fixtureFor({ head, reviewed, baseOid: base }),
-      env: { TYPESAFE_API_KEY: undefined, PLEF_FRESHNESS_IGNORE: "generated/" },
+      env: { TYPESAFE_API_KEY: undefined, PLEF_FRESHNESS_IGNORE: "api-report/" },
     });
     // The lockfile is no longer exempt, so it needs a judgement — and there is no key.
     expect(r.code).toBe(3);
     expect(r.stderr).toMatch(/TYPESAFE_API_KEY is not set/);
   });
 
-  it("refuses a catch-all ignore override rather than exempting everything", async () => {
-    const { base, reviewed } = seedReviewedBranch(sb);
+  it("never lets the environment add an exemption", async () => {
+    const { base, reviewed } = seedReviewedBranch(sb, { config: EXEMPT });
     const head = sb.commit({ "src/app.js": FIXED_GREET + NEW_FEATURE_FN }, "feature");
     sb.git("push", "-q", "origin", "feat");
     const r = await runGhMerge(sb, {
       fixture: fixtureFor({ head, reviewed, baseOid: base }),
-      env: withStub({ PLEF_FRESHNESS_IGNORE: "**" }),
+      env: withStub({ PLEF_FRESHNESS_IGNORE: "src/,**" }),
     });
     expect(r.code).toBe(3);
-    expect(r.stderr).toMatch(/PLEF_FRESHNESS_IGNORE/);
+    expect(r.stderr).toMatch(/fresh Copilot review is needed/);
+    expect(merged(r)).toBe(false);
+  });
+
+  it("refuses when the committed config is invalid", async () => {
+    const { base, reviewed } = seedReviewedBranch(sb, { config: "{ignorePaths:" });
+    const head = sb.commit({ "src/app.js": FIXED_GREET }, "fix typo");
+    sb.git("push", "-q", "origin", "feat");
+    const r = await runGhMerge(sb, { fixture: fixtureFor({ head, reviewed, baseOid: base }), env: withStub() });
+    expect(r.code).toBe(3);
+    expect(r.stderr).toMatch(/could not verify review freshness.*gh-merge\.json/);
+    expect(stub.requests).toHaveLength(0);
+  });
+
+  it("refuses a committed catch-all exemption rather than exempting everything", async () => {
+    const { base, reviewed } = seedReviewedBranch(sb, { config: { ignorePaths: ["**"] } });
+    const head = sb.commit({ "src/app.js": FIXED_GREET + NEW_FEATURE_FN }, "feature");
+    sb.git("push", "-q", "origin", "feat");
+    const r = await runGhMerge(sb, { fixture: fixtureFor({ head, reviewed, baseOid: base }), env: withStub() });
+    expect(r.code).toBe(3);
+    expect(r.stderr).toMatch(/catch-all|ordinary source/);
     expect(merged(r)).toBe(false);
   });
 
@@ -313,6 +360,22 @@ describe("deterministic freshness (no model call)", () => {
     expect(r.code).toBe(3);
     expect(r.stderr).toMatch(/src\/app\.js.*conflict/);
     expect(stub.requests).toHaveLength(0);
+  });
+});
+
+describe("conflicts are never exempt", () => {
+  it("refuses a conflict even in a path the committed config exempts", async () => {
+    const { reviewed } = seedReviewedBranch(sb, { config: { ignorePaths: ["src/"] } });
+    sb.git("checkout", "-q", "main");
+    const newBase = sb.commit({ "src/app.js": APP_V1.replace("return 'hello';", "return 'hi';") }, "hi");
+    sb.git("push", "-q", "origin", "main");
+    sb.git("checkout", "-q", "-b", "resolved", "main");
+    const head = sb.commit({ "src/app.js": APP_V1.replace("return 'hello';", "return 'hi ' + nam;") }, "re-applied");
+    sb.git("push", "-q", "origin", "resolved");
+    const r = await runGhMerge(sb, { fixture: fixtureFor({ head, reviewed, baseOid: newBase }), env: withStub() });
+    expect(r.code).toBe(3);
+    expect(r.stderr).toMatch(/src\/app\.js.*conflict/);
+    expect(merged(r)).toBe(false);
   });
 });
 

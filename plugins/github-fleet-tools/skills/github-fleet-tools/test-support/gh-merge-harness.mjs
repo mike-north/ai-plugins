@@ -117,11 +117,17 @@ export const NEW_FEATURE_FN = [
 ].join("\n");
 
 /**
- * The common starting point: `main` with src/app.js + README, and a `feat`
- * branch whose one commit (R) was reviewed. Returns the shas.
+ * The common starting point: `main` with src/app.js + README (and, when given, a
+ * committed `.github/gh-merge.json`), and a `feat` branch whose one commit (R) was
+ * reviewed. Returns the shas.
  */
-export function seedReviewedBranch(sb) {
-  const base = sb.commit({ "src/app.js": APP_V1, "README.md": "# app\n" }, "initial");
+export function seedReviewedBranch(sb, { config } = {}) {
+  /** @type {Record<string, string>} */
+  const files = { "src/app.js": APP_V1, "README.md": "# app\n" };
+  if (config !== undefined) {
+    files[".github/gh-merge.json"] = typeof config === "string" ? config : JSON.stringify(config);
+  }
+  const base = sb.commit(files, "initial");
   sb.git("push", "-q", "origin", "main");
   sb.git("checkout", "-q", "-b", "feat");
   const reviewed = sb.commit(
