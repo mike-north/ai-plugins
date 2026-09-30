@@ -23,8 +23,17 @@ the **product-led-eng-fleet** plugin, which depends on this one.
 - **`gh-label <N> add|remove <LABEL>`** — bounded single-label edit (claim / release), the
   granular affordance over broad `gh issue edit`.
 - **`gh-merge <N> [--dry-run]`** — guarded squash-merge; **prompts** (configured as `ask`) and
-  refuses unless the PR is open, non-draft, not a release/Version PR, has a reviewer review
-  present, and has passed required checks.
+  refuses unless the PR is open, non-draft, not a release/Version PR, has a recognisably
+  completed reviewer review, has passed required checks, and that review is **fresh**.
+  A review is fresh if it was on the head, or if every later edit is one of:
+  - a rebase;
+  - in a path the repository exempts in a committed `.github/gh-merge.json`;
+  - an answer to the reviewer's own feedback that goes no further (judged per hunk by
+    TypeSafe's Jev model).
+
+  The gate fails closed: an unverifiable guard refuses. It needs `TYPESAFE_API_KEY` in the
+  environment when edits must be judged. See
+  `skills/github-fleet-tools/references/review-freshness.md`.
 
 ## The rubric (why these five)
 
@@ -54,7 +63,9 @@ ln -sf "$PLUGIN/scripts/"* ~/bin/    # then `gh-queue list`, `gh-merge 10`, …
 Allowlist the read tools, the gh-native verbs, and the bounded write tools; leave `gh-merge`
 and raw `gh api` as `ask`. Note that `gh issue edit` is deliberately **not** allowlisted —
 label edits go through `gh-label`. See `skills/github-fleet-tools/SKILL.md` for the exact
-rules. All tools honor `GH` / `GH_HOST` and require `git` + an authenticated `gh`.
+rules. All tools honor `GH` / `GH_HOST` and require `git` + an authenticated `gh`; `gh-merge`
+also needs `node` and, when judging post-review edits, `TYPESAFE_API_KEY` (provide it through
+the agent's environment, e.g. a secrets launcher — the tool never calls a secrets manager).
 
 ## License
 
