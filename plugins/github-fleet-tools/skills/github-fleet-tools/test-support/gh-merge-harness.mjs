@@ -168,7 +168,11 @@ export function prView({ head, baseOid, reviews, overrides = {} }) {
   };
 }
 
-export const review = (commit, { body = "Reviewed.", state = "COMMENTED", login = COPILOT, at } = {}) => ({
+/** A completed Copilot review summary, in the reviewer's current format. */
+export const OVERVIEW_BODY =
+  "<!-- ccr-overview-v2 -->\n\n## Copilot review overview\n\n### 🟢 Approval recommended\n\n**Findings:** None";
+
+export const review = (commit, { body = OVERVIEW_BODY, state = "COMMENTED", login = COPILOT, at } = {}) => ({
   author: { login },
   state,
   body,

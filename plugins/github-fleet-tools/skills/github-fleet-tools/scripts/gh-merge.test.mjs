@@ -199,6 +199,49 @@ describe("errored Copilot reviews do not count (bug: an error notice passed as a
   });
 });
 
+describe("a review counts only when it is recognisably complete (fail closed on wording drift)", () => {
+  const onHead = async (reviews) => {
+    const { base, reviewed } = seedReviewedBranch(sb);
+    return runGhMerge(sb, { fixture: fixtureFor({ head: reviewed, reviewed, baseOid: base, reviews: reviews(reviewed) }) });
+  };
+
+  it("counts the verdict-heading summary format", async () => {
+    const r = await onHead((c) => [review(c, { body: "### 🟡 Changes recommended\n\nThe new test can throw." })]);
+    expect(r.code).toBe(0);
+  });
+
+  it("counts the classic pull-request-overview format", async () => {
+    const r = await onHead((c) => [review(c, { body: "## Pull request overview\n\nThis PR adds a flag." })]);
+    expect(r.code).toBe(0);
+  });
+
+  it("counts an APPROVED review even with an empty body", async () => {
+    const r = await onHead((c) => [review(c, { state: "APPROVED", body: "" })]);
+    expect(r.code).toBe(0);
+  });
+
+  it("does not count a COMMENTED review with an empty body", async () => {
+    const r = await onHead((c) => [review(c, { body: "" })]);
+    expect(r.code).toBe(3);
+    expect(r.stderr).toMatch(/not recognisably complete/);
+    expect(merged(r)).toBe(false);
+  });
+
+  it("does not count a reworded failure notice", async () => {
+    const r = await onHead((c) => [review(c, { body: "Copilot wasn't able to review this pull request. Try again later." })]);
+    expect(r.code).toBe(3);
+    expect(merged(r)).toBe(false);
+  });
+
+  it("an unrecognised review after a real one neither blocks nor refreshes it", async () => {
+    const r = await onHead((c) => [
+      review(c, { at: "2026-09-01T00:00:00Z" }),
+      review(c, { body: "Something went wrong.", at: "2026-09-02T00:00:00Z" }),
+    ]);
+    expect(r.code).toBe(0);
+  });
+});
+
 describe("deterministic freshness (no model call)", () => {
   it("passes a pure rebase onto an advanced base, without needing an API key", async () => {
     const { reviewed } = seedReviewedBranch(sb);

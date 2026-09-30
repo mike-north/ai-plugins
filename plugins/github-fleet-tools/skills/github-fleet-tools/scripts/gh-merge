@@ -10,9 +10,10 @@
 #   1. The PR is OPEN and not a draft.
 #   2. It is NOT a release/Version PR (those are a human's deliberate release gate).
 #   3. A matching reviewer has successfully reviewed it (author login matches
-#      PLEF_COPILOT_LOGIN_RE, default "copilot", case-insensitively). Error notices
-#      ("…encountered an error and was unable to review…") and dismissed reviews do not
-#      count, and the latest successful review must not request changes.
+#      PLEF_COPILOT_LOGIN_RE, default "copilot", case-insensitively). A review counts only
+#      if it is APPROVED/CHANGES_REQUESTED, or COMMENTED with a recognised review summary;
+#      error notices, empty or unrecognised bodies, and dismissed reviews do not count.
+#      The latest counted review must not request changes.
 #   4. Required status checks have passed (`gh pr checks --required` exits clean).
 #   5. That review is FRESH: it was on the current head commit, or every edit pushed
 #      since is covered by it — rebase/base-merge only, confined to generated/mechanical
@@ -53,6 +54,11 @@ VERSION_TITLE_RE="${PLEF_VERSION_TITLE_RE:-^Release packages}"
 VERSION_BRANCH_RE="${PLEF_VERSION_BRANCH_RE:-^changeset-release/}"
 # Body of the notice Copilot posts, as a review, when it fails to review.
 REVIEW_ERROR_RE='encountered an error and was unable to review'
+# A COMMENTED review counts only if its body carries one of the reviewer's recognised
+# summary markers: the overview marker/heading, or a verdict heading. Anything else
+# (empty, an error notice, reworded or unknown text) is not a completed review, so
+# a change in the reviewer's wording fails closed instead of passing as a review.
+REVIEW_SUMMARY_RE='ccr-overview|copilot review overview|pull request overview|#+ [^\n]*(approval recommended|changes recommended|needs a closer look)'
 
 # Resolve this script's real directory (it is commonly symlinked onto PATH).
 src="${BASH_SOURCE[0]}"
@@ -102,11 +108,15 @@ if printf '%s' "$title" | grep -qiE "$VERSION_TITLE_RE" || printf '%s' "$head" |
 fi
 
 # Guard 3: a successful matching-reviewer review exists, and the latest one isn't CHANGES_REQUESTED.
-reviewer=$(printf '%s' "$meta" | jq -c --arg re "$COPILOT_RE" --arg err "$REVIEW_ERROR_RE" '
+reviewer=$(printf '%s' "$meta" | jq -c --arg re "$COPILOT_RE" --arg err "$REVIEW_ERROR_RE" --arg summary "$REVIEW_SUMMARY_RE" '
   [ (.reviews // [])[]
     | select((.author.login // "") | test($re; "i"))
     | select(.state != "DISMISSED" and .state != "PENDING") ] as $matching
-  | ($matching | map(select((.body // "") | test($err; "i") | not)) | sort_by(.submittedAt)) as $ok
+  | ($matching
+     | map(select(
+         .state == "APPROVED" or .state == "CHANGES_REQUESTED"
+         or ((.body // "") as $b | ($b | test($err; "i") | not) and ($b | test($summary; "i")))))
+     | sort_by(.submittedAt)) as $ok
   | { matching: ($matching | length), ok: ($ok | length),
       state: ($ok | last | .state // "NONE"), commit: ($ok | last | .commit.oid // "") }')
 matching=$(printf '%s' "$reviewer" | jq -r '.matching')
@@ -114,7 +124,7 @@ ok=$(printf '%s' "$reviewer" | jq -r '.ok')
 reviewer_latest=$(printf '%s' "$reviewer" | jq -r '.state')
 reviewed=$(printf '%s' "$reviewer" | jq -r '.commit')
 [[ "$matching" != "0" ]] || refuse "no review from a matching reviewer (author login matching /$COPILOT_RE/i — set PLEF_COPILOT_LOGIN_RE to change)"
-[[ "$ok" != "0" ]] || refuse "every matching-reviewer review errored (\"…encountered an error and was unable to review…\"), so the PR has not been reviewed; $REREQUEST"
+[[ "$ok" != "0" ]] || refuse "no matching-reviewer review is recognisably complete — each one errored (\"…encountered an error and was unable to review…\") or is not recognisably complete (an empty or unrecognised comment without a review summary), so the PR has not been reviewed; $REREQUEST"
 [[ "$reviewer_latest" != "CHANGES_REQUESTED" ]] || refuse "the latest matching-reviewer review requests changes"
 [[ -n "$reviewed" ]] || refuse "cannot tell which commit the latest matching-reviewer review covered, so its freshness is unknown; $REREQUEST"
 [[ -n "$headOid" && -n "$baseOid" ]] || refuse "gh did not report the PR's head/base commits, so review freshness cannot be checked"
