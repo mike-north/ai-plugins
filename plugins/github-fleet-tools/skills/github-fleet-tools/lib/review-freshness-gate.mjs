@@ -381,7 +381,8 @@ async function main() {
     const scores =
       `addresses ${j.addresses}${threadLabel(j.addresses)} · confidence ${j.confidence.toFixed(2)} · ` +
       `p(new change) ${j.pNew === undefined ? "?" : j.pNew.toFixed(2)} · beyond ${j.beyond.toFixed(2)}` +
-      `${j.mechanical === undefined ? "" : ` · mechanical ${j.mechanical.toFixed(2)}`}`;
+      `${j.mechanical === undefined ? "" : ` · mechanical ${j.mechanical.toFixed(2)}`}` +
+      `${j.addsLogic === undefined ? "" : ` · adds logic ${j.addsLogic.toFixed(2)}`}`;
     if (j.verdict === "covered") lines.push(`  ${where} — covered: ${scores}`);
     else {
       needs++;

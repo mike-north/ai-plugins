@@ -14,9 +14,10 @@
  *     (`parseFilePatch`);
  *   - the TypeSafe System One request asked about each hunk
  *     (`buildJudgementRequest`): a Choice ("which review thread does this change
- *     carry out?", plus `mechanical` and `new_change`) and two Nouls ("does it go
- *     beyond what the feedback asked for?", "is it purely mechanical?"), all over
- *     the same state (the hunk, the review threads, and the push's other hunks);
+ *     carry out?", plus `mechanical` and `new_change`) and three Nouls ("does it
+ *     go beyond what the feedback asked for?", "is it purely mechanical?", "does it
+ *     add or alter logic no thread asked for?"), all over the same state (the hunk,
+ *     the review threads, and the push's other hunks);
  *   - the asymmetric policy that turns those answers into a per-hunk verdict
  *     (`evaluateHunk`): a hunk is `covered` only when every signal confidently
  *     says so; any doubt means `needs_review`.
@@ -46,6 +47,10 @@ export const MODEL = "jev-1.13.0";
  *     - Choice confidence ≥ `minMechanicalConfidence`;
  *     - the "purely mechanical" Noul ≥ `minMechanicalNoul`;
  *     - P(`new_change`) < `maxNewChangeProbability`.
+ *   On both paths, the independent "adds or alters logic no thread asked for"
+ *   Noul must be < `maxAddsLogic`: a second, logic-specific check on unrequested
+ *   work, so a hunk that talks the Choice into a thread or `mechanical` label
+ *   still has to get past a question it cannot answer by labelling itself.
  *   `new_change` as the top answer never passes.
  */
 export const THRESHOLDS = Object.freeze({
@@ -54,6 +59,7 @@ export const THRESHOLDS = Object.freeze({
   maxBeyond: 0.45,
   minMechanicalConfidence: 0.9,
   minMechanicalNoul: 0.8,
+  maxAddsLogic: 0.45,
 });
 
 /**
@@ -238,7 +244,7 @@ const CONTEXT =
 
 /**
  * Build the System One request for one hunk: shared state (the hunk, every
- * review thread, and the push's other hunks as context) with three independent
+ * review thread, and the push's other hunks as context) with four independent
  * questions over it.
  * @param {FileHunk} hunk
  * @param {readonly ReviewThread[]} threads
@@ -303,6 +309,19 @@ export function buildJudgementRequest(hunk, threads, siblings = []) {
             "Every edit in the change is what a review comment asked for, a direct minimal consequence of it (such as updating a test or doc to match the requested fix), or purely mechanical.",
         },
       },
+      adds_logic: {
+        type: /** @type {const} */ ("noul"),
+        instructions: {
+          context: CONTEXT,
+          question:
+            "Does `change` add or alter behavior, logic, public API, or test assertions in a way that none of the `review_threads` asked for?",
+        },
+        criteria: {
+          true: "It adds or changes code behavior, control flow, values, error handling, exported API, or what a test asserts, and no review comment requested that particular change.",
+          false:
+            "Every behavior or logic change in it is what a review comment requested (or its direct, minimal follow-through), or it touches no logic at all: only renaming, formatting, comments, or documentation wording.",
+        },
+      },
       mechanical: {
         type: /** @type {const} */ ("noul"),
         instructions: {
@@ -321,20 +340,22 @@ export function buildJudgementRequest(hunk, threads, siblings = []) {
 
 /**
  * @typedef {{ verdict: "covered" | "needs_review", addresses: string, confidence: number,
- *   pNew: number | undefined, beyond: number, mechanical: number | undefined, reasons: string[] }} HunkJudgement
+ *   pNew: number | undefined, beyond: number, mechanical: number | undefined,
+ *   addsLogic: number | undefined, reasons: string[] }} HunkJudgement
  */
 
 /**
  * Apply the asymmetric policy to one hunk's answers (see `THRESHOLDS`). Any
  * missing signal counts against the hunk.
  * @param {{ addresses: { choice: string, probabilities: Record<string, number>, confidence: number },
- *   beyond: { noul: number }, mechanical?: { noul: number } }} answers
+ *   beyond: { noul: number }, mechanical?: { noul: number }, adds_logic?: { noul: number } }} answers
  * @returns {HunkJudgement}
  */
 export function evaluateHunk(answers) {
   const { choice, probabilities, confidence } = answers.addresses;
   const beyond = answers.beyond.noul;
   const mechanical = answers.mechanical?.noul;
+  const addsLogic = answers.adds_logic?.noul;
   const pNew = probabilities.new_change;
   const t = THRESHOLDS;
   /** @type {string[]} */
@@ -355,6 +376,11 @@ export function evaluateHunk(answers) {
     if (beyond >= t.maxBeyond)
       reasons.push(`goes beyond what the review feedback asked for (${beyond.toFixed(2)} ≥ ${t.maxBeyond})`);
   }
+  if (choice !== "new_change") {
+    if (addsLogic === undefined) reasons.push("no judgement of whether it adds unrequested logic");
+    else if (addsLogic >= t.maxAddsLogic)
+      reasons.push(`adds or alters logic no review thread asked for (${addsLogic.toFixed(2)} ≥ ${t.maxAddsLogic})`);
+  }
   return {
     verdict: reasons.length === 0 ? "covered" : "needs_review",
     addresses: choice,
@@ -362,6 +388,7 @@ export function evaluateHunk(answers) {
     pNew,
     beyond,
     mechanical,
+    addsLogic,
     reasons,
   };
 }

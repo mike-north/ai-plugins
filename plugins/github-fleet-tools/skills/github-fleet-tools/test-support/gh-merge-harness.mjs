@@ -243,6 +243,7 @@ export function markerJudge(body) {
         addresses,
         beyond: { type: "noul", noul: beyond },
         mechanical: { type: "noul", noul: 0.05 },
+        adds_logic: { type: "noul", noul: patch.includes("NEW_FEATURE") ? 0.9 : 0.05 },
       },
       usage: { input_tokens: 100, output_tokens: 0 },
     },

@@ -233,6 +233,15 @@ describe("buildJudgementRequest", () => {
     expect(q.criteria).toHaveProperty("false");
   });
 
+  it("asks an independent Noul whose 'yes' means the change adds or alters logic no thread asked for", () => {
+    const q = req.questions.adds_logic;
+    expect(q.type).toBe("noul");
+    expect(JSON.stringify(q.instructions)).toContain("`change`");
+    expect(JSON.stringify(q.instructions)).toContain("`review_threads`");
+    expect(q.criteria).toHaveProperty("true");
+    expect(q.criteria).toHaveProperty("false");
+  });
+
   it("omits other_changes when the hunk was pushed alone", () => {
     expect(req.state).not.toHaveProperty("other_changes");
   });
@@ -288,11 +297,12 @@ describe("estimateTokens", () => {
 });
 
 /** Build Choice/Noul answers in the HTTP API's answer shape. */
-function answers({ choice, probabilities, confidence, beyond, mechanical = 0.05 }) {
+function answers({ choice, probabilities, confidence, beyond, mechanical = 0.05, addsLogic = 0.05 }) {
   return {
     addresses: { type: "choice", choice, probabilities, confidence },
     beyond: { type: "noul", noul: beyond },
     ...(mechanical === undefined ? {} : { mechanical: { type: "noul", noul: mechanical } }),
+    ...(addsLogic === undefined ? {} : { adds_logic: { type: "noul", noul: addsLogic } }),
   };
 }
 
@@ -304,6 +314,7 @@ describe("THRESHOLDS — the calibrated policy values (see references/review-fre
       maxBeyond: 0.45,
       minMechanicalConfidence: 0.9,
       minMechanicalNoul: 0.8,
+      maxAddsLogic: 0.45,
     });
   });
 
@@ -327,6 +338,33 @@ describe("THRESHOLDS — the calibrated policy values (see references/review-fre
 
   it("refuses scope creep of 0.45", () => {
     expect(evaluateHunk(threadAnswer({ beyond: 0.45 })).verdict).toBe("needs_review");
+  });
+
+  it("refuses a thread mapping when the independent logic Noul reaches the threshold", () => {
+    const v = evaluateHunk(threadAnswer({ addsLogic: THRESHOLDS.maxAddsLogic }));
+    expect(v.verdict).toBe("needs_review");
+    expect(v.reasons.join(" ")).toMatch(/logic/);
+    expect(v.addsLogic).toBe(THRESHOLDS.maxAddsLogic);
+  });
+
+  it("refuses a mechanical hunk when the independent logic Noul reaches the threshold", () => {
+    const v = evaluateHunk(
+      answers({
+        choice: "mechanical",
+        probabilities: { mechanical: 0.97, new_change: 0.03 },
+        confidence: 0.97,
+        beyond: 0.1,
+        mechanical: 0.95,
+        addsLogic: THRESHOLDS.maxAddsLogic,
+      }),
+    );
+    expect(v.verdict).toBe("needs_review");
+    expect(v.reasons.join(" ")).toMatch(/logic/);
+  });
+
+  it("refuses when the logic judgement is missing", () => {
+    const { adds_logic: _dropped, ...withoutLogic } = threadAnswer({});
+    expect(evaluateHunk(withoutLogic).verdict).toBe("needs_review");
   });
 
   it("passes just inside every threshold", () => {
