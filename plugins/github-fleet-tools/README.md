@@ -23,12 +23,16 @@ the **product-led-eng-fleet** plugin, which depends on this one.
 - **`gh-label <N> add|remove <LABEL>`** — bounded single-label edit (claim / release), the
   granular affordance over broad `gh issue edit`.
 - **`gh-merge <N> [--dry-run]`** — guarded squash-merge; **prompts** (configured as `ask`) and
-  refuses unless the PR is open, non-draft, not a release/Version PR, has a successful
-  reviewer review (error notices don't count), has passed required checks, and that review is
-  **fresh**. A review is fresh if it was on the head, or if every later edit is a rebase, is
-  generated output, or answers the reviewer's own feedback and goes no further (judged per
-  hunk by TypeSafe's Jev model). The gate fails closed: an unverifiable guard refuses. Needs
-  `TYPESAFE_API_KEY` in the environment when edits must be judged. See
+  refuses unless the PR is open, non-draft, not a release/Version PR, has a recognisably
+  completed reviewer review, has passed required checks, and that review is **fresh**.
+  A review is fresh if it was on the head, or if every later edit is one of:
+  - a rebase;
+  - in a path the repository exempts in a committed `.github/gh-merge.json`;
+  - an answer to the reviewer's own feedback that goes no further (judged per hunk by
+    TypeSafe's Jev model).
+
+  The gate fails closed: an unverifiable guard refuses. It needs `TYPESAFE_API_KEY` in the
+  environment when edits must be judged. See
   `skills/github-fleet-tools/references/review-freshness.md`.
 
 ## The rubric (why these five)

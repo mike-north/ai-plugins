@@ -159,42 +159,54 @@ numbers and bad operations (exit 2).
 
 ## `gh-merge` — guarded squash-merge — `gh-merge <N> [--dry-run]`
 
-Squash-only, never deletes the branch. **Configured as `ask`** (never auto-approved): the
-first call in a session prompts — choose "Always Allow" to let that session merge thereafter.
-Even when approved it **refuses** (exit 3) unless every guard holds:
+Squash-only, never deletes the branch. **Configured as `ask`** (never auto-approved): every
+call prompts a human, and choosing "Always Allow" is **not** recommended. The human prompt
+is what makes the remaining environment-level trust (`GH`, `PLEF_COPILOT_LOGIN_RE`)
+acceptable. Even when approved, it **refuses** (exit 3) unless every guard holds:
 
 1. The PR is open and not a draft.
 2. It is **not a release/Version PR**.
-3. A matching reviewer has **successfully** reviewed it, and the latest successful review
-   doesn't request changes. Copilot's "…encountered an error and was unable to review…"
-   notices and dismissed reviews don't count.
+3. A matching reviewer has **recognisably completed** a review, and the latest counted
+   review doesn't request changes. A review counts if it is APPROVED or CHANGES_REQUESTED,
+   or if it is COMMENTED with a recognised review summary (Copilot's overview or verdict
+   heading). Error notices, empty or unrecognised bodies, and dismissed reviews don't count.
 4. Required checks have **passed** (`gh pr checks --required` clean).
 5. **The review is fresh.** It was on the current head commit, or every edit pushed since
-   is covered by it. Rebases and merges from the base branch are covered, and so are edits
-   confined to generated/mechanical paths. Hunks that an automated judgement (TypeSafe's
-   Jev model) confidently maps to the reviewer's own feedback, without going beyond it,
-   are covered too. Anything else needs a fresh review:
-   `gh pr edit <N> --add-reviewer @copilot`.
+   is covered by it. Covered edits are:
+   - rebases and merges from the base branch;
+   - edits confined to paths the repository exempts in a **committed**
+     `.github/gh-merge.json`, read at the PR's base commit;
+   - hunks that an automated judgement (TypeSafe's Jev model) confidently maps to the
+     reviewer's own feedback, without going beyond it.
 
-Every guard **fails closed**. A missing `TYPESAFE_API_KEY`, or an API, network, git, or `gh`
-failure, refuses the merge with the reason. So does a binary, conflicted, or oversized
-change. The merge is bound to the evaluated head (`--match-head-commit`), so a push between
-check and merge is rejected. `--dry-run` evaluates the guards and prints the full freshness
-verdict (per-hunk classification and scores) without merging.
+   Anything else needs a fresh review: `gh pr edit <N> --add-reviewer @copilot`.
+
+Every guard **fails closed**. Each of these refuses the merge with the reason:
+
+- a missing `TYPESAFE_API_KEY`, or an API, network, git, or `gh` failure;
+- an invalid config;
+- a non-loopback `TYPESAFE_BASE_URL`;
+- a binary, conflicted, or oversized change.
+
+The merge is bound to the evaluated head (`--match-head-commit`), so a push between check
+and merge is rejected. `--dry-run` evaluates the guards and prints the full freshness verdict
+(per-hunk classification and scores) without merging.
 
 When the head has moved past the review, run `gh-merge` **from a clone of the PR's
-repository**: the freshness check compares commits with `git`, fetching missing ones from
-`origin` (`PLEF_GIT_REMOTE`). It needs `node` on `PATH`. It also needs `TYPESAFE_API_KEY`,
+repository**. The freshness check compares commits with `git`, fetching missing ones from
+`origin` (`PLEF_GIT_REMOTE`), and needs `node` on `PATH`. It also needs `TYPESAFE_API_KEY`,
 but only when a hunk has to be judged. `gh-merge` never calls a secrets manager. Provide the
 key in the agent's environment, for example by starting the agent session through a
 secrets launcher that exports it (such as one wrapping the agent in your secrets manager's
 `run` command).
 
-Tune the reviewer match and release-PR patterns with `PLEF_COPILOT_LOGIN_RE`,
-`PLEF_VERSION_TITLE_RE`, `PLEF_VERSION_BRANCH_RE`. `PLEF_FRESHNESS_IGNORE` sets the exempt
-generated paths. It replaces the defaults, and a catch-all pattern is refused. Because it
-loosens the gate, set it in human-controlled configuration, not per invocation. The design,
-policy, thresholds, and calibration evidence are in
+Exempting paths (generated API reports, lockfiles, …) loosens the gate, so there are **no
+built-in exemptions**. A repository opts in by committing
+`{"ignorePaths": ["api-report/", "pnpm-lock.yaml"]}` as `.github/gh-merge.json`, which a
+human reviews like any other change. `PLEF_FRESHNESS_IGNORE` can only narrow that list, never
+add to it. Tune the reviewer match and release-PR patterns with `PLEF_COPILOT_LOGIN_RE`,
+`PLEF_VERSION_TITLE_RE`, `PLEF_VERSION_BRANCH_RE`. The design, policy, thresholds,
+calibration evidence, accepted residuals, and open decisions are in
 [references/review-freshness.md](references/review-freshness.md).
 
 ## GitHub engagement steering
