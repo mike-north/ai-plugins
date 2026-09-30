@@ -243,7 +243,7 @@ export function markerJudge(body) {
  * Run the real gh-merge from the sandbox's working clone.
  * Resolves `{ code, stdout, stderr, ghCalls }` — never rejects on a non-zero exit.
  */
-export function runGhMerge(sb, { fixture, args = ["7"], env = {}, cwd = sb.work }) {
+export function runGhMerge(sb, { fixture, args = ["7"], env = {}, cwd = sb.work, script = SCRIPT }) {
   const fixturePath = join(sb.root, "fixture.json");
   const logPath = join(sb.root, "gh-calls.log");
   writeFileSync(fixturePath, JSON.stringify(fixture));
@@ -260,7 +260,7 @@ export function runGhMerge(sb, { fixture, args = ["7"], env = {}, cwd = sb.work 
   };
   for (const [k, v] of Object.entries(fullEnv)) if (v === undefined) delete fullEnv[k];
   return new Promise((resolve) => {
-    execFile("bash", [SCRIPT, ...args], { cwd, env: fullEnv, encoding: "utf8" }, (err, stdout, stderr) => {
+    execFile("bash", [script, ...args], { cwd, env: fullEnv, encoding: "utf8" }, (err, stdout, stderr) => {
       const ghCalls = existsSync(logPath)
         ? readFileSync(logPath, "utf8")
             .split("\n")

@@ -13,7 +13,7 @@
  * @see https://docs.typesafe.ai/api.md
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { writeFileSync } from "node:fs";
+import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   APP_V1,
@@ -27,6 +27,7 @@ import {
   prView,
   review,
   runGhMerge,
+  SCRIPT,
   seedReviewedBranch,
   startTypeSafeStub,
 } from "../test-support/gh-merge-harness.mjs";
@@ -420,6 +421,25 @@ describe("model-judged freshness", () => {
     const r = await runGhMerge(sb, { fixture: fixtureFor({ head, reviewed, baseOid: base }), env: withStub() });
     expect(r.code).toBe(3);
     expect(r.stderr).toMatch(/confidence/);
+  });
+});
+
+describe("installed by symlink", () => {
+  it("finds its freshness helper when invoked through a symlink on PATH", async () => {
+    const { base, reviewed } = seedReviewedBranch(sb);
+    const head = sb.commit({ "src/app.js": FIXED_GREET }, "fix typo");
+    sb.git("push", "-q", "origin", "feat");
+    const bin = join(sb.root, "bin");
+    mkdirSync(bin);
+    symlinkSync(SCRIPT, join(bin, "gh-merge"));
+    const r = await runGhMerge(sb, {
+      fixture: fixtureFor({ head, reviewed, baseOid: base }),
+      env: withStub(),
+      script: join(bin, "gh-merge"),
+    });
+    expect(r.stderr).toBe("");
+    expect(r.code).toBe(0);
+    expect(stub.requests).toHaveLength(1);
   });
 });
 
