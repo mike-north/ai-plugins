@@ -19,6 +19,7 @@ import {
   LIMITS,
   parseIgnorePatterns,
   isIgnoredPath,
+  findCatchAllPattern,
   parseFilePatch,
   buildJudgementRequest,
   evaluateHunk,
@@ -66,6 +67,19 @@ describe("ignored (generated/mechanical) paths", () => {
     expect(isIgnoredPath("src/c.gen.ts", p)).toBe(true);
     expect(isIgnoredPath("lib/src/c.gen.ts", p)).toBe(false);
     expect(isIgnoredPath("src/c.ts", p)).toBe(false);
+  });
+});
+
+describe("findCatchAllPattern — the override names generated paths, it cannot switch the guard off", () => {
+  it("flags patterns that would exempt ordinary source everywhere", () => {
+    for (const p of ["*", "**", "**/*", "*/", "**/"]) {
+      expect(findCatchAllPattern(["api-report/", p])).toBe(p);
+    }
+  });
+
+  it("accepts the defaults and ordinary narrow patterns", () => {
+    expect(findCatchAllPattern(DEFAULT_IGNORE_PATTERNS)).toBeUndefined();
+    expect(findCatchAllPattern(["generated/", "*.snap", "src/**/*.gen.ts"])).toBeUndefined();
   });
 });
 

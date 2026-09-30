@@ -9,14 +9,24 @@
 #
 #   1. The PR is OPEN and not a draft.
 #   2. It is NOT a release/Version PR (those are a human's deliberate release gate).
-#   3. A matching reviewer review is present (author login matches PLEF_COPILOT_LOGIN_RE,
-#      default "copilot", matched case-insensitively) and its latest verdict isn't "changes requested".
+#   3. A matching reviewer has successfully reviewed it (author login matches
+#      PLEF_COPILOT_LOGIN_RE, default "copilot", case-insensitively). Error notices
+#      ("…encountered an error and was unable to review…") and dismissed reviews do not
+#      count, and the latest successful review must not request changes.
 #   4. Required status checks have passed (`gh pr checks --required` exits clean).
+#   5. That review is FRESH: it was on the current head commit, or every edit pushed
+#      since is covered by it — rebase/base-merge only, confined to generated/mechanical
+#      paths, or (judged per hunk by TypeSafe's Jev model) a response to the reviewer's
+#      own feedback that goes no further. Anything uncertain needs a fresh review.
 #
-# It always merges with --squash and never deletes the branch (avoids breaking stacked PRs).
+# Every guard fails closed: if a guard cannot be verified (missing TYPESAFE_API_KEY,
+# API/network/git failure, oversized diff), the merge is refused with the reason.
+# The merge is bound to the evaluated head (`--match-head-commit`), so a push between
+# the check and the merge makes GitHub reject it. It always merges with --squash and
+# never deletes the branch (avoids breaking stacked PRs).
 # Use --dry-run to evaluate the guards and print the verdict without merging.
 #
-# Usage:
+# Usage (from inside a clone of the PR's repository):
 #   gh-merge <PR_NUMBER> [--dry-run]
 #
 # Exit codes: 0 merged (or --dry-run: would merge); 1 gh/API error;
@@ -28,6 +38,10 @@
 #   PLEF_COPILOT_LOGIN_RE  regex matched against review author logins (default "copilot")
 #   PLEF_VERSION_TITLE_RE  title regex marking a release PR  (default "^Release packages")
 #   PLEF_VERSION_BRANCH_RE head-branch regex marking a release PR (default "^changeset-release/")
+#   TYPESAFE_API_KEY       TypeSafe key; needed only when post-review edits must be judged
+#   PLEF_FRESHNESS_IGNORE  comma list of generated/mechanical path patterns whose post-review
+#                          edits need no review (replaces the defaults; see SKILL.md)
+#   PLEF_GIT_REMOTE        remote to fetch missing commits from (default "origin")
 #
 set -euo pipefail
 
@@ -36,6 +50,18 @@ GH="${GH:-gh}"
 COPILOT_RE="${PLEF_COPILOT_LOGIN_RE:-copilot}"
 VERSION_TITLE_RE="${PLEF_VERSION_TITLE_RE:-^Release packages}"
 VERSION_BRANCH_RE="${PLEF_VERSION_BRANCH_RE:-^changeset-release/}"
+# Body of the notice Copilot posts, as a review, when it fails to review.
+REVIEW_ERROR_RE='encountered an error and was unable to review'
+
+# Resolve this script's real directory (it is commonly symlinked onto PATH).
+src="${BASH_SOURCE[0]}"
+while [[ -L "$src" ]]; do
+  dir="$(cd -P "$(dirname "$src")" && pwd)"
+  src="$(readlink "$src")"
+  [[ "$src" == /* ]] || src="$dir/$src"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$src")" && pwd)"
+FRESHNESS_GATE="$SCRIPT_DIR/../lib/review-freshness-gate.mjs"
 
 num="${1:-}"
 mode="${2:-}"
@@ -54,13 +80,16 @@ if [[ -n "$mode" ]]; then
 fi
 
 refuse() { echo "REFUSING to merge PR #$num: $1" >&2; exit 3; }
+REREQUEST="re-request one with \`gh pr edit $num --add-reviewer @copilot\`"
 
-meta="$("$GH" pr view "$num" --json number,title,state,isDraft,headRefName,reviews)"
+meta="$("$GH" pr view "$num" --json number,title,state,isDraft,headRefName,headRefOid,baseRefOid,reviews)"
 
 state=$(printf '%s' "$meta" | jq -r '.state')
 isDraft=$(printf '%s' "$meta" | jq -r '.isDraft')
 title=$(printf '%s' "$meta" | jq -r '.title')
 head=$(printf '%s' "$meta" | jq -r '.headRefName')
+headOid=$(printf '%s' "$meta" | jq -r '.headRefOid // ""')
+baseOid=$(printf '%s' "$meta" | jq -r '.baseRefOid // ""')
 
 # Guard 1: open, not draft.
 [[ "$state" == "OPEN" ]] || refuse "state is $state, not OPEN"
@@ -71,22 +100,52 @@ if printf '%s' "$title" | grep -qiE "$VERSION_TITLE_RE" || printf '%s' "$head" |
   refuse "this looks like a release/Version PR (\"$title\" on $head) — those are a human's release gate"
 fi
 
-# Guard 3: a matching reviewer review is present, and its latest verdict isn't CHANGES_REQUESTED.
-reviewer_latest=$(printf '%s' "$meta" | jq -r --arg re "$COPILOT_RE" '
-  [ (.reviews // [])[] | select(.author.login | test($re; "i")) ]
-  | sort_by(.submittedAt) | last | .state // "NONE"')
-[[ "$reviewer_latest" != "NONE" ]] || refuse "no review from a matching reviewer (author login matching /$COPILOT_RE/i — set PLEF_COPILOT_LOGIN_RE to change)"
+# Guard 3: a successful matching-reviewer review exists, and the latest one isn't CHANGES_REQUESTED.
+reviewer=$(printf '%s' "$meta" | jq -c --arg re "$COPILOT_RE" --arg err "$REVIEW_ERROR_RE" '
+  [ (.reviews // [])[]
+    | select((.author.login // "") | test($re; "i"))
+    | select(.state != "DISMISSED" and .state != "PENDING") ] as $matching
+  | ($matching | map(select((.body // "") | test($err; "i") | not)) | sort_by(.submittedAt)) as $ok
+  | { matching: ($matching | length), ok: ($ok | length),
+      state: ($ok | last | .state // "NONE"), commit: ($ok | last | .commit.oid // "") }')
+matching=$(printf '%s' "$reviewer" | jq -r '.matching')
+ok=$(printf '%s' "$reviewer" | jq -r '.ok')
+reviewer_latest=$(printf '%s' "$reviewer" | jq -r '.state')
+reviewed=$(printf '%s' "$reviewer" | jq -r '.commit')
+[[ "$matching" != "0" ]] || refuse "no review from a matching reviewer (author login matching /$COPILOT_RE/i — set PLEF_COPILOT_LOGIN_RE to change)"
+[[ "$ok" != "0" ]] || refuse "every matching-reviewer review errored (\"…encountered an error and was unable to review…\"), so the PR has not been reviewed; $REREQUEST"
 [[ "$reviewer_latest" != "CHANGES_REQUESTED" ]] || refuse "the latest matching-reviewer review requests changes"
+[[ -n "$reviewed" ]] || refuse "cannot tell which commit the latest matching-reviewer review covered, so its freshness is unknown; $REREQUEST"
+[[ -n "$headOid" && -n "$baseOid" ]] || refuse "gh did not report the PR's head/base commits, so review freshness cannot be checked"
 
 # Guard 4: required status checks have passed.
 if ! "$GH" pr checks "$num" --required >/dev/null 2>&1; then
   refuse "required status checks have not all passed (gh pr checks --required is not clean; if the repo has no required checks, merge manually)"
 fi
 
+# Guard 5: the review is fresh for the current head.
+if [[ "$reviewed" == "$headOid" ]]; then
+  freshness="the latest review is on the head commit (${headOid:0:7})"
+else
+  command -v node >/dev/null 2>&1 || refuse "could not verify review freshness (failing closed): node is not on PATH; $REREQUEST"
+  errfile="$(mktemp "${TMPDIR:-/tmp}/gh-merge-freshness.XXXXXX")"
+  trap 'rm -f "$errfile"' EXIT
+  set +e
+  report="$(node "$FRESHNESS_GATE" --pr "$num" --reviewed "$reviewed" --head "$headOid" --base "$baseOid" \
+    --reviewer-re "$COPILOT_RE" 2>"$errfile")"
+  rc=$?
+  set -e
+  case "$rc" in
+    0) freshness="edits since the reviewed commit are covered by the review"$'\n'"$report" ;;
+    3) refuse "a fresh Copilot review is needed for the commits pushed since it reviewed ${reviewed:0:7}; $REREQUEST"$'\n'"$report" ;;
+    *) refuse "could not verify review freshness (failing closed): $(cat "$errfile")"$'\n'"Either fix that and retry, or $REREQUEST" ;;
+  esac
+fi
+
 if [[ "$dry" == "1" ]]; then
-  echo "would merge PR #$num (squash): all guards pass — open, non-draft, not a release PR, matching reviewer review present ($reviewer_latest), required checks green"
+  echo "would merge PR #$num (squash): all guards pass — open, non-draft, not a release PR, matching reviewer review present ($reviewer_latest), required checks green, review fresh: $freshness"
   exit 0
 fi
 
-"$GH" pr merge "$num" --squash
-echo "squash-merged PR #$num"
+"$GH" pr merge "$num" --squash --match-head-commit "$headOid"
+echo "squash-merged PR #$num (review fresh: $freshness)"
