@@ -39,6 +39,7 @@
 #   PLEF_VERSION_TITLE_RE  title regex marking a release PR  (default "^Release packages")
 #   PLEF_VERSION_BRANCH_RE head-branch regex marking a release PR (default "^changeset-release/")
 #   TYPESAFE_API_KEY       TypeSafe key; needed only when post-review edits must be judged
+#   TYPESAFE_BASE_URL      only the default API or a loopback test endpoint (warned); else refused
 #   PLEF_FRESHNESS_IGNORE  comma list that can only NARROW the exempt path patterns committed
 #                          at the base commit in .github/gh-merge.json (see SKILL.md)
 #   PLEF_GIT_REMOTE        remote to fetch missing commits from (default "origin")

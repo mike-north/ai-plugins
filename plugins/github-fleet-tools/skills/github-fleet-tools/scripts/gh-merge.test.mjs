@@ -550,6 +550,16 @@ describe("fail closed", () => {
     expect(r.stderr).toMatch(/network/i);
   });
 
+  it("refuses a non-loopback TypeSafe endpoint (it could fake the judgement)", async () => {
+    const r = await runGhMerge(sb, {
+      fixture: seedFix(),
+      env: { TYPESAFE_BASE_URL: "https://judge.example.test" },
+    });
+    expect(r.code).toBe(3);
+    expect(r.stderr).toMatch(/TYPESAFE_BASE_URL/);
+    expect(merged(r)).toBe(false);
+  });
+
   it("refuses when review threads cannot be read", async () => {
     const r = await runGhMerge(sb, { fixture: { ...seedFix(), graphqlExit: 1 }, env: withStub() });
     expect(r.code).toBe(3);
@@ -616,6 +626,8 @@ describe("--dry-run", () => {
     expect(r.stdout).toMatch(/confidence 0\.90/);
     expect(r.stdout).toMatch(/p\(new change\) 0\.03/);
     expect(r.stdout).toMatch(/beyond 0\.05/);
+    // The stand-in endpoint is loopback, so it is honoured — loudly.
+    expect(r.stdout).toMatch(/WARNING: non-default TypeSafe endpoint http:\/\/127\.0\.0\.1:\d+/);
   });
 
   it("reports a refusal verdict with exit 3", async () => {

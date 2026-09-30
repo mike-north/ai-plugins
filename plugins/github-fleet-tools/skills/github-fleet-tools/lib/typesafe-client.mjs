@@ -27,6 +27,42 @@ export class TypeSafeRequestError extends Error {
   }
 }
 
+/** The TypeSafe API root. */
+export const DEFAULT_BASE_URL = "https://api.typesafe.ai";
+
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/**
+ * Decide which endpoint `TYPESAFE_BASE_URL` may select. Whoever controls the
+ * endpoint controls the judgement, so the only non-default endpoints honoured
+ * are loopback ones (a local stand-in for tests), and they come with a loud
+ * warning for the report. Anything else throws, and the gate refuses.
+ * @param {string | undefined} raw
+ * @returns {{ baseUrl: string, warning: string | undefined }}
+ */
+export function resolveEndpoint(raw) {
+  const value = (raw ?? "").trim().replace(/\/+$/, "");
+  if (value === "" || value === DEFAULT_BASE_URL) return { baseUrl: DEFAULT_BASE_URL, warning: undefined };
+  /** @type {URL} */
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new TypeSafeRequestError(`TYPESAFE_BASE_URL is not a URL; unset it to use ${DEFAULT_BASE_URL}`);
+  }
+  const loopback =
+    (url.protocol === "http:" || url.protocol === "https:") &&
+    url.username === "" &&
+    url.password === "" &&
+    LOOPBACK_HOSTS.has(url.hostname);
+  if (!loopback) {
+    throw new TypeSafeRequestError(
+      `TYPESAFE_BASE_URL may only name ${DEFAULT_BASE_URL} or a loopback test endpoint (localhost, 127.0.0.1, ::1); unset it`,
+    );
+  }
+  return { baseUrl: value, warning: `WARNING: non-default TypeSafe endpoint ${value} (loopback test endpoint)` };
+}
+
 /** Statuses the SDK treats as transient and retries. */
 const isRetryableStatus = (/** @type {number} */ s) => s === 408 || s === 429 || (s >= 500 && s <= 599);
 
@@ -55,7 +91,7 @@ const isRetryableStatus = (/** @type {number} */ s) => s === 408 || s === 429 ||
 export function createSystemOneClient(opts) {
   const apiKey = opts.apiKey ?? "";
   if (!apiKey) throw new TypeSafeRequestError("TYPESAFE_API_KEY is not set");
-  const baseUrl = (opts.baseUrl || "https://api.typesafe.ai").replace(/\/+$/, "");
+  const baseUrl = (opts.baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, "");
   const maxRetries = opts.maxRetries ?? 2;
   const timeoutMs = opts.timeoutMs ?? 30000;
   const doFetch = opts.fetch ?? fetch;

@@ -29,7 +29,7 @@
  *
  * Env:
  *   TYPESAFE_API_KEY       required only when a hunk needs a model judgement
- *   TYPESAFE_BASE_URL      API root (default https://api.typesafe.ai)
+ *   TYPESAFE_BASE_URL      API root; only the default or a loopback test endpoint (warned)
  *   PLEF_TYPESAFE_MAX_RETRIES  retries for transient API errors (default 2)
  *   PLEF_FRESHNESS_IGNORE  comma list that can only NARROW the committed exempt patterns
  *   PLEF_GIT_REMOTE        remote to fetch missing commits from (default "origin")
@@ -49,7 +49,7 @@ import {
   parseFilePatch,
   parseFreshnessConfig,
 } from "./review-freshness.mjs";
-import { createSystemOneClient } from "./typesafe-client.mjs";
+import { createSystemOneClient, resolveEndpoint } from "./typesafe-client.mjs";
 
 const ENV = process.env;
 const GH = ENV.GH || "gh";
@@ -222,6 +222,13 @@ async function mapLimit(/** @type {any[]} */ items, /** @type {number} */ limit,
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  /** Validated up front, even when no hunk needs the model: a bad value is a misconfiguration. */
+  let endpoint;
+  try {
+    endpoint = resolveEndpoint(ENV.TYPESAFE_BASE_URL);
+  } catch (err) {
+    throw new GateError(err instanceof Error ? err.message : String(err));
+  }
   let reviewerRe;
   try {
     reviewerRe = new RegExp(args.reviewerRe, "i");
@@ -256,6 +263,7 @@ async function main() {
   const lines = [
     `review freshness: reviewed ${short(args.reviewed)} → head ${short(args.head)} (base ${short(args.base)})`,
   ];
+  if (endpoint.warning) lines.push(endpoint.warning);
   /** @type {{ label: string, reasons: string[] }[]} */
   const deterministic = [];
   /** @type {string[]} */
@@ -332,7 +340,7 @@ async function main() {
   const maxRetries = ENV.PLEF_TYPESAFE_MAX_RETRIES === undefined ? 2 : Number(ENV.PLEF_TYPESAFE_MAX_RETRIES);
   const client = createSystemOneClient({
     apiKey: ENV.TYPESAFE_API_KEY,
-    baseUrl: ENV.TYPESAFE_BASE_URL,
+    baseUrl: endpoint.baseUrl,
     model: MODEL,
     maxRetries: Number.isInteger(maxRetries) && maxRetries >= 0 ? maxRetries : 2,
   });

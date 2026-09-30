@@ -8,7 +8,7 @@
  * @see https://docs.typesafe.ai/sdk/javascript/api/interfaces/RetryPolicy.md
  */
 import { describe, it, expect } from "vitest";
-import { createSystemOneClient, TypeSafeRequestError } from "./typesafe-client.mjs";
+import { createSystemOneClient, resolveEndpoint, DEFAULT_BASE_URL, TypeSafeRequestError } from "./typesafe-client.mjs";
 
 const QUESTIONS = {
   addresses: { type: "choice", instructions: "Which?", criteria: { a: "A", b: "B" } },
@@ -150,5 +150,36 @@ describe("createSystemOneClient", () => {
       const f = fakeFetch([{ status: 200, body: "<html>" }]);
       await expect(client(f.impl).ask({ state: "s", questions: QUESTIONS })).rejects.toThrow(/JSON/);
     });
+  });
+});
+
+describe("resolveEndpoint — a non-default endpoint could fake the judgement, so only loopback is honoured", () => {
+  it("defaults to the TypeSafe API without a warning", () => {
+    expect(DEFAULT_BASE_URL).toBe("https://api.typesafe.ai");
+    expect(resolveEndpoint(undefined)).toEqual({ baseUrl: DEFAULT_BASE_URL, warning: undefined });
+    expect(resolveEndpoint("")).toEqual({ baseUrl: DEFAULT_BASE_URL, warning: undefined });
+    expect(resolveEndpoint("https://api.typesafe.ai/")).toEqual({ baseUrl: DEFAULT_BASE_URL, warning: undefined });
+  });
+
+  it("honours loopback hosts, with a loud warning", () => {
+    for (const url of ["http://127.0.0.1:8080", "http://localhost:3000", "http://[::1]:9000"]) {
+      const r = resolveEndpoint(url);
+      expect(r.baseUrl).toBe(url);
+      expect(r.warning).toMatch(/^WARNING: non-default TypeSafe endpoint/);
+      expect(r.warning).toContain(url);
+    }
+  });
+
+  it("refuses every other endpoint", () => {
+    for (const url of [
+      "https://api.typesafe.ai.example.test",
+      "https://judge.example.test",
+      "http://127.0.0.2:80",
+      "http://localhost@evil.example.test",
+      "ftp://localhost/",
+      "not a url",
+    ]) {
+      expect(() => resolveEndpoint(url), url).toThrow(/TYPESAFE_BASE_URL/);
+    }
   });
 });
